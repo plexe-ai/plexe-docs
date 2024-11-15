@@ -52,7 +52,7 @@
     {
       "group": "Get Started",
       "pages": [
-        "introduction/intro_page",
+        "introduction/welcome_to_plexe",
         "quickstart",
         "development"
       ]
