@@ -5,7 +5,7 @@
     "dark": "plexe_logo_long_w.png",
     "light": "plexe_logo_long.png"
   },
-  "favicon": "/favicon.svg",
+  "plexe": "/plexe_logo_dark.png",
   "colors": {
     "primary": "#FFFCF8",
     "light": "#69B6FF",
