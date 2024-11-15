@@ -1,4 +1,9 @@
+---
+title: "Hotels Demand Forecast"
+---
+
 # AI-Powered Demand Forecasting for Travel Technology
+
 ## The Challenge
 
 Travel technology platforms need accurate demand forecasting to optimize inventory, pricing, and revenue management across different markets and seasons. Traditional methods struggle with complex patterns involving seasonality, events, market variations, and changing customer preferences.
@@ -32,6 +37,7 @@ forecast = ai.run(
 ```
 
 ### Using Default Data
+
 ```python
 # No data? No problem! Use our pre-trained models
 ai = PlexeAI()
@@ -82,26 +88,39 @@ async def get_forecast(data: dict):
 ## Benefits
 
 1. **One-Line Implementation**
-   - Create sophisticated models with a single line of code 
-   - Works with or without your own data
-   - Instant deployment
+
+   * Create sophisticated models with a single line of code
+
+   * Works with or without your own data
+
+   * Instant deployment
 
 2. **Powerful Features**
-   - Automatic pattern recognition
-   - Multi-source data integration
-   - Real-time predictions
-   - Supports CSV, PDF, images, and more
+
+   * Automatic pattern recognition
+
+   * Multi-source data integration
+
+   * Real-time predictions
+
+   * Supports CSV, PDF, images, and more
 
 3. **Business Impact**
-   - Optimized inventory
-   - Better pricing decisions
-   - Improved revenue
-   - Data-driven planning
+
+   * Optimized inventory
+
+   * Better pricing decisions
+
+   * Improved revenue
+
+   * Data-driven planning
 
 ## Getting Started
 
-1. Get your Plexe API key
+1. Get your PlexeAI API key
+
 2. Install: `pip install plexe`
+
 3. Start forecasting!
 
 Transform your travel technology platform with AI-powered demand forecasting today!
