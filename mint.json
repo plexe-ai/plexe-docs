@@ -17,8 +17,8 @@
   },
   "topbarLinks": [
     {
-      "name": "Support",
-      "url": "mailto:hi@mintlify.com"
+      "name": "Contact Us",
+      "url": "info@plexe.ai"
     }
   ],
   "topbarCtaButton": {
@@ -39,8 +39,8 @@
     },
     {
       "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
+      "icon": "discord",
+      "url": "https://discord.gg/JwZAXjmZZu"
     },
     {
       "name": "Blog",
