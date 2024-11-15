@@ -1,1 +1,25 @@
 
+{
+  "docs": [
+    {
+      "title": "Home",
+      "path": "/"
+    },
+    {
+      "title": "Use Cases",
+      "path": "/usecases",
+      "children": [
+        {
+          "title": "Travel",
+          "path": "/usecases/travel",
+          "children": [
+            {
+              "title": "Hotels Demand Forecasting",
+              "path": "/usecases/travel/hotels-demand-forecast"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
