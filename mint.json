@@ -2,8 +2,8 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Starter Kit",
   "logo": {
-    "dark": "Plexe_logo_dark.png",
-    "light": "Plexe_logo_light.png"
+    "dark": "Plexe_logo_light.png",
+    "light": "Plexe_logo_dark.png"
   },
   "favicon": "/favicon.svg",
   "colors": {
