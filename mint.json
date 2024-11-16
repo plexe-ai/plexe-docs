@@ -55,12 +55,10 @@
     {
       "group": "Essentials",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "essentials/how-to guides",
+        "essentials/tutorials",
+        "essentials/reference guides",
+        "essentials/explanation",
       ]
     },
     {
