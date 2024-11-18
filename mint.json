@@ -75,6 +75,13 @@
       "pages": [
         "usecases/travel/hotels-demand-forecast"
       ]
-    }
+    },
+    {
+"footerSocials": {
+    "website": "https://www.plexe.ai",
+    "github": "https://github.com/plexe-ai",
+    "linkedin": "https://www.linkedin.com/company/plexe-ai/"
+  }
+}
   ]
 }
