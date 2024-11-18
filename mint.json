@@ -18,7 +18,7 @@
   "topbarLinks": [
     {
       "name": "Contact Us",
-      "url": "info@plexe.ai"
+      "url": "mailto:info@plexe.ai"
     }
   ],
   "topbarCtaButton": {
@@ -48,7 +48,7 @@
       "group": "Get Started",
       "pages": [
         "introduction/welcome_to_plexe",
-        "introduction/Reference",
+        "introduction/reference",
         "introduction/quickstart"
       ]
     },
@@ -57,11 +57,11 @@
       "pages": [
         "essentials/how-to_guides",
         "essentials/tutorials",
-        "essentials/reference guides",
+        "essentials/reference-guides",
         "essentials/explanation"
       ]
     },
-  {
+    {
       "group": "API Reference",
       "pages": [
         {
@@ -84,7 +84,7 @@
           "description": "Delete a specific resource by ID."
         }
       ]
-    },  
+    },
     {
       "group": "Use Cases",
       "pages": [
