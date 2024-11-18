@@ -28,7 +28,7 @@
   "tabs": [
     {
       "name": "API Reference",
-      "url": "api"
+      "url": "api-reference"
     }
   ],
   "anchors": [
@@ -48,7 +48,7 @@
       "group": "Get Started",
       "pages": [
         "introduction/welcome_to_plexe",
-        "introduction/API_Reference",
+        "introduction/Reference",
         "introduction/quickstart"
       ]
     },
