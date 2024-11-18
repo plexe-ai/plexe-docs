@@ -1,0 +1,38 @@
+# Delete Upload
+
+Remove previously uploaded training data. This is typically done after model creation or if you want to cancel an upload.
+
+## Endpoint
+**Method:** `DELETE`  
+**Path:** `/v0/uploads/{upload_id}`
+
+---
+
+## Headers
+
+| Name         | Type   | Required | Description                          |
+|--------------|--------|----------|--------------------------------------|
+| `x-api-key`  | string | Yes      | Your API key for authentication.     |
+
+---
+
+## Parameters
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                                   |
+|-------------|--------|----------|-----------------------------------------------|
+| `upload_id` | string | Yes      | The ID received from the upload endpoint.     |
+
+---
+
+## Responses
+
+### 200 - Successful Response
+**Description:** The upload was deleted successfully.
+
+**Example:**
+```json
+{
+  "message": "Upload deleted successfully."
+}
