@@ -1,72 +1,44 @@
+# Check Model Status
+
+Retrieve the current training status of a machine learning model.
+
+## Endpoint
+**Method:** `GET`  
+**Path:** `/v0/models/{model_name}/{model_version}/status`
+
+---
+
+## Headers
+
+| Name         | Type   | Required | Description                          |
+|--------------|--------|----------|--------------------------------------|
+| `x-api-key`  | string | Yes      | Your API key for authentication.     |
+
+---
+
+## Parameters
+
+### Path Parameters
+
+| Name            | Type   | Required | Description                                              |
+|------------------|--------|----------|----------------------------------------------------------|
+| `model_name`     | string | Yes      | The name of the model whose status you want to check.    |
+| `model_version`  | string | Yes      | The version ID of the model returned during model creation. |
+
+---
+
+## Responses
+
+### 200 - Successful Response
+**Description:** Indicates the current status of the model.  
+
+**Example:**
+```json
 {
-  "url": "api-reference/endpoint/get",
-  "title": "Check Model Status",
-  "description": "Retrieve the current training status of a machine learning model.",
-  "method": "GET",
-  "endpoint": "/v0/models/{model_name}/{model_version}/status",
-  "headers": [
-    {
-      "name": "x-api-key",
-      "type": "string",
-      "required": true,
-      "description": "Your API key for authentication."
-    }
-  ],
-  "parameters": [
-    {
-      "name": "model_name",
-      "type": "string",
-      "required": true,
-      "description": "The name of the model whose status you want to check."
-    },
-    {
-      "name": "model_version",
-      "type": "string",
-      "required": true,
-      "description": "The version ID of the model returned during model creation."
-    }
-  ],
-  "responses": {
-    "200": {
-      "description": "Successful response indicating the current status of the model.",
-      "example": {
-        "status": "completed",
-        "result": {
-          "code": "def predict(data): ...",
-          "valid_metric": 0.87
-        },
-        "error": null
-      }
-    },
-    "400": {
-      "description": "Bad Request. Possible causes include invalid or missing parameters.",
-      "example": {
-        "detail": "Invalid model_name or model_version"
-      }
-    },
-    "401": {
-      "description": "Unauthorized. The API key provided is invalid.",
-      "example": {
-        "detail": "Invalid API key"
-      }
-    },
-    "404": {
-      "description": "Not Found. The model name or version does not exist.",
-      "example": {
-        "detail": "Model not found"
-      }
-    },
-    "500": {
-      "description": "Internal Server Error. Unexpected issue on the server.",
-      "example": {
-        "detail": "An unexpected error occurred."
-      }
-    }
+  "status": "completed",
+  "result": {
+    "code": "def predict(data): ...",
+    "valid_metric": 0.87
   },
-  "curl_example": "curl -X GET https://api.plexe.ai/v0/models/{model_name}/{model_version}/status \\\n  -H \"x-api-key: your_api_key_here\"",
-  "notes": [
-    "Ensure the `model_name` and `model_version` match what was returned during model creation.",
-    "Check the `status` field in the response for training progress: `pending`, `running`, `completed`, or `failed`.",
-    "If `status` is `completed`, the `result` field contains the trained model's code and metrics."
-  ]
+  "error": null
 }
