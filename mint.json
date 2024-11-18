@@ -61,15 +61,31 @@
         "essentials/explanation"
       ]
     },
-    {
-      "group": "API Documentation",
+  {
+      "group": "API Reference",
       "pages": [
-        "api-reference/introduction",
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        {
+          "name": "Introduction",
+          "url": "api/introduction"
+        },
+        {
+          "name": "GET Endpoint",
+          "url": "api-reference/endpoint/get",
+          "description": "Retrieve detailed information about a resource."
+        },
+        {
+          "name": "POST Endpoint",
+          "url": "api-reference/endpoint/create",
+          "description": "Create a new resource with specific attributes."
+        },
+        {
+          "name": "DELETE Endpoint",
+          "url": "api-reference/endpoint/delete",
+          "description": "Delete a specific resource by ID."
+        }
       ]
-    },
+    }
+  ],  
     {
       "group": "Use Cases",
       "pages": [
