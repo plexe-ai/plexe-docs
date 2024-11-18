@@ -3,32 +3,35 @@ title: "Hotels Demand Forecast"
 ---
 
 # AI-Powered Demand Forecasting for Travel Technology
-
 ## The Challenge
-
 Travel technology platforms need accurate demand forecasting to optimize inventory, pricing, and revenue management across different markets and seasons. Traditional methods struggle with complex patterns involving seasonality, events, market variations, and changing customer preferences.
 
 ## The Solution: AI-Powered Demand Forecasting
-
 Using Plexe's AI platform, companies can implement sophisticated demand forecasting without ML expertise. Just describe what you need, upload your data (or use our default datasets), and Plexe handles the rest.
 
 ### Quick Start Example
-
 ```python
-from plexe import PlexeAI
+import plexe
 
-# Initialize and create model in one go
-ai = PlexeAI()
-model_id, version, _ = ai.create(
-    """Create a demand forecasting model that predicts hotel room demand 
+# Build the model
+model_version = plexe.build(
+    model_name="hotel-demand",
+    goal="""Create a demand forecasting model that predicts hotel room demand 
     for the next 90 days considering seasonality, events, and market segments.""",
-    data=["historical_bookings.csv", "events.pdf"]  # Optional: your own data
+    data_files=["historical_bookings.csv", "events.pdf"]
+)
+
+# Check model status
+status = plexe.get_status(
+    model_name="hotel-demand",
+    model_version=model_version
 )
 
 # Get predictions
-forecast = ai.run(
-    model_id=model_id,
-    inputs={
+forecast = plexe.infer(
+    model_name="hotel-demand",
+    model_version=model_version,
+    input_data={
         "dates": "2024-06-01/2024-06-07",
         "room_type": "deluxe",
         "location": "downtown"
@@ -36,22 +39,27 @@ forecast = ai.run(
 )
 ```
 
-### Using Default Data
-
+### Using Direct Client
 ```python
-# No data? No problem! Use our pre-trained models
-ai = PlexeAI()
-model_id, version, _ = ai.create(
-    """Create a demand forecasting model that predicts hotel room demand."""
-)
+from plexe import PlexeAI
+
+with PlexeAI() as client:
+    # Upload data and build model
+    upload_id = client.upload_files(["historical_bookings.csv", "events.pdf"])
+    
+    model_version = client.build(
+        model_name="hotel-demand",
+        goal="Create a demand forecasting model that predicts hotel room demand.",
+        upload_id=upload_id
+    )
 ```
 
 ### Batch Processing
-
 ```python
 # Get multiple forecasts at once
-forecasts = ai.batch_run(
-    model_id=model_id,
+forecasts = plexe.batch_infer(
+    model_name="hotel-demand",
+    model_version=model_version,
     inputs=[
         {
             "dates": "2024-06-01/2024-06-07",
@@ -67,9 +75,9 @@ forecasts = ai.batch_run(
 )
 ```
 
-### API Integration
-
+### Async Support
 ```python
+import asyncio
 from fastapi import FastAPI
 from plexe import PlexeAI
 
@@ -78,49 +86,35 @@ ai = PlexeAI()
 
 @app.post("/forecast")
 async def get_forecast(data: dict):
-    forecast = await ai.arun(
-        model_id="your_model_id",
-        inputs=data
+    forecast = await ai.ainfer(
+        model_name="hotel-demand",
+        model_version="your_model_version",
+        input_data=data
     )
     return forecast
 ```
 
 ## Benefits
-
 1. **One-Line Implementation**
-
    * Create sophisticated models with a single line of code
-
-   * Works with or without your own data
-
+   * Works with your own data
    * Instant deployment
 
 2. **Powerful Features**
-
    * Automatic pattern recognition
-
    * Multi-source data integration
-
    * Real-time predictions
-
    * Supports CSV, PDF, images, and more
 
 3. **Business Impact**
-
    * Optimized inventory
-
    * Better pricing decisions
-
    * Improved revenue
-
    * Data-driven planning
 
 ## Getting Started
-
-1. Get your PlexeAI API key
-
+1. Get your PlexeAI API key: Set as environment variable `PLEXE_API_KEY` or pass directly
 2. Install: `pip install plexe`
-
 3. Start forecasting!
 
 Transform your travel technology platform with AI-powered demand forecasting today!
