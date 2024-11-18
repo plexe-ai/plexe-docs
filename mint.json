@@ -84,8 +84,7 @@
           "description": "Delete a specific resource by ID."
         }
       ]
-    }
-  ],  
+    },  
     {
       "group": "Use Cases",
       "pages": [
