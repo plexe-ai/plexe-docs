@@ -64,12 +64,7 @@
     {
       "group": "API Documentation",
       "pages": [
-        "api/introduction"
-      ]
-    },
-    {
-      "group": "Endpoint Examples",
-      "pages": [
+        "api-reference/introduction",
         "api-reference/endpoint/get",
         "api-reference/endpoint/create",
         "api-reference/endpoint/delete"
