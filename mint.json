@@ -10,7 +10,7 @@
     "primary": "#69B6FF",
     "light": "#69B6FF",
     "dark": "#69B6FF",
-    "anchors": {
+    "gradient": {
       "from": "#FFD6FF",
       "to": "#69B6FF"
     }
@@ -31,7 +31,7 @@
       "url": "api-reference"
     }
   ],
-  "anchors": [
+  "socials": [
     {
       "name": "Community",
       "icon": "discord",
@@ -41,6 +41,11 @@
       "name": "Blog",
       "icon": "newspaper",
       "url": "https://www.plexe.ai/resources"
+    },
+    {
+      "website": "https://www.plexe.ai",
+      "github": "https://github.com/plexe-ai",
+      "linkedin": "https://www.linkedin.com/company/plexe-ai/"
     }
   ],
   "navigation": [
@@ -91,10 +96,5 @@
         "usecases/travel/hotels-demand-forecast"
       ]
     }
-  ],
-  "footerSocials": {
-    "website": "https://www.plexe.ai",
-    "github": "https://github.com/plexe-ai",
-    "linkedin": "https://www.linkedin.com/company/plexe-ai/"
-  }
+  ]
 }
