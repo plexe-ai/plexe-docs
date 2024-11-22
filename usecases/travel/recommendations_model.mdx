@@ -1,151 +1,171 @@
-```json
-{
-  "title": "E-commerce Product Recommendations for ML Engineers",
-  "content": [
-    {
-      "type": "heading",
-      "level": 1,
-      "text": "Deploying AI-Powered Product Recommendations for E-commerce"
-    },
-    {
-      "type": "heading",
-      "level": 2,
-      "text": "The Challenge"
-    },
-    {
-      "type": "paragraph",
-      "text": "Creating and deploying recommendation systems for e-commerce platforms involves handling large datasets, feature engineering, model selection, and optimization. Delivering accurate, scalable, and performant solutions in production is critical."
-    },
-    {
-      "type": "heading",
-      "level": 2,
-      "text": "The Solution: ML-Driven Recommendation System with Plexe"
-    },
-    {
-      "type": "paragraph",
-      "text": "Plexe simplifies deployment, enabling tuning and customization while leveraging advanced model-building capabilities. It adapts to workflows from raw data to quick prototypes."
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Quick Start Example"
-    },
-    {
-      "type": "codeblock",
-      "language": "python",
-      "code": "import plexe\n\nmodel_version = plexe.build(\n    goal=\"\"\"Develop a product recommendation system for e-commerce to suggest complementary products based on browsing, purchase history, and cart data.\"\"\",\n    model_name=\"ecommerce-recsys\",\n    data_files=[\"product_data.csv\", \"user_behavior.json\"]\n)\n\nstatus = plexe.get_status(\n    model_name=\"ecommerce-recsys\", \n    model_version=model_version\n)\n\nrecommendations = plexe.infer(\n    model_name=\"ecommerce-recsys\",\n    model_version=model_version,\n    input_data={\n        \"user_id\": \"12345\",\n        \"current_cart\": [\"product_001\", \"product_005\"],\n        \"context\": \"holiday season\"\n    }\n)"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Fine-Tuning and Customization"
-    },
-    {
-      "type": "codeblock",
-      "language": "python",
-      "code": "from plexe import PlexeAI\n\nclient = PlexeAI(api_key=\"your-api-key\")\n\nupload_id = client.upload_files([\"updated_product_data.csv\", \"new_user_activity.json\"])\n\nnew_model_version = client.build(\n    goal=\"Fine-tune the recommendation system with updated product and user activity data.\",\n    model_name=\"ecommerce-recsys\",\n    upload_id=upload_id\n)"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Batch Predictions for Scalability"
-    },
-    {
-      "type": "codeblock",
-      "language": "python",
-      "code": "recommendations = plexe.batch_infer(\n    model_name=\"ecommerce-recsys\",\n    model_version=model_version,\n    inputs=[\n        {\n            \"user_id\": \"12345\",\n            \"current_cart\": [\"product_001\", \"product_005\"],\n            \"context\": \"holiday season\"\n        },\n        {\n            \"user_id\": \"67890\",\n            \"current_cart\": [\"product_010\"],\n            \"context\": \"back-to-school\"\n        }\n    ]\n)"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Production-Ready Async Support"
-    },
-    {
-      "type": "codeblock",
-      "language": "python",
-      "code": "import asyncio\nfrom fastapi import FastAPI\nfrom plexe import PlexeAI\n\napp = FastAPI()\nclient = PlexeAI(api_key=\"your-api-key\")\n\n@app.post(\"/recommendations\")\nasync def get_recommendations(data: dict):\n    recommendations = await client.ainfer(\n        model_name=\"ecommerce-recsys\",\n        model_version=\"your_model_version\",\n        input_data=data\n    )\n    return recommendations\n\n@app.on_event(\"shutdown\")\nasync def shutdown_event():\n    await client.async_client.aclose()"
-    },
-    {
-      "type": "heading",
-      "level": 2,
-      "text": "Benefits for ML Engineers"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Seamless Model Deployment"
-    },
-    {
-      "type": "list",
-      "items": [
-        "Build models with natural language instructions or preprocessed data.",
-        "Fine-tune with custom datasets for domain-specific optimization.",
-        "Integrate in real-time with e-commerce platforms."
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Robust Features"
-    },
-    {
-      "type": "list",
-      "items": [
-        "Automated data preprocessing (categorical encoding, normalization).",
-        "Adaptive learning based on customer behavior patterns.",
-        "Support for diverse data formats (JSON, CSV, etc.).",
-        "Contextual awareness (e.g., events, seasonality)."
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Production-Grade Performance"
-    },
-    {
-      "type": "list",
-      "items": [
-        "Asynchronous APIs for high-volume inference.",
-        "Batch processing for efficiency.",
-        "Scalable architecture to handle millions of requests per day."
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 2,
-      "text": "Getting Started as an ML Engineer"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Install the Plexe Library"
-    },
-    {
-      "type": "codeblock",
-      "language": "bash",
-      "code": "pip install plexe"
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Set Up Authentication"
-    },
-    {
-      "type": "list",
-      "items": [
-        "Use an environment variable: export PLEXE_API_KEY=your-api-key",
-        "Or pass the key directly to the client."
-      ]
-    },
-    {
-      "type": "heading",
-      "level": 3,
-      "text": "Train, Deploy, and Iterate"
-    },
-    {
-      "type": "paragraph",
-      "text": "Upload your data and describe your model goals. Leverage Plexe's API to test and deploy models quickly. Whether prototyping or refining production-grade systems, Plexe provides the flexibility and power you need."
-    }
-  ]
-}
+---
+title: 'E-commerce Product Recommendations'
+---
+
+# Deploying AI-Powered Product Recommendations for E-commerce
+
+## Overview
+
+Creating and deploying recommendation systems for e-commerce platforms involves handling large datasets, feature engineering, model selection, and optimization. Delivering accurate, scalable, and performant solutions in production is critical.
+
+Plexe simplifies deployment, enabling tuning and customization while leveraging advanced model-building capabilities. It adapts to workflows from raw data to quick prototypes.
+
+## Quick Start
+
+Install the Plexe library:
+
+```bash
+pip install plexe
 ```
+
+Here's a basic example to get started:
+
+```python
+import plexe
+
+model_version = plexe.build(
+    goal="""Develop a product recommendation system for e-commerce to suggest complementary products based on browsing, purchase history, and cart data.""",
+    model_name="ecommerce-recsys",
+    data_files=["product_data.csv", "user_behavior.json"]
+)
+
+status = plexe.get_status(
+    model_name="ecommerce-recsys", 
+    model_version=model_version
+)
+
+recommendations = plexe.infer(
+    model_name="ecommerce-recsys",
+    model_version=model_version,
+    input_data={
+        "user_id": "12345",
+        "current_cart": ["product_001", "product_005"],
+        "context": "holiday season"
+    }
+)
+```
+
+## Authentication
+
+Set up your API key using one of these methods:
+
+1. Environment variable:
+```bash
+export PLEXE_API_KEY=your-api-key
+```
+
+2. Direct client initialization:
+```python
+from plexe import PlexeAI
+client = PlexeAI(api_key="your-api-key")
+```
+
+## Fine-Tuning and Customization
+
+Update your model with new data and custom parameters:
+
+```python
+from plexe import PlexeAI
+
+client = PlexeAI(api_key="your-api-key")
+
+upload_id = client.upload_files([
+    "updated_product_data.csv",
+    "new_user_activity.json"
+])
+
+new_model_version = client.build(
+    goal="Fine-tune the recommendation system with updated product and user activity data.",
+    model_name="ecommerce-recsys",
+    upload_id=upload_id
+)
+```
+
+## Batch Processing
+
+Process multiple recommendations efficiently:
+
+```python
+recommendations = plexe.batch_infer(
+    model_name="ecommerce-recsys",
+    model_version=model_version,
+    inputs=[
+        {
+            "user_id": "12345",
+            "current_cart": ["product_001", "product_005"],
+            "context": "holiday season"
+        },
+        {
+            "user_id": "67890",
+            "current_cart": ["product_010"],
+            "context": "back-to-school"
+        }
+    ]
+)
+```
+
+## Production Implementation
+
+Deploy with FastAPI for production-ready async support:
+
+```python
+import asyncio
+from fastapi import FastAPI
+from plexe import PlexeAI
+
+app = FastAPI()
+client = PlexeAI(api_key="your-api-key")
+
+@app.post("/recommendations")
+async def get_recommendations(data: dict):
+    recommendations = await client.ainfer(
+        model_name="ecommerce-recsys",
+        model_version="your_model_version",
+        input_data=data
+    )
+    return recommendations
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await client.async_client.aclose()
+```
+
+## Key Features
+
+### Data Processing
+- Automated preprocessing (categorical encoding, normalization)
+- Support for diverse data formats (JSON, CSV)
+- Adaptive learning based on customer behavior
+
+### Model Capabilities
+- Natural language instruction-based model building
+- Fine-tuning with custom datasets
+- Contextual awareness (events, seasonality)
+- Domain-specific optimization
+
+### Production Features
+- Asynchronous APIs for high-volume inference
+- Batch processing capabilities
+- Scalable to millions of requests per day
+- Real-time e-commerce platform integration
+
+## Getting Started Guide
+
+1. **Install Plexe**
+   - Use pip to install the library
+   - Set up authentication
+
+2. **Prepare Your Data**
+   - Format your product data
+   - Collect user behavior information
+   - Organize contextual data
+
+3. **Train and Deploy**
+   - Upload your datasets
+   - Define your model goals
+   - Test and iterate on results
+
+4. **Monitor and Optimize**
+   - Track model performance
+   - Update with new data
+   - Fine-tune based on results
