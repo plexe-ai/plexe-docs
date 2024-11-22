@@ -63,9 +63,8 @@
         {
           "group": "Endpoints",
           "pages": [
-            "api-reference/endpoint/get",
-            "api-reference/endpoint/post",
-            "api-reference/endpoint/delete"
+            "api-reference/endpoint/Data_Management.mdx",
+            "api-reference/endpoint/Model_Management.mdx"
           ]
         }
       ]
