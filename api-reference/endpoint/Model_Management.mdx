@@ -1,0 +1,61 @@
+### Model Management
+
+#### Create a Model
+```http
+POST /v0/models/{model_name}/create
+```
+
+Start training a new model using your uploaded data.
+
+**Path Parameters:**
+- `model_name` (required): Name for your model
+
+**Request Body:**
+```json
+{
+  "upload_id": "550e8400-e29b-41d4-a716-446655440000",
+  "goal": "Predict customer churn based on usage patterns",
+  "eval": "accuracy"  // Optional
+}
+```
+
+**Response:**
+```json
+{
+  "model_version": "model_20231118_001"
+}
+```
+
+#### Check Model Status
+```http
+GET /v0/models/{model_name}/{model_version}/status
+```
+
+Check the training status of your model.
+
+**Path Parameters:**
+- `model_name` (required): Name of the model
+- `model_version` (required): Version ID returned from model creation
+
+**Response:**
+```json
+{
+  "status": "completed",  // possible values: "pending", "running", "completed", "failed"
+  "result": {
+    "code": "def predict(data): ...",  // Only present when status is "completed"
+    "valid_metric": 0.87  // Only present when status is "completed"
+  },
+  "error": null  // Only present when status is "failed"
+}
+```
+
+#### Perform Inference
+```http
+POST /v0/models/{model_name}/{model_version}/infer
+```
+
+Use a trained model to make predictions.
+
+**Path Parameters:**
+- `model_name` (required): Name of the model
+- `model_version` (required): Version of the model
