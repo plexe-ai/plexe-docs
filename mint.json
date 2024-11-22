@@ -71,7 +71,7 @@
       "group": "Use Cases",
       "pages": [
         "usecases/travel/hotels-demand-forecast",
-        "usecases/trave/recommendations_model"
+        "usecases/travel/recommendations_model"
         ]
     }
   ],
