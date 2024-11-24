@@ -48,13 +48,6 @@
       ]
     },
     {
-      "group": "Essentials",
-      "pages": [
-        "essentials/how-to_guides",
-        "essentials/tutorials"
-      ]
-    },
-    {
       "group": "API Reference",
       "pages": [
         "api-reference/introduction",
