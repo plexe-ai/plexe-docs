@@ -2,47 +2,91 @@
 title: "Welcome to Plexe 🚀"
 ---
 
-**🔍 What is Plexe?**
+Plexe.ai enables anyone to create and deploy custom machine learning models in minutes—without large datasets or ML expertise. Whether you're a developer, data scientist, or business professional, Plexe simplifies the end-to-end model creation process using natural language descriptions and synthetic data generation.
 
-Create models by simply describing your problem in natural language, our platform leverages pre-trained models to generate synthetic domain-specific datasets and train specialised, lightweight models for your specific use case. These models are:
+Now, with our open-source library, [smolmodels](https://github.com/plexe-ai/smolmodels), you can define, train, and deploy models entirely in code—without depending on a managed platform.
 
-* Easy to Build: No coding or ML expertise required.
+### **🔍 What is Plexe?**
 
-* Efficient to Deploy: Ready for production use in minutes.
+Plexe is an ML model generation platform that enables you to:&#x20;
 
-* Continuously Improving: Feedback-driven optimisation ensures your models stay relevant over time.
+✅ Define models using natural language
+✅ Generate high-quality synthetic training data
+✅ Train efficient, specialized models on the fly
+✅ Deploy models instantly for real-world use
 
-**🤔 Why Choose Plexe?**
+With smolmodels, you get the same experience in an open-source library—giving you full control over model creation, data generation, and deployment.
 
-1. Simple Yet Powerful: Skip the complexity of traditional ML workflows. Just describe your task, and let Plexe do the heavy lifting.
+### **🏎️ Introducing smolmodels**
 
-2. Flexible Data Options: Whether you have a small dataset, partial data, or none at all, Plexe fills the gaps with high-quality synthetic data tailored to your needs.
+[smolmodels](https://github.com/plexe-ai/smolmodels) is the **open-source core** of Plexe, designed to let you do all the good stuff mentioned above.
 
-3. Cost-Effective: Our specialised models are lightweight and optimised for performance, reducing costs associated with inference and scaling.
+### 👉 **Get started:**
 
-4. Real-World Results: Deliver production-ready models faster and with better accuracy than traditional AutoML solutions.
+Install with:
 
-**🏎️ Get Started**
+```
+pip install smolmodels
+```
 
-* **Quickstart Guide**: Learn how to create your first model in just a few steps.
+Try a basic example:
 
-* **API Reference**: Explore our simple, intuitive client library for seamless integration.
+```
+import smolmodels as sm
 
-* **FAQs**: Got questions? We’ve got answers!
+# Define the model
+model = sm.Model(
+    intent="Classify email as spam or not",
+    input_schema={"subject": str, "body": str},
+    output_schema={"label": str}
+)
 
-**👯‍♂️ Join Our Community**
-Connect with like-minded developers and AI enthusiasts on our [Discord channel](https://discord.gg/your-discord-invite-link) for real-time support, feature requests, and updates.
+# Train the model
+model.build(generate_samples=1000)
 
-Ready to transform your ideas into intelligent solutions? [Start building with Plexe.ai now!](https://plexe.ai)
+# Make predictions
+prediction = model.predict({"subject": "Win a free iPhone!", "body": "Click here to claim your prize"})
+print(prediction)
+```
 
-Happy coding!
+### **Key Features**
 
----
+**🌍 No Large Datasets Needed**
+
+Plexe generates synthetic data to train **highly accurate models** without requiring **huge labeled datasets**.
+
+**💡 Works with Any Problem**
+
+Use Plexe to build models for:
+
+* Text classification
+
+* Sentiment analysis
+
+* Prediction tasks
+
+* Decision-making systems
+
+* And any custom ML solutions
+
+**⚡ Fast, Low-Cost, and Efficient**
+
+Unlike traditional ML pipelines, **Plexe automates the entire model-building process**, reducing training time and cost.
+
+### **🛠️ Open-Source & Extensible**
+
+With smolmodels, you can modify, extend, and integrate ML capabilities into your own projects.
+
+### **Join the Community**
+
+We're building the easiest way to create custom ML models—and we'd love your help!
+
+👨‍💻 **Contribute to smolmodels**: [GitHub](https://github.com/plexe-ai/smolmodels)
+📣 **Ask questions & share ideas**: [Discussions](https://github.com/plexe-ai/smolmodels/discussions)
+📧 **Contact us**: [info@plexe.ai](mailto:info@plexe.ai)&#x20;
+
+***
 
 <div align="center">
-
-Made with 🫶 by [Plexe AI](https://plexe.ai)
-
+  Made with 🫶 by [Plexe AI](https://plexe.ai)
 </div>
-
-
