@@ -1,36 +1,242 @@
-Follow these instructions to manage your data. 
+# Data Management API
 
-#### Upload Training Data
-```http
-POST /v0/uploads
+This document outlines the RESTful API endpoints for managing data uploads and querying datasets in the Plexe platform.
+
+## Base URL
+
+All API endpoints are relative to: `https://api.plexe.ai`
+
+## Authentication
+
+All API requests require authentication using an API key:
+
+```
+x-api-key: YOUR_API_KEY
 ```
 
-Upload your training data files. Supports multiple files and ZIP archives.
+You can obtain an API key from the Settings page in the Plexe console.
 
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: Form data containing one or more files
+## Upload Management
 
-```bash
-curl -X POST https://api.plexe.ai/v0/uploads \
-  -H "x-api-key: your_api_key_here" \
-  -F "files=@your_data.csv" \
-  -F "files=@additional_data.zip"
+### Get All Uploads
+
+```http
+GET /uploads
+```
+
+Retrieve a list of all data uploads associated with your account.
+
+**Response:**
+```json
+[
+  {
+    "upload_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-03-27T12:00:00Z",
+    "status": "complete",
+    "files": [
+      {
+        "filename": "sales_data.csv",
+        "size": 1024000
+      },
+      {
+        "filename": "customer_data.csv",
+        "size": 512000
+      }
+    ]
+  },
+  {
+    "upload_id": "550e8400-e29b-41d4-a716-446655440001",
+    "created_at": "2024-03-26T10:30:00Z",
+    "status": "complete",
+    "files": [
+      {
+        "filename": "financial_report.csv",
+        "size": 750000
+      }
+    ]
+  }
+]
+```
+
+### Get Upload Details
+
+```http
+GET /uploads/{upload_id}
+```
+
+Retrieve details for a specific upload.
+
+**Path Parameters:**
+- `upload_id` (required): ID of the upload
+
+**Response:**
+```json
+{
+  "upload_id": "550e8400-e29b-41d4-a716-446655440000",
+  "created_at": "2024-03-27T12:00:00Z",
+  "status": "complete",
+  "files": [
+    {
+      "filename": "sales_data.csv",
+      "size": 1024000,
+      "s3_key": "uploads/user123/sales_data.csv"
+    },
+    {
+      "filename": "customer_data.csv",
+      "size": 512000,
+      "s3_key": "uploads/user123/customer_data.csv"
+    }
+  ]
+}
+```
+
+### Create Upload
+
+```http
+POST /uploads
+```
+
+Initiate a new upload by requesting a pre-signed S3 URL.
+
+**Request Body (FormData):**
+```
+filename: "sales_data.csv"
+content_type: "application/octet-stream"
 ```
 
 **Response:**
 ```json
 {
-  "upload_id": "550e8400-e29b-41d4-a716-446655440000"
+  "upload_id": "550e8400-e29b-41d4-a716-446655440002",
+  "presigned_url": "https://s3.amazonaws.com/plexe-uploads/...",
+  "key": "uploads/user123/sales_data.csv"
 }
 ```
 
-#### Delete Upload
+### Update Upload Status
+
 ```http
-DELETE /v0/uploads/{upload_id}
+POST /uploads/status
 ```
 
-Remove previously uploaded training data. Call this after model creation or if you want to cancel the upload.
+Confirm completion of a file upload to S3 and update its status.
+
+**Request Body (FormData):**
+```
+upload_id: "550e8400-e29b-41d4-a716-446655440002"
+filename: "sales_data.csv"
+s3_key: "uploads/user123/sales_data.csv"
+```
+
+**Response:**
+```json
+{
+  "upload_id": "550e8400-e29b-41d4-a716-446655440002",
+  "status": "complete",
+  "message": "File upload confirmed"
+}
+```
+
+### Delete Upload
+
+```http
+DELETE /uploads/{upload_id}
+```
+
+Delete an upload and its associated files.
 
 **Path Parameters:**
-- `upload_id` (required): The ID received from the upload endpoint
+- `upload_id` (required): ID of the upload to delete
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Upload deleted successfully"
+}
+```
+
+## Data Querying
+
+### Create Data Session
+
+```http
+POST /data/use-upload
+```
+
+Create a session for querying a dataset.
+
+**Request Body (FormData):**
+```
+upload_id: "550e8400-e29b-41d4-a716-446655440000"
+```
+
+**Response:**
+```json
+{
+  "session_id": "session_20240327_001",
+  "expires_at": "2024-03-28T12:00:00Z",
+  "status": "ready"
+}
+```
+
+### Query Dataset
+
+```http
+POST /data/query
+```
+
+Query a dataset using natural language.
+
+**Request Body (FormData):**
+```
+session_id: "session_20240327_001"
+query: "Show me monthly sales trends for 2023"
+```
+
+**Response (Text Result):**
+```json
+{
+  "type": "text",
+  "data": "Sales showed a steady increase throughout 2023, with peak performance in Q4. December had the highest monthly revenue at $1.2M."
+}
+```
+
+**Response (Table Result):**
+```json
+{
+  "type": "table",
+  "data": {
+    "columns": ["Month", "Revenue", "Growth"],
+    "rows": [
+      ["January", 850000, null],
+      ["February", 920000, 8.2],
+      ["March", 960000, 4.3]
+    ]
+  }
+}
+```
+
+**Response (Visualization Result):**
+```json
+{
+  "type": "visualization",
+  "visualization_type": "bar",
+  "data": {
+    "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    "datasets": [{
+      "label": "Monthly Sales",
+      "data": [850000, 920000, 960000, 980000, 1050000, 1100000]
+    }]
+  }
+}
+```
+
+**Response (S3 Visualization):**
+```json
+{
+  "type": "visualization",
+  "visualization_type": "s3_url",
+  "visualization": "https://s3.amazonaws.com/plexe-visualizations/chart-123.png"
+}
+```
