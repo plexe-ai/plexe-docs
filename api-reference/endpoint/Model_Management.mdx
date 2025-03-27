@@ -1,6 +1,45 @@
-#### Create a Model
+# Model Management API
+
+This document outlines the RESTful API endpoints for managing machine learning models in the Plexe platform.
+
+## Endpoints
+
+### Get All Models
+
 ```http
-POST /v0/models/{model_name}/create
+GET /models
+```
+
+Retrieve a list of all models associated with your account.
+
+**Response:**
+```json
+[
+  {
+    "model_id": "model_20240327_001",
+    "model_name": "Customer Churn Predictor",
+    "status": "completed",
+    "created_at": "2024-03-27T12:00:00Z",
+    "intent": "Predict customer churn based on usage patterns",
+    "provider": "auto",
+    "metric_name": "accuracy",
+    "metric_value": 0.87
+  },
+  {
+    "model_id": "model_20240327_002",
+    "model_name": "Product Recommendation",
+    "status": "processing",
+    "created_at": "2024-03-27T14:30:00Z",
+    "intent": "Recommend products based on purchase history",
+    "provider": "auto"
+  }
+]
+```
+
+### Create a Model
+
+```http
+POST /models/{model_name}
 ```
 
 Start training a new model using your uploaded data.
@@ -12,48 +51,138 @@ Start training a new model using your uploaded data.
 ```json
 {
   "upload_id": "550e8400-e29b-41d4-a716-446655440000",
-  "goal": "Predict customer churn based on usage patterns",
-  "eval": "accuracy"  // Optional
+  "intent": "Predict customer churn based on usage patterns",
+  "metric": "accuracy"  // Optional
 }
 ```
 
 **Response:**
 ```json
 {
-  "model_version": "model_20231118_001"
+  "model_id": "model_20240327_001",
+  "model_name": "Customer Churn Predictor",
+  "status": "pending",
+  "created_at": "2024-03-27T12:00:00Z",
+  "intent": "Predict customer churn based on usage patterns",
+  "provider": "auto",
+  "upload_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-#### Check Model Status
+### Get Model Details
+
 ```http
-GET /v0/models/{model_name}/{model_version}/status
+GET /models/{model_name}/{model_version}
+```
+
+Retrieve details for a specific model.
+
+**Path Parameters:**
+- `model_name` (required): Name of the model
+- `model_version` (required): Version ID of the model
+
+**Response:**
+```json
+{
+  "model_id": "model_20240327_001",
+  "model_name": "Customer Churn Predictor",
+  "status": "completed",
+  "created_at": "2024-03-27T12:00:00Z",
+  "intent": "Predict customer churn based on usage patterns",
+  "provider": "auto",
+  "metric_name": "accuracy",
+  "metric_value": 0.87,
+  "input_schema": {
+    "properties": {
+      "usage_days": {"type": "number"},
+      "last_activity": {"type": "string", "format": "date"},
+      "plan_type": {"type": "string"}
+    }
+  },
+  "output_schema": {
+    "properties": {
+      "churn_probability": {"type": "number"},
+      "risk_level": {"type": "string"}
+    }
+  }
+}
+```
+
+### Check Model Status
+
+```http
+GET /models/{model_name}/{model_version}/status
 ```
 
 Check the training status of your model.
 
 **Path Parameters:**
 - `model_name` (required): Name of the model
-- `model_version` (required): Version ID returned from model creation
+- `model_version` (required): Version ID of the model
 
 **Response:**
 ```json
 {
-  "status": "completed",  // possible values: "pending", "running", "completed", "failed"
+  "status": "completed",  // possible values: "pending", "processing", "completed", "failed"
   "result": {
-    "code": "def predict(data): ...",  // Only present when status is "completed"
-    "valid_metric": 0.87  // Only present when status is "completed"
+    "metric_name": "accuracy",
+    "metric_value": 0.87  // Only present when status is "completed"
   },
   "error": null  // Only present when status is "failed"
 }
 ```
 
-#### Perform Inference
+### Get Model Description
+
 ```http
-POST /v0/models/{model_name}/{model_version}/infer
+GET /models/{model_name}/{model_version}/describe
+```
+
+Get a description or documentation for a model.
+
+**Path Parameters:**
+- `model_name` (required): Name of the model
+- `model_version` (required): Version ID of the model
+
+**Response:**
+```json
+{
+  "description": "This model predicts customer churn probability based on usage patterns and account history.",
+  "features": ["usage_days", "last_activity", "plan_type"],
+  "target": "churn_probability",
+  "performance": {
+    "accuracy": 0.87,
+    "precision": 0.82,
+    "recall": 0.79
+  }
+}
+```
+
+### Perform Inference
+
+```http
+POST /models/{model_name}/{model_version}/infer
 ```
 
 Use a trained model to make predictions.
 
 **Path Parameters:**
 - `model_name` (required): Name of the model
-- `model_version` (required): Version of the model
+- `model_version` (required): Version ID of the model
+
+**Request Body:**
+```json
+{
+  "usage_days": 45,
+  "last_activity": "2024-03-20",
+  "plan_type": "premium"
+}
+```
+
+**Response:**
+```json
+{
+  "churn_probability": 0.23,
+  "risk_level": "low"
+}
+```
