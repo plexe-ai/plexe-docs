@@ -2,10 +2,10 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Plexe Documentation",
   "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
+    "dark": "/plexe.svg",
+    "light": "/plexe.svg"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/plexe_favicon.svg",
   "colors": {
     "primary": "#69B6FF",
     "light": "#69B6FF",
@@ -49,7 +49,7 @@
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://plexe.ai/resources"
+      "url": "https://plexe.ai/blog"
     }
   ],
   "navigation": [
