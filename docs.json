@@ -23,7 +23,7 @@
             "group": "Plexe Python Library",
             "pages": [
               {
-                "group": "Get Started",
+                "group": "Tutorials",
                 "pages": [
                   "library/tutorials/quickstart",
                   "library/tutorials/using_callbacks",
@@ -41,7 +41,7 @@
                 ]
               },
               {
-                "group": "Explanation",
+                "group": "Concepts",
                 "pages": [
                   "library/explanation/concepts",
                   "library/explanation/providers",
@@ -50,7 +50,7 @@
                 ]
               },
               {
-                "group": "Reference",
+                "group": "Library Reference",
                 "pages": [
                   "library/reference/api",
                   "library/reference/callbacks",
@@ -64,7 +64,7 @@
             "group": "Plexe Platform",
             "pages": [
               {
-                "group": "Get Started",
+                "group": "Tutorials",
                 "pages": [
                   "platform/tutorials/quickstart_api"
                 ]
@@ -82,7 +82,7 @@
                 ]
               },
               {
-                "group": "Explanation",
+                "group": "Concepts",
                 "pages": [
                   "platform/explanation/concepts",
                   "platform/explanation/authentication",
@@ -112,14 +112,17 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Plexe Platform",
+            "group": "Overview",
             "pages": [
-              {
-                "group": "API Reference",
-                "pages": [
-                  "platform/reference/introduction"
-                ]
-              }
+              "platform/reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "platform/reference/endpoints/auth",
+              "platform/reference/endpoints/data",
+              "platform/reference/endpoints/models"
             ]
           }
         ]
@@ -128,14 +131,17 @@
         "tab": "Library Reference",
         "groups": [
           {
-            "group": "Plexe Python Library",
+            "group": "Core API",
             "pages": [
-              {
-                "group": "Reference",
-                "pages": [
-                  "library/reference/api"
-                ]
-              }
+              "library/reference/api"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "library/reference/callbacks",
+              "library/reference/datasets",
+              "library/reference/exceptions"
             ]
           }
         ]
