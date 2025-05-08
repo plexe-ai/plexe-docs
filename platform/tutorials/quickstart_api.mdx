@@ -1,0 +1,220 @@
+---
+title: 'Platform API Quickstart'
+description: 'Learn how to build and deploy ML models using the Plexe Platform API.'
+---
+
+This guide walks you through the core functionality of the Plexe Platform API, allowing you to build machine learning models and make predictions without managing any infrastructure.
+
+## Prerequisites
+
+* An account on the Plexe Platform (sign up at [console.plexe.ai](https://console.plexe.ai) if you don't have one)
+* An API key with the appropriate permissions (can be created in the Console)
+* Basic knowledge of making HTTP requests (we'll use `curl` in examples, but you can use any HTTP client)
+
+## Authentication
+
+All API requests require a valid API key passed in the `x-api-key` header:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/user/profile \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+<Note>
+Protect your API key! Anyone with your key can make API calls on your behalf and incur usage charges.
+</Note>
+
+## Step 1: Upload Data
+
+First, let's upload a dataset to use for model training. The API accepts CSV, JSON, or Parquet files.
+
+```bash
+curl -X POST https://api.plexe.ai/v1/data/upload \
+  -H "x-api-key: YOUR_API_KEY_HERE" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@housing_data.csv" \
+  -F "name=Housing Prices Dataset" \
+  -F "description=Housing data with price predictions"
+```
+
+A successful response will include a `dataset_id` that you'll need for the next step:
+
+```json
+{
+  "dataset_id": "ds_abc123def456",
+  "name": "Housing Prices Dataset",
+  "status": "READY",
+  "rows": 1200,
+  "columns": 4,
+  "created_at": "2023-06-15T08:12:34Z"
+}
+```
+
+## Step 2: Create a Model
+
+Now, let's build a model using the uploaded dataset. You'll specify the model's intent in natural language:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/build \
+  -H "x-api-key: YOUR_API_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "intent": "Predict house prices based on square footage, bedrooms, and bathrooms",
+    "dataset_id": "ds_abc123def456",
+    "input_schema": {
+      "square_footage": "float",
+      "bedrooms": "integer",
+      "bathrooms": "float"
+    },
+    "output_schema": {
+      "price": "float"
+    }
+  }'
+```
+
+The response will include a `job_id` that you can use to track the model building progress:
+
+```json
+{
+  "job_id": "job_xyz789uvw123",
+  "status": "PENDING",
+  "model_id": "mdl_456ghi789jkl",
+  "created_at": "2023-06-15T08:15:45Z"
+}
+```
+
+## Step 3: Monitor Model Building Progress
+
+Building a model can take a few minutes. You can check the status:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/jobs/job_xyz789uvw123 \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+Response while building:
+
+```json
+{
+  "job_id": "job_xyz789uvw123",
+  "status": "RUNNING",
+  "model_id": "mdl_456ghi789jkl",
+  "progress": 65,
+  "created_at": "2023-06-15T08:15:45Z",
+  "updated_at": "2023-06-15T08:17:12Z"
+}
+```
+
+Once complete:
+
+```json
+{
+  "job_id": "job_xyz789uvw123",
+  "status": "COMPLETED",
+  "model_id": "mdl_456ghi789jkl",
+  "progress": 100,
+  "created_at": "2023-06-15T08:15:45Z",
+  "completed_at": "2023-06-15T08:19:23Z",
+  "metrics": {
+    "rmse": 15234.56,
+    "r2": 0.87,
+    "mae": 12345.67
+  }
+}
+```
+
+## Step 4: Deploy the Model
+
+Once the model is built, you can deploy it to make it available for predictions:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/mdl_456ghi789jkl/deploy \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+Response:
+
+```json
+{
+  "deployment_id": "dep_789mno012pqr",
+  "model_id": "mdl_456ghi789jkl",
+  "status": "DEPLOYING",
+  "endpoint": "https://api.plexe.ai/v1/predict/dep_789mno012pqr",
+  "created_at": "2023-06-15T08:20:45Z"
+}
+```
+
+## Step 5: Make Predictions
+
+After the model is deployed (check status with `/models/mdl_456ghi789jkl` until `deployment_status` is `READY`), you can make predictions:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/dep_789mno012pqr \
+  -H "x-api-key: YOUR_API_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "square_footage": 1850.0,
+    "bedrooms": 3,
+    "bathrooms": 2.5
+  }'
+```
+
+Response:
+
+```json
+{
+  "request_id": "req_123stu456vwx",
+  "result": {
+    "price": 385000.0
+  },
+  "model_id": "mdl_456ghi789jkl",
+  "created_at": "2023-06-15T08:25:12Z"
+}
+```
+
+## Getting Model Information
+
+You can get details about a model:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/mdl_456ghi789jkl \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+Response:
+
+```json
+{
+  "model_id": "mdl_456ghi789jkl",
+  "name": "Housing Price Predictor",
+  "intent": "Predict house prices based on square footage, bedrooms, and bathrooms",
+  "status": "READY",
+  "deployment_status": "READY",
+  "endpoint": "https://api.plexe.ai/v1/predict/dep_789mno012pqr",
+  "metrics": {
+    "rmse": 15234.56,
+    "r2": 0.87,
+    "mae": 12345.67
+  },
+  "input_schema": {
+    "square_footage": "float",
+    "bedrooms": "integer",
+    "bathrooms": "float"
+  },
+  "output_schema": {
+    "price": "float"
+  },
+  "created_at": "2023-06-15T08:15:45Z",
+  "last_updated": "2023-06-15T08:20:45Z"
+}
+```
+
+## Conclusion
+
+You've now learned the basics of using the Plexe Platform API to:
+1. Upload training data
+2. Build a model with a natural language intent
+3. Deploy the model
+4. Make predictions
+
+The platform handles all the infrastructure, scaling, and ML engineering complexities for you. For more details about available endpoints and options, see the [API Reference](/platform/reference/introduction).

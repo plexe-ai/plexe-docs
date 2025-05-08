@@ -1,0 +1,173 @@
+---
+title: 'Library Quickstart'
+description: 'Build your first ML model using the Plexe Python library in minutes.'
+---
+
+This tutorial guides you through the essential steps to install the `plexe` library, define a model using natural language, build it using your data, and make predictions.
+
+## 1. Installation
+
+First, install the `plexe` library using pip. You can choose between a standard installation, a lightweight version (without deep learning dependencies), or include all optional dependencies.
+
+```bash {{ label: "Standard Installation" }}
+pip install plexe
+```
+
+```bash {{ label: "Lightweight Installation" }}
+pip install plexe[lightweight]
+```
+
+```bash {{ label: "Include Deep Learning" }}
+pip install plexe[all]
+```
+
+## 2\. Set Up Environment Variables
+
+Plexe uses Large Language Models (LLMs) under the hood via the [LiteLLM](https://docs.litellm.ai/docs/providers) library. You need to configure API keys for the LLM provider you want to use. Set them as environment variables:
+
+```bash
+# Example for OpenAI
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+
+# Example for Anthropic
+# export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
+```
+
+Plexe defaults to `openai/gpt-4o-mini` if no provider is specified.
+
+## 3\. Prepare Your Data
+
+For this example, let's assume you have a CSV file named `housing_data.csv` with features like `square_footage`, `bedrooms`, `bathrooms`, and a target column `price`.
+
+```python
+import pandas as pd
+
+# Load your data (replace with your actual data loading)
+try:
+    df = pd.read_csv("housing_data.csv")
+    print("Dataset loaded successfully:")
+    print(df.head())
+except FileNotFoundError:
+    print("Error: housing_data.csv not found. Please create a sample CSV.")
+    # Create a dummy DataFrame for demonstration if file not found
+    df = pd.DataFrame({
+        'square_footage': [1500, 2100, 1800, 2500, 1200],
+        'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5],
+        'price': [300000, 450000, 380000, 550000, 250000]
+    })
+    print("Using dummy data:")
+    print(df.head())
+
+# Ensure your DataFrame is ready
+datasets = [df]
+```
+
+## 4\. Define and Build the Model
+
+Import the `plexe` library and create a `Model` instance. Define your goal using the `intent` parameter. You can also specify input and output schemas, though Plexe can often infer them.
+
+```python
+import plexe
+import logging
+
+# Optional: Configure logging for more details
+# plexe.configure_logging(level=logging.DEBUG)
+
+# Define the model's intent
+# Input and output schemas can often be inferred if data is provided
+model = plexe.Model(
+    intent="Predict house prices based on square footage, bedrooms, and bathrooms."
+    # Optionally define schemas:
+    # input_schema={"square_footage": float, "bedrooms": int, "bathrooms": float},
+    # output_schema={"price": float}
+)
+
+# Build the model
+# This process involves LLM calls, code generation, and execution.
+# It might take a few minutes depending on complexity and provider.
+print("Starting model build...")
+model.build(
+    datasets=datasets,
+    provider="openai/gpt-4o-mini", # Specify your preferred LLM provider
+    max_iterations=5,              # Try up to 5 different model approaches
+    chain_of_thought=True         # Show detailed reasoning steps (optional)
+)
+
+print(f"Model build finished. Model state: {model.get_state()}")
+```
+
+<Note>
+The `build` process involves multiple steps orchestrated by AI agents: planning, code generation, execution, analysis, and potentially fixing code. Enabling `chain_of_thought=True` provides verbose output showing these steps.
+</Note>
+
+## 5\. Make Predictions
+
+Once the model state is `READY`, you can use the `predict` method.
+
+```python
+if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+    # Prepare input data as a dictionary
+    input_data = {
+        "square_footage": 1900.0,
+        "bedrooms": 3,
+        "bathrooms": 2.0
+    }
+
+    print(f"\nMaking prediction for input: {input_data}")
+    prediction = model.predict(input_data)
+    print(f"Predicted price: {prediction}")
+
+    # Example with validation
+    # prediction_validated = model.predict(input_data, validate_input=True, validate_output=True)
+    # print(f"Validated prediction: {prediction_validated}")
+
+else:
+    print("\nModel is not ready for prediction. Check logs for errors.")
+
+```
+
+## 6\. Inspect the Model
+
+You can get metadata and a description of the built model.
+
+```python
+if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+    print("\nModel Metadata:")
+    print(model.get_metadata())
+
+    print("\nModel Metrics:")
+    print(model.get_metrics())
+
+    print("\nModel Description:")
+    # The describe() method returns a detailed object, print its text representation
+    print(model.describe().as_text())
+    # Or use as_markdown() or to_dict() / to_json()
+    # print(model.describe().as_markdown())
+else:
+    print("\nModel information not available as it's not in READY state.")
+```
+
+## 7\. Save and Load (Optional)
+
+Persist your trained model for later use.
+
+```python
+import os
+
+if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+    model_filename = f"{model.identifier}.tar.gz"
+    save_path = plexe.save_model(model, model_filename)
+    print(f"\nModel saved to: {save_path}")
+
+    # Load the model later
+    if os.path.exists(save_path):
+      loaded_model = plexe.load_model(save_path)
+      print(f"Model loaded successfully. Intent: {loaded_model.intent}")
+      # You can now use loaded_model.predict()
+    else:
+        print("Saved model file not found for loading example.")
+
+```
+
+That's it\! You've built, trained, and used a machine learning model using natural language with the `plexe` library. Explore the other tutorials and guides to learn about more advanced features.

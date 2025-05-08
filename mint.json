@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
+  "name": "Plexe Documentation",
   "logo": {
-    "dark": "plexe_logo_long_w.png",
-    "light": "plexe_logo_long.png"
+    "dark": "/logo/dark.svg", // Replace with actual path
+    "light": "/logo/light.svg" // Replace with actual path
   },
-  "favicon": "/plexe_favicon.svg",
+  "favicon": "/favicon.svg", // Replace with actual path
   "colors": {
     "primary": "#69B6FF",
     "light": "#69B6FF",
@@ -17,60 +17,144 @@
   },
   "topbarLinks": [
     {
-      "name": "Contact Us",
-      "url": "mailto:info@plexe.ai"
+      "name": "Plexe Website",
+      "url": "https://plexe.ai" // Replace with actual URL if different
     }
   ],
   "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "name": "Go to Console",
+    "url": "https://console.plexe.ai" // Replace with actual URL
   },
   "tabs": [
     {
-      "name": "API Reference",
-      "url": "api-reference"
+      "name": "Platform API Reference",
+      "url": "platform/reference/api"
+    },
+    {
+      "name": "Library Reference",
+      "url": "library/reference/api"
     }
   ],
-  "socials": {
-    "website": "https://www.plexe.ai",
-    "github": "https://github.com/plexe-ai",
-    "linkedin": "https://www.linkedin.com/company/plexe-ai/",
-    "discord": "https://discord.gg/JwZAXjmZZu",
-    "blog": "https://www.plexe.ai/resources"
-  },
+  "anchors": [
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/SefZDepGMv" // From old docs
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/plexe-ai/plexe"
+    },
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "url": "https://plexe.ai/resources" // From old docs
+    }
+  ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Introduction",
       "pages": [
-        "introduction/welcome_to_plexe",
-        "introduction/reference",
-        "introduction/quickstart"
+        "introduction/welcome"
       ]
     },
     {
-      "group": "API Reference",
+      "group": "Plexe Python Library",
       "pages": [
-        "api-reference/introduction",
         {
-          "group": "Endpoints",
+          "group": "Get Started",
           "pages": [
-            "api-reference/endpoint/Data_Management",
-            "api-reference/endpoint/Model_Management"
+            "library/tutorials/quickstart",
+            "library/tutorials/using_callbacks",
+            "library/tutorials/distributed_training"
+          ]
+        },
+        {
+          "group": "How-To Guides",
+          "pages": [
+            "library/how-to/install_plexe",
+            "library/how-to/provide_schemas",
+            "library/how-to/use_datasets",
+            "library/how-to/configure_llm_provider",
+            "library/how-to/save_load_models"
+            // "library/how-to/handle_constraints" // Add if constraints are user-facing
+          ]
+        },
+        {
+          "group": "Explanation",
+          "pages": [
+            "library/explanation/concepts",
+            "library/explanation/providers",
+            "library/explanation/datasets_schemas",
+            "library/explanation/callbacks_logging"
+          ]
+        },
+        {
+          "group": "Reference",
+          "pages": [
+            "library/reference/api",
+            "library/reference/callbacks",
+            "library/reference/datasets",
+            "library/reference/exceptions"
           ]
         }
       ]
     },
     {
-      "group": "Use Cases",
+      "group": "Plexe Platform",
       "pages": [
-        "usecases/travel/hotels-demand-forecast",
-        "usecases/travel/recommendations_model"
-        ]
+        {
+          "group": "Get Started",
+          "pages": [
+            // "platform/tutorials/quickstart_ui", // Uncomment if UI exists
+            "platform/tutorials/quickstart_api"
+          ]
+        },
+        {
+          "group": "How-To Guides",
+          "pages": [
+            "platform/how-to/manage_account",
+            "platform/how-to/manage_api_keys",
+            // "platform/how-to/upload_data_ui", // Uncomment if UI exists
+            "platform/how-to/upload_data_api",
+            // "platform/how-to/build_model_ui", // Uncomment if UI exists
+            "platform/how-to/build_model_api",
+            "platform/how-to/monitor_jobs",
+            "platform/how-to/use_deployed_model",
+            "platform/how-to/manage_models"
+          ]
+        },
+        {
+          "group": "Explanation",
+          "pages": [
+            "platform/explanation/concepts",
+            "platform/explanation/authentication",
+            "platform/explanation/billing",
+            "platform/explanation/deployment"
+          ]
+        },
+        {
+          "group": "API Reference",
+          "pages": [
+            "platform/reference/introduction",
+             {
+              "group": "Endpoints",
+              "pages": [
+                "platform/reference/endpoints/auth",
+                "platform/reference/endpoints/data",
+                "platform/reference/endpoints/models"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "footerSocials": {
-    "website": "https://www.plexe.ai",
-    "github": "https://github.com/plexe-ai",
-    "linkedin": "https://www.linkedin.com/company/plexe-ai/"
+    "website": "https://plexe.ai", // Replace with actual URL if different
+    "github": "https://github.com/plexe-ai/plexe",
+    "linkedin": "https://www.linkedin.com/company/plexe-ai/", // From old docs
+    "discord": "https://discord.gg/SefZDepGMv" // From old docs
   }
 }

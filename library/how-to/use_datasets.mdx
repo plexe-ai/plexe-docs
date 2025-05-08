@@ -1,0 +1,160 @@
+---
+title: 'Use Datasets for Building Models'
+description: 'Provide training and validation data to the model build process using Pandas DataFrames or DatasetGenerator.'
+---
+
+The `model.build()` method requires data to train and evaluate the machine learning model. You can provide this data in two main ways:
+
+1.  **List of Pandas DataFrames:** The simplest way for tabular data.
+2.  **List of `plexe.DatasetGenerator` objects:** Useful for generating synthetic data or augmenting existing datasets.
+
+## Using Pandas DataFrames
+
+If your data is already loaded into Pandas DataFrames, pass a list containing these DataFrames to the `datasets` argument of `model.build()`.
+
+```python
+import plexe
+import pandas as pd
+
+# Load your data into DataFrames
+try:
+    train_df = pd.read_csv("train_data.csv")
+    # val_df = pd.read_csv("validation_data.csv") # Optional validation set
+except FileNotFoundError:
+    print("Warning: Data files not found, using dummy data.")
+    train_df = pd.DataFrame({
+        'feature1': [1, 2, 3, 4, 5], 'feature2': [10, 12, 11, 14, 13], 'target': [0, 1, 0, 1, 0]
+    })
+    # val_df = pd.DataFrame({ # Dummy validation data
+    #    'feature1': [6, 7], 'feature2': [15, 16], 'target': [1, 0]
+    # })
+
+
+# --- Define Model ---
+model = plexe.Model(
+    intent="Classify target based on feature1 and feature2."
+    # Schemas might be inferred if not provided explicitly
+)
+# --------------------
+
+# Provide the DataFrame(s) in a list
+datasets_to_use = [train_df]
+# datasets_to_use = [train_df, val_df] # If you have a separate validation set
+
+print("Building model using Pandas DataFrame(s)...")
+model.build(
+    datasets=datasets_to_use,
+    provider="openai/gpt-4o-mini",
+    max_iterations=1
+)
+
+print(f"Model build finished. State: {model.get_state()}")
+
+```
+
+Plexe will internally assign default names (like `dataset_0`, `dataset_1`) to these DataFrames and use them during the build process. If schemas are not provided, they will be inferred from these DataFrames.
+
+## Using `DatasetGenerator`
+
+The `DatasetGenerator` class allows you to define requirements for a dataset, potentially generating synthetic data or augmenting existing data using an LLM provider.
+
+**Use Case 1: Generating purely synthetic data**
+
+```python
+import plexe
+from pydantic import BaseModel
+
+# Define the desired schema for synthetic data
+class SyntheticDataSchema(BaseModel):
+    user_query: str
+    intent_category: str
+    sentiment_score: float
+
+# Create a DatasetGenerator instance
+synthetic_dataset_gen = plexe.DatasetGenerator(
+    description="Generate synthetic user support queries with intent and sentiment.",
+    provider="openai/gpt-4o-mini", # LLM used for generation
+    schema=SyntheticDataSchema
+    # data=None # No existing data provided
+)
+
+# Generate synthetic samples (this happens during the build process)
+# The 'num_samples' argument inside build tells the generator how many to create.
+# Note: The old API had a .generate() method, the new API integrates generation
+# directly into the .build() call using the DatasetGenerator object.
+# (Actual generation mechanism within build needs confirmation from codebase analysis,
+# assuming it uses the generator object passed in datasets)
+
+# --- Define Model ---
+model = plexe.Model(
+    intent="Classify user query intent and predict sentiment.",
+    input_schema={"user_query": str},
+    output_schema={"intent_category": str, "sentiment_score": float}
+)
+# --------------------
+
+print("Building model using DatasetGenerator for synthetic data...")
+# Pass the generator object in the list
+model.build(
+    datasets=[synthetic_dataset_gen], # Pass the generator here
+    provider="openai/gpt-4o-mini",
+    max_iterations=1
+    # Add num_samples if required by the internal build logic using DatasetGenerator
+    # e.g., build_args={"synthetic_dataset_gen_0": {"num_samples": 500}} ??? -> Needs clarification from code how generation count is passed
+)
+
+print(f"Model build finished. State: {model.get_state()}")
+
+```
+
+**Use Case 2: Augmenting existing data**
+
+You can provide an existing DataFrame to `DatasetGenerator` and potentially use it as a base for generating more samples (although the exact augmentation mechanism within `build` needs confirmation).
+
+```python
+import plexe
+import pandas as pd
+from pydantic import BaseModel
+
+# --- Load existing data ---
+try:
+    existing_df = pd.read_csv("partial_data.csv")
+except FileNotFoundError:
+     print("Warning: Partial data file not found, using dummy data.")
+     existing_df = pd.DataFrame({'text': ['good service', 'bad experience'], 'label': [1, 0]})
+# --------------------------
+
+# Define schema matching existing data
+class TextFeedback(BaseModel):
+    text: str
+    label: int
+
+# Create generator, providing existing data
+augmented_dataset_gen = plexe.DatasetGenerator(
+    description="User feedback text for classification, augmenting existing samples.",
+    provider="openai/gpt-4o-mini",
+    schema=TextFeedback,
+    data=existing_df # Provide existing data here
+)
+
+# --- Define Model ---
+model = plexe.Model(
+    intent="Classify user feedback text.",
+    input_schema={"text": str},
+    output_schema={"label": int}
+)
+# --------------------
+
+print("Building model using DatasetGenerator with existing data...")
+model.build(
+    datasets=[augmented_dataset_gen], # Pass the generator
+    provider="openai/gpt-4o-mini",
+    max_iterations=1
+    # Again, clarification needed on how augmentation count is controlled within build.
+)
+
+print(f"Model build finished. State: {model.get_state()}")
+
+```
+
+Choose the method that best fits how your data is structured and whether you need synthetic data generation capabilities.

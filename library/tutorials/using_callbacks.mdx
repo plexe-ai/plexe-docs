@@ -1,0 +1,165 @@
+---
+title: 'Using Callbacks for Monitoring'
+description: 'Monitor the model building process using built-in and custom callbacks, including MLflow integration.'
+---
+
+Plexe provides a callback system that allows you to hook into various stages of the `model.build()` process. This is useful for logging, monitoring, custom artifact handling, or triggering external processes.
+
+## The Callback System
+
+Callbacks are classes that inherit from `plexe.Callback` and implement one or more of the following methods:
+
+* `on_build_start(info: BuildStateInfo)`: Called once at the beginning of the `build` process.
+* `on_build_end(info: BuildStateInfo)`: Called once at the end of the `build` process (after success or error).
+* `on_iteration_start(info: BuildStateInfo)`: Called at the start of each model building iteration (solution attempt).
+* `on_iteration_end(info: BuildStateInfo)`: Called at the end of each model building iteration.
+
+The `BuildStateInfo` object passed to these methods contains contextual information like the model intent, provider used, schemas, datasets, current iteration number, and the current solution `Node` being evaluated (especially relevant in `on_iteration_end`).
+
+## Built-in Callbacks
+
+Plexe includes some useful built-in callbacks:
+
+### `ChainOfThoughtModelCallback`
+
+This callback is automatically added when you set `chain_of_thought=True` in `model.build()`. It captures the agent reasoning steps and emits them using an emitter (defaults to `ConsoleEmitter`). You generally don't need to instantiate this directly.
+
+### `MLFlowCallback`
+
+This callback logs parameters, metrics, and artifacts from the build process to an [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) server.
+
+**Prerequisites:**
+
+1.  Install MLflow: `pip install mlflow`
+2.  Have an MLflow tracking server running or use local file logging.
+
+**Usage:**
+
+```python
+import plexe
+import pandas as pd
+from plexe.callbacks import MLFlowCallback # Import the callback
+
+# --- Prepare Data (as in Quickstart) ---
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+# -----------------------------------------
+
+# --- Define Model (as in Quickstart) ---
+model = plexe.Model(
+    intent="Predict house prices based on square footage, bedrooms, and bathrooms."
+)
+# -----------------------------------------
+
+# Configure MLflow tracking URI (local example)
+# Replace with your tracking server URI if applicable (e.g., "http://localhost:5000")
+mlflow_tracking_uri = "file:./mlruns"
+mlflow_experiment_name = "Plexe_House_Pricing"
+
+# Instantiate the callback
+mlflow_callback = MLFlowCallback(
+    tracking_uri=mlflow_tracking_uri,
+    experiment_name=mlflow_experiment_name
+)
+
+print(f"Configured MLflow logging to: {mlflow_tracking_uri}, Experiment: {mlflow_experiment_name}")
+
+# Build the model, passing the callback instance
+print("Starting model build with MLflow logging...")
+model.build(
+    datasets=datasets,
+    provider="openai/gpt-4o-mini",
+    max_iterations=3, # Keep low for quick example
+    callbacks=[mlflow_callback], # Pass the callback here
+    chain_of_thought=False # Optional: disable default console logging if desired
+)
+
+print(f"Model build finished. Check MLflow UI for experiment '{mlflow_experiment_name}'.")
+print(f"You can start the local MLflow UI with: mlflow ui --backend-store-uri {mlflow_tracking_uri}")
+
+# You can now inspect the runs in the MLflow UI. Each iteration
+# will be logged as a separate run within the specified experiment.
+```
+
+<Info>
+The `MLFlowCallback` logs:
+
+  * **Parameters:** Intent, provider, schemas, timeouts, iteration number.
+  * **Metrics:** Performance metrics (e.g., accuracy, RMSE) reported by the agent for each iteration, execution time.
+  * **Artifacts:** Training code (`trainer_source.py`), model artifacts saved by the training script.
+  * **Tags:** Provider used, whether an exception occurred during the iteration.
+</Info>
+
+## Creating Custom Callbacks
+
+You can create your own callbacks by subclassing `plexe.Callback`.
+
+**Example: A simple callback to print iteration progress.**
+
+```python
+import plexe
+import pandas as pd
+from plexe.callbacks import Callback, BuildStateInfo # Import base class and info object
+
+# --- Prepare Data & Model (as before) ---
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+model = plexe.Model(intent="Predict house prices based on square footage, bedrooms, and bathrooms.")
+# ---------------------------------------
+
+# Define a custom callback
+class ProgressPrinterCallback(Callback):
+    def on_build_start(self, info: BuildStateInfo) -> None:
+        print(f"🚀 Starting build for intent: '{info.intent[:50]}...'")
+        if info.max_iterations:
+             print(f"Max iterations: {info.max_iterations}")
+
+    def on_iteration_start(self, info: BuildStateInfo) -> None:
+        print(f"\n--- Iteration {info.iteration + 1} Start ---")
+
+    def on_iteration_end(self, info: BuildStateInfo) -> None:
+        print(f"--- Iteration {info.iteration + 1} End ---")
+        if info.node: # Check if node info is available
+             if info.node.performance:
+                 print(f"  Performance ({info.node.performance.name}): {info.node.performance.value:.4f}")
+             else:
+                 print("  Performance: Not available")
+
+             if info.node.exception_was_raised:
+                 print(f"  Status: Failed ({type(info.node.exception).__name__})")
+             else:
+                 print("  Status: Success")
+        else:
+             print("  Node info not available for this iteration.")
+
+
+    def on_build_end(self, info: BuildStateInfo) -> None:
+        print(f"\n✅ Build process finished.")
+
+# Instantiate the custom callback
+progress_callback = ProgressPrinterCallback()
+
+# Build the model with the custom callback
+model.build(
+    datasets=datasets,
+    provider="openai/gpt-4o-mini",
+    max_iterations=2,
+    callbacks=[progress_callback], # Add custom callback
+    chain_of_thought=False # Disable default verbose logging
+)
+
+```
+
+By implementing custom callbacks, you can integrate Plexe's model building process seamlessly into your existing workflows and monitoring systems.

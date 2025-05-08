@@ -1,0 +1,107 @@
+---
+title: 'Save and Load Models'
+description: 'Persist trained Plexe models to disk and load them back for later use.'
+---
+
+Once you have successfully built a `plexe.Model` (`model.state == ModelState.READY`), you can save its state, including the trained predictor, source code, artifacts, and metadata, to a file. You can then load this file later to reuse the model without rebuilding it.
+
+Plexe saves models as `.tar.gz` archives.
+
+## Saving a Model
+
+Use the `plexe.save_model()` function.
+
+```python
+import plexe
+import pandas as pd
+import os
+
+# --- Build a model first (Example steps) ---
+# (Assume df and model are defined and built successfully)
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+model = plexe.Model(intent="Predict house prices")
+model.build(datasets=datasets, max_iterations=1)
+# ---------------------------------------------
+
+# Check if the model is ready before saving
+if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+    # Define a path for the saved model archive
+    # It's good practice to include the model identifier or name
+    model_filename = f"house_price_model_{model.identifier}.tar.gz"
+    save_directory = "./saved_models"
+    os.makedirs(save_directory, exist_ok=True) # Ensure directory exists
+    full_save_path = os.path.join(save_directory, model_filename)
+
+    try:
+        # Save the model
+        saved_path = plexe.save_model(model, full_save_path)
+        print(f"Model successfully saved to: {saved_path}")
+    except Exception as e:
+        print(f"Error saving model: {e}")
+else:
+    print("Model is not in READY state, cannot save.")
+
+```
+
+<Note>
+The `save_model` function requires the full path including the `.tar.gz` extension. It will create the necessary parent directories if they don't exist.
+</Note>
+
+The saved archive contains:
+
+  * Metadata (intent, state, metrics, identifier)
+  * Schemas (input, output)
+  * Code (trainer source, predictor source)
+  * Artifacts (serialized model files, e.g., `.joblib`, `.pkl`, `.pt`)
+  * Constraints (if any were defined)
+
+## Loading a Model
+
+Use the `plexe.load_model()` function, providing the path to the `.tar.gz` archive.
+
+```python
+import plexe
+import os
+
+# Assuming 'full_save_path' is the path where the model was saved previously
+# Example: full_save_path = "./saved_models/house_price_model_model-....tar.gz"
+saved_model_path = full_save_path # Replace with your actual path if running separately
+
+if 'full_save_path' in locals() and os.path.exists(saved_model_path):
+    try:
+        # Load the model from the archive
+        loaded_model = plexe.load_model(saved_model_path)
+        print(f"\nModel loaded successfully from: {saved_model_path}")
+        print(f"Loaded model intent: {loaded_model.intent}")
+        print(f"Loaded model state: {loaded_model.get_state()}")
+
+        # The loaded model is ready for prediction if it was saved in a READY state
+        if loaded_model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+            # Example prediction with the loaded model
+            input_data = {
+                "square_footage": 1750.0,
+                "bedrooms": 3,
+                "bathrooms": 2.0
+            }
+            prediction = loaded_model.predict(input_data)
+            print(f"Prediction using loaded model: {prediction}")
+        else:
+             print("Loaded model is not in READY state.")
+
+    except ValueError as e:
+        print(f"Error loading model: {e} - File not found or invalid.")
+    except Exception as e:
+        print(f"An unexpected error occurred during loading: {e}")
+else:
+    print("\nSaved model path not found or not defined. Skipping loading example.")
+
+```
+
+Loading a model reconstructs the `plexe.Model` instance, including its state, predictor, and associated data, allowing you to immediately use it for inference or further inspection.
