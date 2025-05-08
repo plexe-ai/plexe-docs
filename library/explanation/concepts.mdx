@@ -57,4 +57,18 @@ Specifies the Large Language Model(s) (LLMs) used by the agent system.
 Data used for training and evaluation.
 
 * **Input:** Pass data to `model.build()` as a list containing Pandas DataFrames.
-* **`DatasetGenerator`:** A class (`plexe.DatasetGenerator`) can be used to wrap existing data or define parameters for synthetic data generation (using an LLM provider). Pass instances of this class in the `datasets` list if needed.
+* **`DatasetGenerator`:** A class (`plexe.DatasetGenerator`) can be used to define requirements for a dataset, including generating synthetic data based on a schema or augmenting existing data using an LLM provider. Pass instances of this class in the `datasets` list if needed.
+
+## Callbacks (`plexe.Callback`, `MLFlowCallback`)
+
+Classes that allow you to hook into the `build()` process lifecycle (`on_build_start`, `on_iteration_start`, `on_iteration_end`, `on_build_end`).
+
+* **Purpose:** Used for logging, monitoring, custom artifact handling, etc.
+* **Built-in:** Includes `MLFlowCallback` for easy integration with MLflow tracking. The `ChainOfThoughtModelCallback` provides verbose agent step logging when `chain_of_thought=True` is set in `build()`.
+* **Custom:** You can create your own callbacks by inheriting from `plexe.Callback`.
+
+## Constraints (`plexe.Constraint`)
+
+*(Note: Based on `plexe/constraints.py`, this seems more like an internal concept for potential future validation rather than a primary user-facing feature for model definition yet. It might be omitted from initial user docs unless intended usage is confirmed.)*
+
+Represents rules or conditions that a model's input/output pairs should satisfy. Can be composed using logical operators (`&`, `|`, `~`). Currently, their primary use within the core build process is less defined for the end-user compared to intent and schemas.

@@ -1,0 +1,430 @@
+---
+title: 'Manage Models'
+description: 'Learn how to organize, version, update, and delete models on the Plexe Platform.'
+---
+
+After creating models on the Plexe Platform, effective management helps you organize your work, track versions, and maintain optimal performance. This guide covers best practices for managing your models throughout their lifecycle.
+
+## Viewing Your Models
+
+### Via Console UI
+
+1. Log in to the [Plexe Console](https://console.plexe.ai)
+2. Navigate to the **Models** section from the left sidebar
+3. View your models with key information:
+   - Model name
+   - Latest status
+   - Creation date
+   - Latest metric values
+   - Deployment status
+
+### Via API
+
+```bash
+# List all models
+curl -X GET https://api.plexe.ai/v1/models \
+  -H "x-api-key: YOUR_API_KEY"
+
+# Get details for a specific model
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+## Model Versioning
+
+The Plexe Platform automatically handles versioning when you create new iterations of the same model.
+
+### Creating a New Version
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click **Create New Version**
+3. Provide updated parameters (e.g., new data, modified intent)
+4. Click **Build**
+
+#### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/versions \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "upload_id": "upload_123abc",
+    "intent": "Updated intent for improved accuracy",
+    "metric": "f1_score"
+  }'
+```
+
+### Comparing Versions
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Versions** tab
+3. Select two versions to compare
+4. View side-by-side comparison of:
+   - Performance metrics
+   - Input/output schemas
+   - Training parameters
+   - Feature importance
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/compare?version1=1&version2=2 \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+## Model Metadata and Descriptions
+
+Adding metadata helps with organization and searchability.
+
+### Updating Model Metadata
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click **Edit** next to model name or description
+3. Update the information
+4. Click **Save**
+
+#### Via API
+
+```bash
+curl -X PATCH https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Model Name",
+    "description": "Improved customer churn prediction model with enhanced feature engineering",
+    "tags": ["production", "churn", "v2"]
+  }'
+```
+
+## Model Organization with Tags
+
+Tags help you categorize and filter models.
+
+### Adding Tags
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click the **+** icon in the Tags section
+3. Add new tags
+4. Click **Save**
+
+#### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/tags \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tags": ["production", "finance", "classification"]
+  }'
+```
+
+### Filtering Models by Tags
+
+#### Via Console UI
+
+1. Navigate to the Models list
+2. Use the filter dropdown to select tags
+3. View only models with selected tags
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models?tags=production,classification \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+## Model Performance Monitoring
+
+### Viewing Performance Metrics
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Metrics** tab
+3. View all evaluation metrics
+4. See charts for key metrics over time (if multiple versions exist)
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/metrics \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+### Setting Up Performance Alerts
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Monitoring** tab
+3. Click **Add Alert**
+4. Configure conditions (e.g., "Alert if accuracy drops below 0.9")
+5. Set notification methods (email, webhook)
+6. Click **Save**
+
+#### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/alerts \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Accuracy Drop Alert",
+    "metric": "accuracy",
+    "condition": "less_than",
+    "threshold": 0.9,
+    "notification_channels": ["email", "webhook"],
+    "webhook_url": "https://your-service.com/webhooks/plexe-alerts"
+  }'
+```
+
+## Managing Deployments
+
+Each model can have multiple deployments across environments.
+
+### Viewing Deployments
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Deployments** tab
+3. View all active deployments with:
+   - Environment
+   - Version
+   - Health status
+   - Request volume
+   - Creation date
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/deployments \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+### Promoting Versions
+
+When a new model version passes testing, promote it to production.
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Versions** tab
+3. Find the version to promote
+4. Click **Deploy**
+5. Select "production" environment
+6. Configure settings
+7. Click **Deploy**
+
+#### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/deploy \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "environment": "production",
+    "deployment_type": "standard",
+    "replicas": 2,
+    "auto_scale": true
+  }'
+```
+
+## Model Export and Backup
+
+### Exporting Model Artifacts
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Export** button
+3. Select artifacts to include
+4. Click **Download**
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/export \
+  -H "x-api-key: YOUR_API_KEY" \
+  -o model_export.zip
+```
+
+### Downloading Training Code
+
+You can access the code generated to train your model.
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Code** tab
+3. View the generated training code
+4. Click **Download** to save it
+
+#### Via API
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/code \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+## Deleting Models and Versions
+
+### Deleting a Version
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Versions** tab
+3. Find the version to delete
+4. Click the three-dot menu
+5. Select **Delete**
+6. Confirm the action
+
+#### Via API
+
+```bash
+curl -X DELETE https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+### Deleting an Entire Model
+
+This removes all versions and associated deployments.
+
+#### Via Console UI
+
+1. Navigate to the Models list
+2. Find the model to delete
+3. Click the three-dot menu
+4. Select **Delete**
+5. Type the model name to confirm
+6. Click **Delete**
+
+#### Via API
+
+```bash
+curl -X DELETE https://api.plexe.ai/v1/models/{model_name} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+{/* Warning component with proper JSX syntax */}
+<Warning>
+  Deleting a model or version is permanent and cannot be undone. All associated deployments will be terminated, and prediction endpoints will become unavailable. Consider exporting any important artifacts before deletion.
+</Warning>
+
+## Model Sharing and Collaboration
+
+### Team Access
+
+For team accounts, you can control access to models.
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Sharing** tab
+3. Add team members or groups
+4. Set permission levels (Viewer, Editor, Admin)
+5. Click **Save**
+
+#### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/access \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_email": "colleague@company.com",
+    "permission": "editor"
+  }'
+```
+
+### Creating Model Cards
+
+Model cards document information about your model for better collaboration.
+
+#### Via Console UI
+
+1. Navigate to the model details page
+2. Click on the **Model Card** tab
+3. Fill in the various sections:
+   - Use cases
+   - Limitations
+   - Ethical considerations
+   - Training data characteristics
+   - Performance across categories
+4. Click **Save**
+
+## Advanced Management Features
+
+### Model Registry (Enterprise Feature)
+
+For enterprise customers, the Model Registry provides:
+- Model approval workflows
+- Compliance documentation
+- Governance controls
+- Audit logging
+
+### A/B Testing
+
+Test different model versions against each other:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/experiments \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Price Model Comparison",
+    "model_name": "price_predictor",
+    "variants": [
+      {"version": "1", "traffic_percentage": 50},
+      {"version": "2", "traffic_percentage": 50}
+    ],
+    "success_metric": "prediction_accuracy",
+    "duration_days": 7
+  }'
+```
+
+### Model Retraining Schedules
+
+Set up automatic retraining schedules:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_name}/schedules \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schedule_type": "retrain",
+    "frequency": "weekly",
+    "day_of_week": "monday",
+    "time": "02:00",
+    "timezone": "UTC",
+    "data_source": {
+      "type": "database",
+      "connection_id": "conn_123abc",
+      "query": "SELECT * FROM customers WHERE created_at > current_date - interval '7 days'"
+    }
+  }'
+```
+
+## Best Practices
+
+1. **Consistent Naming**: Use clear, consistent naming conventions for models
+2. **Version Documentation**: Add detailed notes when creating new versions
+3. **Environment Separation**: Deploy to dev/staging before production
+4. **Regular Cleanup**: Archive or delete unused models and versions
+5. **Performance Monitoring**: Set up alerts for model performance degradation
+6. **Resource Optimization**: Delete deployments when not in use to save resources
+7. **Tags for Organization**: Use a consistent tagging strategy to organize models
+8. **Export Backups**: Regularly export important models as a backup
+9. **Access Control**: Carefully manage who can modify production models
+10. **Model Cards**: Document model information for better team collaboration
+
+By following these guidelines, you can effectively manage your models throughout their lifecycle on the Plexe Platform, ensuring optimal organization, performance, and collaboration.

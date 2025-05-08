@@ -2,10 +2,10 @@
   "$schema": "https://mintlify.com/schema.json",
   "name": "Plexe Documentation",
   "logo": {
-    "dark": "/logo/dark.svg", // Replace with actual path
-    "light": "/logo/light.svg" // Replace with actual path
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
   },
-  "favicon": "/favicon.svg", // Replace with actual path
+  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#69B6FF",
     "light": "#69B6FF",
@@ -18,12 +18,12 @@
   "topbarLinks": [
     {
       "name": "Plexe Website",
-      "url": "https://plexe.ai" // Replace with actual URL if different
+      "url": "https://plexe.ai"
     }
   ],
   "topbarCtaButton": {
     "name": "Go to Console",
-    "url": "https://console.plexe.ai" // Replace with actual URL
+    "url": "https://console.plexe.ai"
   },
   "tabs": [
     {
@@ -39,7 +39,7 @@
     {
       "name": "Community",
       "icon": "discord",
-      "url": "https://discord.gg/SefZDepGMv" // From old docs
+      "url": "https://discord.gg/SefZDepGMv"
     },
     {
       "name": "GitHub",
@@ -49,7 +49,7 @@
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://plexe.ai/resources" // From old docs
+      "url": "https://plexe.ai/resources"
     }
   ],
   "navigation": [
@@ -78,7 +78,6 @@
             "library/how-to/use_datasets",
             "library/how-to/configure_llm_provider",
             "library/how-to/save_load_models"
-            // "library/how-to/handle_constraints" // Add if constraints are user-facing
           ]
         },
         {
@@ -107,7 +106,6 @@
         {
           "group": "Get Started",
           "pages": [
-            // "platform/tutorials/quickstart_ui", // Uncomment if UI exists
             "platform/tutorials/quickstart_api"
           ]
         },
@@ -116,9 +114,7 @@
           "pages": [
             "platform/how-to/manage_account",
             "platform/how-to/manage_api_keys",
-            // "platform/how-to/upload_data_ui", // Uncomment if UI exists
             "platform/how-to/upload_data_api",
-            // "platform/how-to/build_model_ui", // Uncomment if UI exists
             "platform/how-to/build_model_api",
             "platform/how-to/monitor_jobs",
             "platform/how-to/use_deployed_model",
@@ -152,9 +148,9 @@
     }
   ],
   "footerSocials": {
-    "website": "https://plexe.ai", // Replace with actual URL if different
+    "website": "https://plexe.ai",
     "github": "https://github.com/plexe-ai/plexe",
-    "linkedin": "https://www.linkedin.com/company/plexe-ai/", // From old docs
-    "discord": "https://discord.gg/SefZDepGMv" // From old docs
+    "linkedin": "https://www.linkedin.com/company/plexe-ai/",
+    "discord": "https://discord.gg/SefZDepGMv"
   }
 }

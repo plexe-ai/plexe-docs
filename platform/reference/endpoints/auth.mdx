@@ -1,0 +1,618 @@
+---
+title: 'Authentication API'
+description: 'API reference for authentication, API keys, and user management on the Plexe Platform.'
+---
+
+This document provides detailed information about the authentication endpoints of the Plexe Platform API.
+
+## API Keys
+
+### Create API Key
+
+Creates a new API key for your account.
+
+```http
+POST /v1/keys
+```
+
+#### Request Body
+
+```json
+{
+  "name": "Production Backend Key",
+  "permission_level": "read_write",
+  "expiration_days": 90  // Optional, defaults to no expiration
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Descriptive name for the API key |
+| `permission_level` | string | Yes | Permission level: `read_only`, `read_write`, or `admin` |
+| `expiration_days` | integer | No | Number of days until key expires (default: never expires) |
+
+#### Response
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "name": "Production Backend Key",
+  "key": "plx_sk_987654321abcdefg...", // Full key shown ONLY once
+  "permission_level": "read_write",
+  "created_at": "2024-05-01T12:00:00Z",
+  "expires_at": "2024-07-30T12:00:00Z", // Or null if no expiration
+  "created_by": "user@example.com"
+}
+```
+
+{/* Warning component with proper JSX syntax */}
+<Warning>
+  The full API key value (`key` field) is displayed only once when the key is created. Store it securely as you won't be able to retrieve it again.
+</Warning>
+
+### List API Keys
+
+Returns a list of all API keys for your account.
+
+```http
+GET /v1/keys
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `status` | string | No | Filter by status: `active` or `revoked` |
+| `limit` | integer | No | Maximum number of keys to return (default: 20, max: 100) |
+| `offset` | integer | No | Number of keys to skip for pagination (default: 0) |
+
+#### Response
+
+```json
+{
+  "keys": [
+    {
+      "key_id": "key_abc123def456",
+      "name": "Production Backend Key",
+      "key_prefix": "plx_sk_9876", // First 4 digits + last 4 digits for identification
+      "key_suffix": "defg",
+      "permission_level": "read_write",
+      "created_at": "2024-05-01T12:00:00Z",
+      "expires_at": "2024-07-30T12:00:00Z",
+      "last_used_at": "2024-05-10T15:22:43Z",
+      "status": "active",
+      "created_by": "user@example.com"
+    },
+    {
+      "key_id": "key_ghi789jkl012",
+      "name": "Development Key",
+      "key_prefix": "plx_sk_1234",
+      "key_suffix": "zyxw",
+      "permission_level": "admin",
+      "created_at": "2024-04-15T09:30:00Z",
+      "expires_at": null,
+      "last_used_at": "2024-05-11T08:17:22Z",
+      "status": "active",
+      "created_by": "admin@example.com"
+    }
+  ],
+  "pagination": {
+    "total": 5,
+    "limit": 20,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Get API Key
+
+Retrieves details for a specific API key.
+
+```http
+GET /v1/keys/{key_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `key_id` | string | Yes | ID of the API key to retrieve |
+
+#### Response
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "name": "Production Backend Key",
+  "key_prefix": "plx_sk_9876",
+  "key_suffix": "defg",
+  "permission_level": "read_write",
+  "created_at": "2024-05-01T12:00:00Z",
+  "expires_at": "2024-07-30T12:00:00Z",
+  "last_used_at": "2024-05-10T15:22:43Z",
+  "status": "active",
+  "created_by": "user@example.com",
+  "usage_stats": {
+    "requests_last_24h": 156,
+    "requests_last_7d": 1287,
+    "requests_last_30d": 4583
+  }
+}
+```
+
+### Update API Key
+
+Updates the name or expiration of an API key.
+
+```http
+PATCH /v1/keys/{key_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `key_id` | string | Yes | ID of the API key to update |
+
+#### Request Body
+
+```json
+{
+  "name": "Updated Name",
+  "expiration_days": 180  // Updates expiration to 180 days from now
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | No | New name for the API key |
+| `expiration_days` | integer | No | New expiration period (in days) from current date |
+
+#### Response
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "name": "Updated Name",
+  "key_prefix": "plx_sk_9876",
+  "key_suffix": "defg",
+  "permission_level": "read_write",
+  "created_at": "2024-05-01T12:00:00Z",
+  "expires_at": "2024-10-28T12:00:00Z", // Updated expiration
+  "last_used_at": "2024-05-10T15:22:43Z",
+  "status": "active",
+  "created_by": "user@example.com"
+}
+```
+
+{/* Note component with proper JSX syntax */}
+<Note>
+  You cannot change the permission level of an existing key. Create a new key with the desired permissions instead.
+</Note>
+
+### Revoke API Key
+
+Revokes (invalidates) an API key, preventing its further use.
+
+```http
+DELETE /v1/keys/{key_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `key_id` | string | Yes | ID of the API key to revoke |
+
+#### Response
+
+```json
+{
+  "key_id": "key_abc123def456",
+  "status": "revoked",
+  "revoked_at": "2024-05-11T14:30:45Z"
+}
+```
+
+{/* Warning component with proper JSX syntax */}
+<Warning>
+  Revoking an API key is permanent and cannot be undone. Applications using the revoked key will immediately lose access.
+</Warning>
+
+## User Management
+
+{/* Note component with proper JSX syntax */}
+<Note>
+  User management endpoints are only available for accounts with team or enterprise features enabled. They require an API key with admin permissions.
+</Note>
+
+### List Users
+
+Lists all users in your organization.
+
+```http
+GET /v1/users
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `status` | string | No | Filter by status: `active`, `invited`, or `disabled` |
+| `role` | string | No | Filter by role: `admin`, `member`, or `viewer` |
+| `limit` | integer | No | Maximum number of users to return (default: 20, max: 100) |
+| `offset` | integer | No | Number of users to skip for pagination (default: 0) |
+
+#### Response
+
+```json
+{
+  "users": [
+    {
+      "user_id": "user_abc123",
+      "email": "admin@example.com",
+      "full_name": "Admin User",
+      "role": "admin",
+      "status": "active",
+      "created_at": "2024-01-15T10:00:00Z",
+      "last_active_at": "2024-05-11T08:17:22Z",
+      "mfa_enabled": true
+    },
+    {
+      "user_id": "user_def456",
+      "email": "member@example.com",
+      "full_name": "Team Member",
+      "role": "member",
+      "status": "active",
+      "created_at": "2024-02-20T14:30:00Z",
+      "last_active_at": "2024-05-10T16:45:11Z",
+      "mfa_enabled": false
+    }
+  ],
+  "pagination": {
+    "total": 8,
+    "limit": 20,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Invite User
+
+Invites a new user to your organization.
+
+```http
+POST /v1/users/invite
+```
+
+#### Request Body
+
+```json
+{
+  "email": "newuser@example.com",
+  "full_name": "New User",
+  "role": "member",
+  "send_welcome_email": true
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `email` | string | Yes | Email address of the user to invite |
+| `full_name` | string | Yes | Full name of the user |
+| `role` | string | Yes | Role to assign: `admin`, `member`, or `viewer` |
+| `send_welcome_email` | boolean | No | Whether to send a welcome email (default: true) |
+
+#### Response
+
+```json
+{
+  "user_id": "user_ghi789",
+  "email": "newuser@example.com",
+  "full_name": "New User",
+  "role": "member",
+  "status": "invited",
+  "created_at": "2024-05-11T15:00:00Z",
+  "invitation_sent_at": "2024-05-11T15:00:00Z",
+  "invitation_expires_at": "2024-05-18T15:00:00Z"
+}
+```
+
+### Update User
+
+Updates a user's details or role.
+
+```http
+PATCH /v1/users/{user_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `user_id` | string | Yes | ID of the user to update |
+
+#### Request Body
+
+```json
+{
+  "full_name": "Updated Name",
+  "role": "admin"
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `full_name` | string | No | Updated full name |
+| `role` | string | No | Updated role: `admin`, `member`, or `viewer` |
+
+#### Response
+
+```json
+{
+  "user_id": "user_def456",
+  "email": "member@example.com",
+  "full_name": "Updated Name",
+  "role": "admin",
+  "status": "active",
+  "created_at": "2024-02-20T14:30:00Z",
+  "updated_at": "2024-05-11T15:15:00Z",
+  "last_active_at": "2024-05-10T16:45:11Z",
+  "mfa_enabled": false
+}
+```
+
+### Disable User
+
+Disables a user's access to your organization.
+
+```http
+POST /v1/users/{user_id}/disable
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `user_id` | string | Yes | ID of the user to disable |
+
+#### Response
+
+```json
+{
+  "user_id": "user_def456",
+  "email": "member@example.com",
+  "status": "disabled",
+  "disabled_at": "2024-05-11T15:30:00Z"
+}
+```
+
+{/* Note component with proper JSX syntax */}
+<Note>
+  Disabling a user revokes their access and terminates all active sessions, but preserves their account information and history. To completely remove a user, contact support.
+</Note>
+
+## Session Management
+
+### List Active Sessions
+
+Lists all active sessions for the current user or a specific user (admin only).
+
+```http
+GET /v1/sessions
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `user_id` | string | No | User ID to list sessions for (admin only) |
+
+#### Response
+
+```json
+{
+  "sessions": [
+    {
+      "session_id": "session_abc123",
+      "user_id": "user_abc123",
+      "device": "Chrome 94.0 on macOS",
+      "ip_address": "192.168.1.1",
+      "location": "San Francisco, CA, USA",
+      "created_at": "2024-05-10T09:00:00Z",
+      "expires_at": "2024-05-12T09:00:00Z",
+      "last_activity_at": "2024-05-11T14:22:33Z",
+      "current": true
+    },
+    {
+      "session_id": "session_def456",
+      "user_id": "user_abc123",
+      "device": "Safari Mobile on iOS 15",
+      "ip_address": "192.168.2.2",
+      "location": "San Francisco, CA, USA",
+      "created_at": "2024-05-08T15:30:00Z",
+      "expires_at": "2024-05-15T15:30:00Z",
+      "last_activity_at": "2024-05-09T10:45:12Z",
+      "current": false
+    }
+  ]
+}
+```
+
+### Revoke Session
+
+Revokes a specific session, logging out that device.
+
+```http
+DELETE /v1/sessions/{session_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `session_id` | string | Yes | ID of the session to revoke |
+
+#### Response
+
+```json
+{
+  "session_id": "session_def456",
+  "revoked_at": "2024-05-11T16:00:00Z"
+}
+```
+
+### Revoke All Sessions
+
+Revokes all sessions for the current user except the current session.
+
+```http
+DELETE /v1/sessions
+```
+
+#### Response
+
+```json
+{
+  "revoked_sessions_count": 3,
+  "revoked_at": "2024-05-11T16:05:00Z"
+}
+```
+
+## Authentication Settings
+
+### Get MFA Status
+
+Checks if Multi-Factor Authentication (MFA) is enabled for the current user.
+
+```http
+GET /v1/auth/mfa/status
+```
+
+#### Response
+
+```json
+{
+  "mfa_enabled": true,
+  "mfa_methods": ["totp", "sms"],
+  "primary_method": "totp",
+  "last_updated_at": "2024-04-10T15:20:00Z"
+}
+```
+
+### Enable TOTP MFA
+
+Initiates the process to enable Time-based One-Time Password (TOTP) MFA.
+
+```http
+POST /v1/auth/mfa/totp/enable
+```
+
+#### Response
+
+```json
+{
+  "secret": "JBSWY3DPEHPK3PXP",
+  "qr_code_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+  "verification_required": true,
+  "expires_at": "2024-05-11T17:00:00Z"
+}
+```
+
+### Verify TOTP MFA
+
+Verifies the TOTP code to complete MFA setup.
+
+```http
+POST /v1/auth/mfa/totp/verify
+```
+
+#### Request Body
+
+```json
+{
+  "code": "123456"
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | string | Yes | 6-digit TOTP code |
+
+#### Response
+
+```json
+{
+  "mfa_enabled": true,
+  "mfa_method": "totp",
+  "enabled_at": "2024-05-11T16:15:45Z",
+  "backup_codes": [
+    "abc12-def34",
+    "ghi56-jkl78",
+    "mno90-pqr12",
+    "stu34-vwx56",
+    "yza78-bcd90"
+  ]
+}
+```
+
+{/* Warning component with proper JSX syntax */}
+<Warning>
+  Store the backup codes securely. They will only be shown once and are needed if you lose access to your MFA device.
+</Warning>
+
+### Disable MFA
+
+Disables Multi-Factor Authentication for the current user.
+
+```http
+POST /v1/auth/mfa/disable
+```
+
+#### Request Body
+
+```json
+{
+  "code": "123456",  // Current MFA code or a backup code
+  "password": "your-current-password"
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | string | Yes | Current MFA code or a backup code |
+| `password` | string | Yes | Current password for verification |
+
+#### Response
+
+```json
+{
+  "mfa_enabled": false,
+  "disabled_at": "2024-05-11T16:30:00Z"
+}
+```
+
+## Error Codes
+
+| HTTP Status | Error Code | Description |
+| --- | --- | --- |
+| 400 | `invalid_request` | The request was invalid |
+| 401 | `unauthorized` | Authentication failed |
+| 403 | `forbidden` | Insufficient permissions |
+| 404 | `not_found` | Resource not found |
+| 409 | `resource_exists` | Resource already exists |
+| 422 | `validation_failed` | Validation failed |
+| 429 | `rate_limited` | Too many requests |
+| 500 | `server_error` | Internal server error |
+
+## Rate Limits
+
+Authentication endpoints have specific rate limits to prevent abuse:
+
+- Key creation: 10 requests per hour
+- Authentication attempts: 10 failed attempts per 15 minutes
+- MFA verification: 5 failed attempts per 15 minutes
+
+Exceeding these limits will result in a `429 Too Many Requests` response.

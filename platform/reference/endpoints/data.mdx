@@ -1,0 +1,839 @@
+---
+title: 'Data Management API'
+description: 'API reference for uploading, managing, and querying datasets on the Plexe Platform.'
+---
+
+This document outlines the RESTful API endpoints for managing data uploads and querying datasets in the Plexe Platform.
+
+## Uploads
+
+### Get All Uploads
+
+Retrieves a list of all data uploads associated with your account.
+
+```http
+GET /v1/uploads
+```
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | No | Maximum number of uploads to return (default: 20, max: 100) |
+| `offset` | integer | No | Number of uploads to skip for pagination (default: 0) |
+| `status` | string | No | Filter by status: `pending`, `complete`, `failed`, `processing` |
+| `sort` | string | No | Field to sort by: `created_at`, `status` (default: `created_at`) |
+| `order` | string | No | Sort direction: `asc` or `desc` (default: `desc`) |
+
+#### Response
+
+```json
+{
+  "uploads": [
+    {
+      "upload_id": "upload_abc123def456",
+      "name": "Customer Dataset",
+      "description": "Monthly customer data for churn analysis",
+      "created_at": "2024-05-01T12:00:00Z",
+      "status": "complete",
+      "files": [
+        {
+          "filename": "customers.csv",
+          "size_bytes": 1024000,
+          "rows": 5000,
+          "columns": 12
+        },
+        {
+          "filename": "transactions.csv",
+          "size_bytes": 2048000,
+          "rows": 15000,
+          "columns": 8
+        }
+      ],
+      "created_by": "user@example.com"
+    },
+    {
+      "upload_id": "upload_ghi789jkl012",
+      "name": "Product Inventory",
+      "description": null,
+      "created_at": "2024-04-28T09:30:00Z",
+      "status": "complete",
+      "files": [
+        {
+          "filename": "inventory.csv",
+          "size_bytes": 512000,
+          "rows": 3000,
+          "columns": 10
+        }
+      ],
+      "created_by": "user@example.com"
+    }
+  ],
+  "pagination": {
+    "total": 15,
+    "limit": 20,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Get Upload Details
+
+Retrieves detailed information about a specific upload.
+
+```http
+GET /v1/uploads/{upload_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to retrieve |
+
+#### Response
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "name": "Customer Dataset",
+  "description": "Monthly customer data for churn analysis",
+  "created_at": "2024-05-01T12:00:00Z",
+  "status": "complete",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "size_bytes": 1024000,
+      "rows": 5000,
+      "columns": 12,
+      "column_info": [
+        {"name": "customer_id", "type": "string", "nullable": false, "unique": true},
+        {"name": "name", "type": "string", "nullable": false, "unique": false},
+        {"name": "email", "type": "string", "nullable": false, "unique": true},
+        {"name": "age", "type": "integer", "nullable": true, "unique": false},
+        {"name": "signup_date", "type": "date", "nullable": false, "unique": false},
+        {"name": "last_purchase", "type": "date", "nullable": true, "unique": false},
+        {"name": "purchase_count", "type": "integer", "nullable": false, "unique": false},
+        {"name": "lifetime_value", "type": "float", "nullable": false, "unique": false},
+        {"name": "churn", "type": "boolean", "nullable": false, "unique": false},
+        {"name": "country", "type": "string", "nullable": false, "unique": false},
+        {"name": "plan_type", "type": "string", "nullable": false, "unique": false},
+        {"name": "referral_source", "type": "string", "nullable": true, "unique": false}
+      ],
+      "preview_url": "https://api.plexe.ai/v1/uploads/upload_abc123def456/files/customers.csv/preview",
+      "s3_key": "uploads/user123/customers.csv",
+      "content_type": "text/csv",
+      "created_at": "2024-05-01T12:00:00Z"
+    },
+    {
+      "filename": "transactions.csv",
+      "size_bytes": 2048000,
+      "rows": 15000,
+      "columns": 8,
+      "column_info": [
+        {"name": "transaction_id", "type": "string", "nullable": false, "unique": true},
+        {"name": "customer_id", "type": "string", "nullable": false, "unique": false},
+        {"name": "date", "type": "date", "nullable": false, "unique": false},
+        {"name": "amount", "type": "float", "nullable": false, "unique": false},
+        {"name": "product_id", "type": "string", "nullable": false, "unique": false},
+        {"name": "quantity", "type": "integer", "nullable": false, "unique": false},
+        {"name": "discount", "type": "float", "nullable": true, "unique": false},
+        {"name": "payment_method", "type": "string", "nullable": false, "unique": false}
+      ],
+      "preview_url": "https://api.plexe.ai/v1/uploads/upload_abc123def456/files/transactions.csv/preview",
+      "s3_key": "uploads/user123/transactions.csv",
+      "content_type": "text/csv",
+      "created_at": "2024-05-01T12:00:00Z"
+    }
+  ],
+  "created_by": "user@example.com",
+  "models_using_this": [
+    {
+      "model_id": "model_mno345pqr678",
+      "model_name": "Customer Churn Predictor",
+      "version": "1"
+    }
+  ]
+}
+```
+
+### Create Upload
+
+Initiates a new upload by requesting a pre-signed S3 URL.
+
+```http
+POST /v1/uploads
+```
+
+#### Request Body
+
+```json
+{
+  "name": "Customer Dataset",
+  "description": "Monthly customer data for churn analysis",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "content_type": "text/csv",
+      "size_bytes": 1024000
+    },
+    {
+      "filename": "transactions.csv",
+      "content_type": "text/csv",
+      "size_bytes": 2048000
+    }
+  ]
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | No | Display name for the upload |
+| `description` | string | No | Description of the upload |
+| `files` | array | Yes | List of files to upload |
+| `files[].filename` | string | Yes | Name of the file |
+| `files[].content_type` | string | Yes | MIME type of the file |
+| `files[].size_bytes` | integer | No | Expected size of the file in bytes |
+
+#### Response
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "name": "Customer Dataset",
+  "description": "Monthly customer data for churn analysis",
+  "status": "pending",
+  "created_at": "2024-05-01T12:00:00Z",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "presigned_url": "https://s3.amazonaws.com/plexe-uploads/...",
+      "s3_key": "uploads/user123/customers.csv",
+      "content_type": "text/csv"
+    },
+    {
+      "filename": "transactions.csv",
+      "presigned_url": "https://s3.amazonaws.com/plexe-uploads/...",
+      "s3_key": "uploads/user123/transactions.csv",
+      "content_type": "text/csv"
+    }
+  ],
+  "expires_at": "2024-05-01T13:00:00Z"
+}
+```
+
+After receiving the pre-signed URLs, you must upload each file directly to the provided S3 URLs using HTTP PUT requests.
+
+### Update Upload Status
+
+Confirms completion of file uploads to S3 and updates the upload status.
+
+```http
+POST /v1/uploads/{upload_id}/status
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to update |
+
+#### Request Body
+
+```json
+{
+  "status": "complete",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "s3_key": "uploads/user123/customers.csv"
+    },
+    {
+      "filename": "transactions.csv",
+      "s3_key": "uploads/user123/transactions.csv"
+    }
+  ]
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `status` | string | Yes | New status: `complete` to confirm all files are uploaded |
+| `files` | array | Yes | List of files that were uploaded |
+| `files[].filename` | string | Yes | Name of the file |
+| `files[].s3_key` | string | Yes | S3 key of the uploaded file |
+
+#### Response
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "status": "processing",
+  "message": "Files uploaded successfully. Processing data...",
+  "estimated_completion": "2024-05-01T12:05:00Z"
+}
+```
+
+After confirming the uploads, the system will process the files (validating, parsing, etc.) and update the status to `complete` when finished.
+
+### Delete Upload
+
+Deletes an upload and its associated files.
+
+```http
+DELETE /v1/uploads/{upload_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to delete |
+
+#### Response
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "status": "deleted",
+  "deleted_at": "2024-05-02T09:15:00Z"
+}
+```
+
+{/* Warning component with proper JSX syntax */}
+<Warning>
+  You cannot delete an upload that is currently being used by a model. Unbind models from the dataset first.
+</Warning>
+
+### Get File Preview
+
+Retrieves a preview of a file's contents.
+
+```http
+GET /v1/uploads/{upload_id}/files/{filename}/preview
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload containing the file |
+| `filename` | string | Yes | Name of the file to preview |
+
+#### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | No | Maximum number of rows to return (default: 10, max: 100) |
+| `offset` | integer | No | Number of rows to skip (default: 0) |
+
+#### Response
+
+For CSV files:
+
+```json
+{
+  "filename": "customers.csv",
+  "total_rows": 5000,
+  "returned_rows": 10,
+  "columns": ["customer_id", "name", "email", "age", "signup_date", "last_purchase", "purchase_count", "lifetime_value", "churn", "country", "plan_type", "referral_source"],
+  "data": [
+    ["C001", "John Doe", "john@example.com", "34", "2023-01-15", "2024-04-20", "12", "1250.50", "false", "US", "premium", "search"],
+    ["C002", "Jane Smith", "jane@example.com", "28", "2023-02-01", "2024-04-18", "8", "895.75", "false", "CA", "basic", "referral"],
+    ["C003", "Bob Johnson", "bob@example.com", "45", "2023-01-20", "2024-03-15", "3", "350.25", "true", "UK", "premium", "ads"],
+    // ... more rows
+  ]
+}
+```
+
+For JSON files:
+
+```json
+{
+  "filename": "customers.json",
+  "total_rows": 5000,
+  "returned_rows": 3,
+  "data": [
+    {
+      "customer_id": "C001",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "age": 34,
+      "signup_date": "2023-01-15",
+      "last_purchase": "2024-04-20",
+      "purchase_count": 12,
+      "lifetime_value": 1250.50,
+      "churn": false,
+      "country": "US",
+      "plan_type": "premium",
+      "referral_source": "search"
+    },
+    // ... more records
+  ]
+}
+```
+
+## Data Analysis
+
+### Analyze Dataset
+
+Performs automated analysis on an uploaded dataset.
+
+```http
+POST /v1/data/analyze
+```
+
+#### Request Body
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "files": ["customers.csv"],
+  "analysis_type": "comprehensive"
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to analyze |
+| `files` | array | No | Specific files to analyze (if omitted, analyzes all files) |
+| `analysis_type` | string | No | Type of analysis: `basic` or `comprehensive` (default: `basic`) |
+
+#### Response
+
+```json
+{
+  "job_id": "job_stu345vwx678",
+  "status": "pending",
+  "estimated_completion": "2024-05-01T12:10:00Z"
+}
+```
+
+This initiates an asynchronous job. You can check the job status using the Jobs API.
+
+### Get Analysis Results
+
+Retrieves the results of a completed dataset analysis.
+
+```http
+GET /v1/data/analysis/{job_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `job_id` | string | Yes | ID of the analysis job |
+
+#### Response
+
+```json
+{
+  "job_id": "job_stu345vwx678",
+  "upload_id": "upload_abc123def456",
+  "status": "completed",
+  "created_at": "2024-05-01T12:00:00Z",
+  "completed_at": "2024-05-01T12:08:30Z",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "stats": {
+        "rows": 5000,
+        "columns": 12,
+        "missing_values": {
+          "age": 120,
+          "last_purchase": 450,
+          "referral_source": 230
+        },
+        "column_types": {
+          "customer_id": "string",
+          "name": "string",
+          "email": "string",
+          "age": "integer",
+          "signup_date": "date",
+          "last_purchase": "date",
+          "purchase_count": "integer",
+          "lifetime_value": "float",
+          "churn": "boolean",
+          "country": "string",
+          "plan_type": "string",
+          "referral_source": "string"
+        },
+        "summary": {
+          "age": {"min": 18, "max": 85, "mean": 42.7, "median": 39},
+          "purchase_count": {"min": 0, "max": 50, "mean": 8.2, "median": 6},
+          "lifetime_value": {"min": 0, "max": 12500.75, "mean": 950.25, "median": 725.50}
+        },
+        "categorical_counts": {
+          "country": {"US": 2500, "CA": 1000, "UK": 800, "other": 700},
+          "plan_type": {"basic": 3000, "premium": 1800, "enterprise": 200},
+          "churn": {"true": 850, "false": 4150}
+        }
+      },
+      "correlations": [
+        {"feature1": "lifetime_value", "feature2": "purchase_count", "correlation": 0.75},
+        {"feature1": "age", "feature2": "lifetime_value", "correlation": 0.45},
+        {"feature1": "churn", "feature2": "last_purchase", "correlation": -0.60}
+      ],
+      "insights": [
+        {
+          "type": "missing_data",
+          "message": "The 'last_purchase' column has 9% missing values, primarily for customers with churn=true.",
+          "severity": "medium"
+        },
+        {
+          "type": "outliers",
+          "message": "The 'lifetime_value' column contains 12 potential outliers (>3 std. deviations).",
+          "severity": "low"
+        },
+        {
+          "type": "imbalance",
+          "message": "The target variable 'churn' is imbalanced (17% positive, 83% negative).",
+          "severity": "high"
+        }
+      ],
+      "visualizations": [
+        {
+          "type": "histogram",
+          "title": "Age Distribution",
+          "data_url": "https://api.plexe.ai/v1/data/visualizations/viz_yza123bcd456",
+          "thumbnail_url": "https://api.plexe.ai/v1/data/visualizations/viz_yza123bcd456/thumbnail"
+        },
+        {
+          "type": "bar_chart",
+          "title": "Churn by Country",
+          "data_url": "https://api.plexe.ai/v1/data/visualizations/viz_efg789hij012",
+          "thumbnail_url": "https://api.plexe.ai/v1/data/visualizations/viz_efg789hij012/thumbnail"
+        }
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "preprocessing",
+      "message": "Consider imputing missing 'age' values (currently 2.4% missing).",
+      "importance": "medium"
+    },
+    {
+      "type": "feature_engineering",
+      "message": "Create a 'days_since_last_purchase' feature from 'last_purchase' date.",
+      "importance": "high"
+    },
+    {
+      "type": "modeling",
+      "message": "Use SMOTE or class weighting to handle the imbalanced 'churn' target.",
+      "importance": "high"
+    }
+  ]
+}
+```
+
+## Data Querying
+
+### Create Data Session
+
+Creates a session for querying a dataset.
+
+```http
+POST /v1/data/sessions
+```
+
+#### Request Body
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "name": "Customer Analysis Session",
+  "expiration_hours": 24
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to query |
+| `name` | string | No | Session name for reference |
+| `expiration_hours` | integer | No | Hours until session expires (default: 24, max: 168) |
+
+#### Response
+
+```json
+{
+  "session_id": "session_klm345nop678",
+  "name": "Customer Analysis Session",
+  "upload_id": "upload_abc123def456",
+  "status": "ready",
+  "created_at": "2024-05-01T14:00:00Z",
+  "expires_at": "2024-05-02T14:00:00Z",
+  "files": ["customers.csv", "transactions.csv"]
+}
+```
+
+### Query Dataset
+
+Queries a dataset using natural language or SQL.
+
+```http
+POST /v1/data/sessions/{session_id}/query
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `session_id` | string | Yes | ID of the data session |
+
+#### Request Body
+
+Natural language query:
+
+```json
+{
+  "query_type": "natural_language",
+  "query": "Show me the average lifetime value by country for customers who haven't churned",
+  "max_results": 100
+}
+```
+
+SQL query:
+
+```json
+{
+  "query_type": "sql",
+  "query": "SELECT country, AVG(lifetime_value) as avg_ltv FROM customers WHERE churn = false GROUP BY country ORDER BY avg_ltv DESC",
+  "max_results": 100
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `query_type` | string | Yes | Type of query: `natural_language` or `sql` |
+| `query` | string | Yes | The query to execute |
+| `max_results` | integer | No | Maximum number of results to return (default: 100, max: 10000) |
+
+#### Response
+
+```json
+{
+  "query_id": "query_qrs901tuv234",
+  "result_type": "table",
+  "columns": ["country", "avg_ltv"],
+  "rows": [
+    ["US", 1050.75],
+    ["CA", 925.50],
+    ["UK", 880.25],
+    ["other", 750.80]
+  ],
+  "row_count": 4,
+  "truncated": false,
+  "execution_time_ms": 125,
+  "generated_sql": "SELECT country, AVG(lifetime_value) as avg_ltv FROM customers WHERE churn = false GROUP BY country ORDER BY avg_ltv DESC"
+}
+```
+
+For visualization results:
+
+```json
+{
+  "query_id": "query_wxy567zab890",
+  "result_type": "visualization",
+  "visualization_type": "bar_chart",
+  "title": "Average Lifetime Value by Country (Non-churned Customers)",
+  "data": {
+    "labels": ["US", "CA", "UK", "other"],
+    "datasets": [
+      {
+        "label": "Average Lifetime Value",
+        "data": [1050.75, 925.50, 880.25, 750.80]
+      }
+    ]
+  },
+  "execution_time_ms": 185,
+  "generated_sql": "SELECT country, AVG(lifetime_value) as avg_ltv FROM customers WHERE churn = false GROUP BY country ORDER BY avg_ltv DESC"
+}
+```
+
+### Get Query History
+
+Retrieves the history of queries for a data session.
+
+```http
+GET /v1/data/sessions/{session_id}/queries
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `session_id` | string | Yes | ID of the data session |
+
+#### Response
+
+```json
+{
+  "queries": [
+    {
+      "query_id": "query_qrs901tuv234",
+      "query_type": "natural_language",
+      "query": "Show me the average lifetime value by country for customers who haven't churned",
+      "executed_at": "2024-05-01T14:05:00Z",
+      "execution_time_ms": 125
+    },
+    {
+      "query_id": "query_wxy567zab890",
+      "query_type": "natural_language",
+      "query": "Visualize the distribution of purchase counts",
+      "executed_at": "2024-05-01T14:10:00Z",
+      "execution_time_ms": 185
+    }
+  ]
+}
+```
+
+### End Data Session
+
+Ends a data session, releasing resources.
+
+```http
+DELETE /v1/data/sessions/{session_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `session_id` | string | Yes | ID of the data session to end |
+
+#### Response
+
+```json
+{
+  "session_id": "session_klm345nop678",
+  "status": "ended",
+  "ended_at": "2024-05-01T15:00:00Z"
+}
+```
+
+## Data Export
+
+### Export Dataset
+
+Initiates an export job for a dataset.
+
+```http
+POST /v1/data/export
+```
+
+#### Request Body
+
+```json
+{
+  "upload_id": "upload_abc123def456",
+  "files": ["customers.csv"],
+  "format": "csv",
+  "include_headers": true,
+  "email_notification": true
+}
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to export |
+| `files` | array | No | Specific files to export (if omitted, exports all) |
+| `format` | string | No | Export format: `csv`, `json`, `parquet` (default: original format) |
+| `include_headers` | boolean | No | Whether to include headers (CSV only, default: true) |
+| `email_notification` | boolean | No | Whether to send email when export is ready (default: false) |
+
+#### Response
+
+```json
+{
+  "export_id": "export_cde456fgh789",
+  "status": "processing",
+  "created_at": "2024-05-01T16:00:00Z",
+  "estimated_completion": "2024-05-01T16:05:00Z"
+}
+```
+
+### Get Export Status
+
+Checks the status of an export job.
+
+```http
+GET /v1/data/export/{export_id}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `export_id` | string | Yes | ID of the export job |
+
+#### Response
+
+```json
+{
+  "export_id": "export_cde456fgh789",
+  "status": "completed",
+  "created_at": "2024-05-01T16:00:00Z",
+  "completed_at": "2024-05-01T16:04:30Z",
+  "files": [
+    {
+      "filename": "customers.csv",
+      "size_bytes": 1048576,
+      "download_url": "https://api.plexe.ai/v1/data/export/export_cde456fgh789/customers.csv",
+      "expires_at": "2024-05-08T16:04:30Z"
+    }
+  ]
+}
+```
+
+### Download Exported File
+
+Downloads an exported file.
+
+```http
+GET /v1/data/export/{export_id}/{filename}
+```
+
+#### Path Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `export_id` | string | Yes | ID of the export job |
+| `filename` | string | Yes | Name of the file to download |
+
+#### Response
+
+The file contents as a binary stream with appropriate content type header.
+
+## Error Codes
+
+| HTTP Status | Error Code | Description |
+| --- | --- | --- |
+| 400 | `invalid_request` | The request was invalid |
+| 401 | `unauthorized` | Authentication failed |
+| 403 | `insufficient_permissions` | Insufficient permissions for the operation |
+| 404 | `not_found` | Resource not found |
+| 409 | `resource_conflict` | Resource conflict (e.g., duplicate name) |
+| 413 | `payload_too_large` | Upload size exceeds limits |
+| 422 | `validation_failed` | Validation failed |
+| 429 | `rate_limited` | Too many requests |
+| 500 | `server_error` | Internal server error |
+| 503 | `service_unavailable` | Service temporarily unavailable |
+
+## Limits
+
+The Data Management API has the following limits:
+
+| Resource | Limit |
+| --- | --- |
+| Maximum file size | 5 GB per file |
+| Maximum upload size | 20 GB per upload |
+| Maximum files per upload | 50 files |
+| Active data sessions | 5 per user |
+| Queries per minute | 30 per session |
+| Maximum query result size | 100 MB |
+| Export retention period | 7 days |
+
+These limits may vary based on your account tier.

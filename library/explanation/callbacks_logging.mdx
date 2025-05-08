@@ -1,0 +1,239 @@
+---
+title: 'Callbacks and Logging'
+description: 'Monitor and interact with the Plexe model building process through callbacks and logging.'
+---
+
+Plexe provides robust capabilities for monitoring and interacting with the model building process through its callback system and logging features. These tools give you visibility into what's happening during model creation and allow you to integrate with external systems.
+
+## The Callback System
+
+Callbacks in Plexe let you hook into key points in the model building lifecycle. They're useful for:
+
+- Logging progress and results
+- Integrating with experiment tracking systems
+- Implementing custom monitoring solutions
+- Saving artifacts
+- Event triggering for workflows
+
+### Callback Lifecycle Events
+
+The `Callback` base class defines four key methods that are triggered at different points:
+
+1. **`on_build_start(info)`**: Called once when `model.build()` begins
+2. **`on_iteration_start(info)`**: Called at the start of each build iteration
+3. **`on_iteration_end(info)`**: Called at the end of each build iteration 
+4. **`on_build_end(info)`**: Called once when the entire build process completes
+
+The `info` parameter provides context about the current state, including:
+
+- The model's intent and configuration
+- The current iteration number
+- The datasets being used
+- Current schemas
+- Performance metrics (in `on_iteration_end`)
+
+### Built-in Callbacks
+
+#### Chain of Thought Callback
+
+This callback is automatically added when you set `chain_of_thought=True` in `model.build()`. It captures the detailed reasoning steps and decision-making process of the AI agents.
+
+```python
+import plexe
+
+model = plexe.Model(intent="Predict customer churn")
+model.build(
+    datasets=[df],
+    chain_of_thought=True  # Enables verbose output
+)
+```
+
+The output shows the step-by-step thought process of the agents, including:
+- Problem analysis
+- Solution planning
+- Code development
+- Debugging
+- Evaluation
+
+#### MLflow Callback
+
+This integrates with MLflow, a popular platform for tracking ML experiments:
+
+```python
+import plexe
+from plexe.callbacks import MLFlowCallback
+
+# Set up MLflow callback
+mlflow_callback = MLFlowCallback(
+    tracking_uri="http://localhost:5000",
+    experiment_name="Customer Churn Models"
+)
+
+# Build model with MLflow tracking
+model = plexe.Model(intent="Predict customer churn")
+model.build(
+    datasets=[df],
+    callbacks=[mlflow_callback]
+)
+```
+
+The MLflow callback:
+- Creates runs for each iteration
+- Logs parameters (intent, provider, iteration number)
+- Records metrics (accuracy, RMSE, etc.)
+- Saves artifacts (code, model files)
+- Tags runs with relevant metadata
+
+### Creating Custom Callbacks
+
+You can create your own callbacks by subclassing `Callback`:
+
+```python
+import plexe
+from plexe.callbacks import Callback
+import time
+
+class TimingCallback(Callback):
+    def __init__(self):
+        self.start_time = None
+        self.iteration_times = {}
+        
+    def on_build_start(self, info):
+        self.start_time = time.time()
+        print(f"Build started for model with intent: {info.intent[:50]}...")
+        
+    def on_iteration_start(self, info):
+        iteration = info.iteration
+        self.iteration_times[iteration] = time.time()
+        print(f"Starting iteration {iteration + 1}")
+        
+    def on_iteration_end(self, info):
+        iteration = info.iteration
+        duration = time.time() - self.iteration_times[iteration]
+        print(f"Iteration {iteration + 1} completed in {duration:.2f} seconds")
+        
+        # Check for metrics if available
+        if hasattr(info, "node") and info.node and hasattr(info.node, "performance"):
+            perf = info.node.performance
+            if perf:
+                print(f"  Performance: {perf.name} = {perf.value:.4f}")
+        
+    def on_build_end(self, info):
+        total_time = time.time() - self.start_time
+        print(f"Build finished in {total_time:.2f} seconds")
+        if hasattr(info, "model"):
+            print(f"Final model state: {info.model.get_state()}")
+```
+
+Usage:
+
+```python
+# Create and use the custom callback
+timing_callback = TimingCallback()
+model.build(datasets=[df], callbacks=[timing_callback])
+```
+
+## Logging System
+
+In addition to callbacks, Plexe has a built-in logging system for observing the inner workings of the library.
+
+### Configuring Logging
+
+You can configure Plexe's logging system to adjust verbosity:
+
+```python
+import plexe
+import logging
+
+# Set up logging with desired verbosity
+plexe.configure_logging(level=logging.DEBUG)
+```
+
+For more control over logging format:
+
+```python
+import logging
+
+# Create a custom handler
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# Configure with more options
+plexe.configure_logging(
+    level=logging.INFO,
+    handlers=[handler]
+)
+```
+
+### Logging Levels
+
+- **DEBUG**: Very detailed information, useful for diagnosing problems
+- **INFO**: Confirmation that things are working as expected
+- **WARNING**: Indication of potential issues
+- **ERROR**: Serious problems that prevented operations
+- **CRITICAL**: Very serious errors
+
+### Log Output Destinations
+
+By default, Plexe logs to the console (stdout), but you can redirect logs:
+
+```python
+import logging
+
+# Log to file
+file_handler = logging.FileHandler("plexe_build.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# Configure Plexe logging
+plexe.configure_logging(
+    level=logging.DEBUG,
+    handlers=[file_handler]
+)
+```
+
+## Integrating Callbacks and Logging
+
+For comprehensive monitoring, combine callbacks and logging:
+
+```python
+import plexe
+import logging
+from plexe.callbacks import MLFlowCallback
+
+# Set up logging
+plexe.configure_logging(level=logging.INFO)
+
+# Set up MLflow callback
+mlflow_callback = MLFlowCallback(
+    tracking_uri="http://localhost:5000",
+    experiment_name="Customer Churn Models"
+)
+
+# Create custom callback
+timing_callback = TimingCallback()
+
+# Build with both systems
+model = plexe.Model(intent="Predict customer churn")
+model.build(
+    datasets=[df],
+    callbacks=[mlflow_callback, timing_callback],
+    chain_of_thought=True  # Also get agent reasoning steps
+)
+```
+
+This approach gives you:
+1. Standard logging for library operations
+2. MLflow integration for experiment tracking
+3. Custom timing logs for performance monitoring
+4. Detailed agent reasoning via chain-of-thought
+
+## Best Practices
+
+1. **Start Simple**: Begin with `chain_of_thought=True` to see what's happening
+2. **Use Callbacks for Integration**: Connect Plexe to your existing ML infrastructure
+3. **Create Custom Callbacks**: Build callbacks tailored to your workflow needs
+4. **Adjust Log Levels**: Set appropriate verbosity based on your needs
+5. **Combine Approaches**: Use both logging and callbacks for comprehensive monitoring
+
+By leveraging Plexe's callback system and logging capabilities, you can gain insights into the model building process, track experiments systematically, and integrate Plexe into your broader ML workflows.

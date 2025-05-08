@@ -1,147 +1,71 @@
 ---
 title: 'Manage API Keys'
-description: 'Create, rotate, and manage API keys for the Plexe Platform.'
+description: 'Create, view, and revoke API keys for accessing the Plexe Platform API.'
 ---
 
-API keys are used to authenticate your requests to the Plexe Platform API. This guide shows you how to create, use, and manage API keys.
+API keys allow you to authenticate requests to the Plexe Platform API programmatically. Manage your API keys securely through the Plexe Console.
+
+## Accessing API Key Management
+
+1.  Log in to the [Plexe Console](https://console.plexe.ai) (Replace with actual URL).
+2.  Navigate to the "Account Settings" or "API Keys" section.
 
 ## Creating an API Key
 
-You can create an API key through the Plexe Console UI or via the API.
+1.  Click the "Create New API Key" or similar button.
+2.  Give your key a descriptive name (e.g., "dev-script-key", "production-app-key") to help you identify its purpose later.
+3.  Click "Create".
+4.  **Important:** Your new API key will be displayed **only once**. Copy it immediately and store it securely (e.g., in a password manager or secret vault). **You will not be able to retrieve the key again.**
 
-### Via the Console UI
+## Viewing API Keys
 
-1. Log in to the [Plexe Console](https://console.plexe.ai)
-2. Navigate to **Settings** > **API Keys** in the left sidebar
-3. Click **Create New API Key**
-4. Enter a descriptive name (e.g., "Development Key" or "Production Backend")
-5. Select the appropriate permission level:
-   - **Read-only**: Can only make GET requests
-   - **Read & Write**: Can create models, upload data, and make predictions
-   - **Admin**: Full access including user management
-6. Click **Create Key**
-7. **Important**: Copy the key immediately! For security reasons, the full key will only be shown once.
+The API Key management section will list your existing keys, typically showing:
 
-### Via the API
+* Key Name
+* A portion of the key (e.g., the first few characters) for identification
+* Creation Date
+* Last Used Date (if tracked)
+* Status (Active/Inactive)
 
-You can also programmatically create API keys (requires an existing key with admin permissions):
-
-```bash
-curl -X POST https://api.plexe.ai/v1/keys \
-  -H "x-api-key: YOUR_ADMIN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Automated Testing Key",
-    "permission_level": "read_write",
-    "expiration_days": 30
-  }'
-```
-
-Response:
-
-```json
-{
-  "key_id": "key_abc123def456",
-  "name": "Automated Testing Key",
-  "key": "plx_sk_987654321abcdefg...", // Only shown once!
-  "permission_level": "read_write",
-  "created_at": "2023-06-15T10:00:00Z",
-  "expires_at": "2023-07-15T10:00:00Z"
-}
-```
-
-<Warning>
-Store your API key securely! Anyone with your key can make API calls on your behalf and incur usage charges. The full key string (starting with `plx_sk_`) is only shown once at creation time.
-</Warning>
-
-## Listing Your API Keys
-
-### Via the Console UI
-
-1. Navigate to **Settings** > **API Keys** in the left sidebar
-2. View the list of all active and expired keys
-
-### Via the API
-
-```bash
-curl -X GET https://api.plexe.ai/v1/keys \
-  -H "x-api-key: YOUR_ADMIN_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "keys": [
-    {
-      "key_id": "key_abc123def456",
-      "name": "Automated Testing Key",
-      "last_used": "2023-06-15T11:22:33Z",
-      "permission_level": "read_write",
-      "created_at": "2023-06-15T10:00:00Z",
-      "expires_at": "2023-07-15T10:00:00Z",
-      "status": "active"
-    },
-    {
-      "key_id": "key_ghi789jkl012",
-      "name": "Development Key",
-      "last_used": "2023-06-01T09:08:07Z",
-      "permission_level": "admin",
-      "created_at": "2023-05-15T10:00:00Z",
-      "expires_at": null,
-      "status": "active"
-    }
-  ]
-}
-```
+You **cannot** view the full secret key after creation for security reasons.
 
 ## Revoking an API Key
 
-If you believe a key has been compromised or is no longer needed, you should revoke it immediately.
+If a key is compromised or no longer needed:
 
-### Via the Console UI
+1.  Find the key you want to revoke in the list.
+2.  Click the "Revoke", "Delete", or similar button associated with that key.
+3.  Confirm the action when prompted.
 
-1. Navigate to **Settings** > **API Keys** in the left sidebar
-2. Find the key you want to revoke
-3. Click the **Revoke** button
-4. Confirm the action
+Revoked keys can no longer be used to authenticate API requests.
 
-### Via the API
+## Using Your API Key
 
-```bash
-curl -X DELETE https://api.plexe.ai/v1/keys/key_abc123def456 \
-  -H "x-api-key: YOUR_ADMIN_API_KEY"
-```
+Include your API key in the `x-api-key` header for all requests to the Plexe API.
 
-Response:
+```python
+import requests
+import os
 
-```json
-{
-  "key_id": "key_abc123def456",
-  "status": "revoked",
-  "revoked_at": "2023-06-15T14:30:45Z"
+api_key = "YOUR_PLEXE_API_KEY" # Replace with your actual key or load securely
+base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+
+headers = {
+    "x-api-key": api_key
 }
+
+# Example: List models
+try:
+    response = requests.get(f"{base_url}/v1/models", headers=headers)
+    response.raise_for_status()
+    print("API request successful:", response.json())
+except requests.exceptions.RequestException as e:
+    print(f"API request failed: {e}")
+    if e.response is not None:
+        print(f"Status Code: {e.response.status_code}, Response: {e.response.text}")
 ```
 
-## Rotating API Keys
-
-For security, it's good practice to periodically rotate your API keys. Here's a suggested process:
-
-1. Create a new API key with the same permissions as the one you're replacing
-2. Update your applications to use the new key
-3. Monitor the "last_used" timestamp of the old key to ensure all systems have migrated
-4. Once you confirm all systems are using the new key, revoke the old key
-
-## Best Practices for API Key Management
-
-1. **Use descriptive names**: Make it easy to identify what each key is used for
-2. **Set expirations**: Use the `expiration_days` parameter to create keys that automatically expire
-3. **Least privilege principle**: Only grant the permissions a key actually needs
-4. **Monitor usage**: Regularly check the "last_used" timestamp and usage patterns
-5. **Secure storage**: Store API keys in secure environment variables or secret management systems, never in code repositories
-6. **Regular rotation**: Rotate keys periodically, especially for production environments
-7. **Different keys for different environments**: Use separate keys for development, testing, and production
-
-<Info>
-If you believe an API key has been compromised, revoke it immediately and check the API usage logs for any suspicious activity.
-</Info>
+{/* Warning component - proper JSX syntax */}
+<Warning>
+**Treat your API keys like passwords.** Do not share them, embed them directly in public code (like frontend JavaScript), or commit them to version control. Use environment variables or secure secret management solutions.
+</Warning>

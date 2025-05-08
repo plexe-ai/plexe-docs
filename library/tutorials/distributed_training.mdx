@@ -93,8 +93,9 @@ When `distributed=True` is set:
 3.  **Parallelism:** If `max_iterations` in `model.build()` is greater than 1, and the Ray cluster has sufficient resources (CPUs/GPUs), Ray can potentially execute multiple training iterations in parallel, significantly speeding up the exploration of different model candidates.
 4.  **Results:** Results (metrics, artifacts, logs, exceptions) are collected from the Ray tasks and integrated back into the Plexe model building process.
 
+{/* Note component with proper JSX syntax */}
 <Note>
-The degree of speedup depends on the number of iterations, the computational cost of each training run, and the resources available in your Ray cluster (or on your local machine). Tasks involving LLM calls for planning or code generation are typically not distributed via Ray in the current implementation.
+  The degree of speedup depends on the number of iterations, the computational cost of each training run, and the resources available in your Ray cluster (or on your local machine). Tasks involving LLM calls for planning or code generation are typically not distributed via Ray in the current implementation.
 </Note>
 
 ## Configuration (Advanced)

@@ -1,0 +1,343 @@
+---
+title: 'Callbacks Reference'
+description: 'Detailed reference documentation for the callback system in the Plexe Python library.'
+---
+
+Plexe provides a flexible callback system that allows you to monitor and interact with the model building process. This reference documents all built-in callbacks and provides information on creating custom callbacks.
+
+## Base Callback Class
+
+All callbacks inherit from the `Callback` base class:
+
+```python
+class Callback:
+    def on_build_start(self, info: BuildStateInfo) -> None:
+        """Called once at the beginning of model.build()"""
+        pass
+
+    def on_iteration_start(self, info: BuildStateInfo) -> None:
+        """Called at the start of each iteration"""
+        pass
+
+    def on_iteration_end(self, info: BuildStateInfo) -> None:
+        """Called at the end of each iteration"""
+        pass
+
+    def on_build_end(self, info: BuildStateInfo) -> None:
+        """Called once at the end of model.build()"""
+        pass
+```
+
+## BuildStateInfo
+
+The `BuildStateInfo` object provides context about the current state of the build process and is passed to all callback methods:
+
+```python
+class BuildStateInfo:
+    def __init__(
+        self,
+        model: Optional['Model'] = None,
+        intent: Optional[str] = None,
+        provider: Optional[Union[str, ProviderConfig]] = None,
+        input_schema: Optional[SchemaType] = None,
+        output_schema: Optional[SchemaType] = None,
+        datasets: Optional[List[Union[pd.DataFrame, DatasetGenerator]]] = None,
+        iteration: Optional[int] = None,
+        max_iterations: Optional[int] = None,
+        node: Optional['Node'] = None
+    )
+```
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `model` | `Optional['Model']` | Reference to the model being built |
+| `intent` | `Optional[str]` | The natural language description of the model's goal |
+| `provider` | `Optional[Union[str, ProviderConfig]]` | LLM provider configuration |
+| `input_schema` | `Optional[SchemaType]` | Input schema for the model |
+| `output_schema` | `Optional[SchemaType]` | Output schema for the model |
+| `datasets` | `Optional[List[Union[pd.DataFrame, DatasetGenerator]]]` | Training datasets |
+| `iteration` | `Optional[int]` | Current iteration number (0-based) |
+| `max_iterations` | `Optional[int]` | Maximum number of iterations |
+| `node` | `Optional['Node']` | Current solution node (only in iteration_end) |
+
+## Built-in Callbacks
+
+### `ChainOfThoughtModelCallback`
+
+This callback logs detailed steps of the agent's reasoning during the build process:
+
+```python
+class ChainOfThoughtModelCallback(Callback):
+    def __init__(
+        self,
+        emitter: Optional[Emitter] = None,
+        include_code: bool = True
+    )
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `emitter` | `Optional[Emitter]` | Object that handles outputting the chain of thought logs. Default: `ConsoleEmitter()` |
+| `include_code` | `bool` | Whether to include generated code in the logs. Default: `True` |
+
+This callback is automatically added when `chain_of_thought=True` is set in `model.build()`.
+
+**Example:**
+
+```python
+import plexe
+from plexe.callbacks import ChainOfThoughtModelCallback, ConsoleEmitter
+
+# Create custom emitter if needed (otherwise uses default)
+emitter = ConsoleEmitter()
+callback = ChainOfThoughtModelCallback(emitter=emitter, include_code=True)
+
+model = plexe.Model(intent="Predict house prices")
+model.build(
+    datasets=[df],
+    callbacks=[callback]
+)
+```
+
+### `MLFlowCallback`
+
+Integrates with MLflow for experiment tracking:
+
+```python
+class MLFlowCallback(Callback):
+    def __init__(
+        self,
+        tracking_uri: Optional[str] = None,
+        experiment_name: Optional[str] = None,
+        run_name_prefix: str = "plexe_",
+        log_code: bool = True,
+        log_artifacts: bool = True
+    )
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `tracking_uri` | `Optional[str]` | MLflow tracking server URI. Default: `None` (uses default MLflow URI) |
+| `experiment_name` | `Optional[str]` | MLflow experiment name. Default: `None` (uses/creates "Default") |
+| `run_name_prefix` | `str` | Prefix for MLflow run names. Default: `"plexe_"` |
+| `log_code` | `bool` | Whether to log generated code as artifacts. Default: `True` |
+| `log_artifacts` | `bool` | Whether to log model artifacts. Default: `True` |
+
+**Example:**
+
+```python
+import plexe
+from plexe.callbacks import MLFlowCallback
+
+# Initialize MLflow callback
+mlflow_callback = MLFlowCallback(
+    tracking_uri="http://localhost:5000",
+    experiment_name="Housing Price Models",
+    run_name_prefix="housing_"
+)
+
+model = plexe.Model(intent="Predict house prices")
+model.build(
+    datasets=[df],
+    callbacks=[mlflow_callback]
+)
+```
+
+### `TensorBoardCallback`
+
+Logs metrics and events to TensorBoard:
+
+```python
+class TensorBoardCallback(Callback):
+    def __init__(
+        self,
+        log_dir: Optional[str] = None,
+        experiment_name: Optional[str] = None
+    )
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `log_dir` | `Optional[str]` | Directory to store TensorBoard logs. Default: `"./runs"` |
+| `experiment_name` | `Optional[str]` | Name for the experiment. Default: Automatically generated |
+
+**Example:**
+
+```python
+import plexe
+from plexe.callbacks import TensorBoardCallback
+
+# Initialize TensorBoard callback
+tb_callback = TensorBoardCallback(
+    log_dir="./tb_logs",
+    experiment_name="housing_price_model"
+)
+
+model = plexe.Model(intent="Predict house prices")
+model.build(
+    datasets=[df],
+    callbacks=[tb_callback]
+)
+```
+
+### `JSONLogCallback`
+
+Logs build events and metrics to a JSON file:
+
+```python
+class JSONLogCallback(Callback):
+    def __init__(
+        self,
+        log_file: Optional[str] = None,
+        append: bool = False
+    )
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `log_file` | `Optional[str]` | Path to JSON log file. Default: Auto-generated based on timestamp |
+| `append` | `bool` | Whether to append to an existing log file. Default: `False` |
+
+**Example:**
+
+```python
+import plexe
+from plexe.callbacks import JSONLogCallback
+
+# Initialize JSON log callback
+json_callback = JSONLogCallback(
+    log_file="./logs/housing_model_build.json"
+)
+
+model = plexe.Model(intent="Predict house prices")
+model.build(
+    datasets=[df],
+    callbacks=[json_callback]
+)
+```
+
+## Creating Custom Callbacks
+
+You can create custom callbacks by subclassing `Callback` and implementing the desired methods:
+
+```python
+import plexe
+from plexe.callbacks import Callback, BuildStateInfo
+import time
+
+class TimingCallback(Callback):
+    def __init__(self):
+        self.start_time = None
+        self.iteration_start_times = {}
+        
+    def on_build_start(self, info: BuildStateInfo) -> None:
+        self.start_time = time.time()
+        print(f"Build started at {time.strftime('%H:%M:%S')}")
+        
+    def on_iteration_start(self, info: BuildStateInfo) -> None:
+        iteration = info.iteration + 1  # 1-based for output
+        self.iteration_start_times[iteration] = time.time()
+        print(f"Iteration {iteration} started at {time.strftime('%H:%M:%S')}")
+        
+    def on_iteration_end(self, info: BuildStateInfo) -> None:
+        iteration = info.iteration + 1  # 1-based for output
+        iteration_time = time.time() - self.iteration_start_times[iteration]
+        status = "succeeded" if not (info.node and info.node.exception_was_raised) else "failed"
+        
+        print(f"Iteration {iteration} {status} in {iteration_time:.2f} seconds")
+        
+        if info.node and info.node.performance:
+            print(f"  Performance: {info.node.performance.name} = {info.node.performance.value:.4f}")
+        
+    def on_build_end(self, info: BuildStateInfo) -> None:
+        total_time = time.time() - self.start_time
+        print(f"Build finished in {total_time:.2f} seconds")
+        print(f"Final state: {info.model.get_state().name}")
+```
+
+## Using Multiple Callbacks
+
+You can use multiple callbacks simultaneously:
+
+```python
+import plexe
+from plexe.callbacks import MLFlowCallback, JSONLogCallback
+
+# Create callback instances
+mlflow_callback = MLFlowCallback(experiment_name="Housing Models")
+json_callback = JSONLogCallback(log_file="./logs/build_log.json")
+timing_callback = TimingCallback()  # Custom callback from above
+
+# Use all callbacks together
+model = plexe.Model(intent="Predict house prices")
+model.build(
+    datasets=[df],
+    callbacks=[mlflow_callback, json_callback, timing_callback],
+    chain_of_thought=True  # This adds ChainOfThoughtModelCallback automatically
+)
+```
+
+## Callback Execution Order
+
+When multiple callbacks are provided:
+
+1. All callbacks' `on_build_start` methods are called in the order they appear in the list
+2. For each iteration:
+   a. All callbacks' `on_iteration_start` methods are called in order
+   b. The iteration runs
+   c. All callbacks' `on_iteration_end` methods are called in order
+3. All callbacks' `on_build_end` methods are called in order
+
+## Emitters for Chain of Thought
+
+The `ChainOfThoughtModelCallback` uses an `Emitter` to output the chain of thought logs. Built-in emitters include:
+
+### `ConsoleEmitter`
+
+Outputs logs to the console (stdout):
+
+```python
+class ConsoleEmitter(Emitter):
+    def __init__(
+        self,
+        use_color: bool = True,
+        show_timestamps: bool = False
+    )
+```
+
+### `FileEmitter`
+
+Outputs logs to a file:
+
+```python
+class FileEmitter(Emitter):
+    def __init__(
+        self,
+        file_path: str,
+        append: bool = False,
+        use_color: bool = False,
+        show_timestamps: bool = True
+    )
+```
+
+### Creating Custom Emitters
+
+You can create custom emitters by subclassing `Emitter`:
+
+```python
+from plexe.callbacks.chain_of_thought import Emitter
+
+class CustomEmitter(Emitter):
+    def emit(self, message: str, category: str = None) -> None:
+        # Custom logic for emitting messages
+        formatted = f"[{category or 'INFO'}] {message}"
+        # Do something with formatted message
+        # e.g., send to logging service, web socket, etc.
+```
+
+## Best Practices
+
+- **Choose callbacks based on your needs:** Use MLflow for experiment tracking, TensorBoard for visualization, or custom callbacks for specialized logging
+- **Limit callback overhead:** Complex callbacks can slow down the build process
+- **Combine callbacks strategically:** Multiple callbacks can provide different views of the same process
+- **Handle exceptions gracefully:** Callbacks should catch their own exceptions to avoid disrupting the build process

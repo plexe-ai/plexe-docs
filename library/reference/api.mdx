@@ -1,0 +1,360 @@
+---
+title: 'API Reference'
+description: 'Complete reference documentation for the Plexe Python library API.'
+---
+
+This page provides comprehensive reference documentation for the core classes and functions in the Plexe Python library.
+
+## Core Classes
+
+### `Model`
+
+The primary class in the Plexe library, representing a machine learning model.
+
+```python
+class Model:
+    def __init__(
+        self,
+        intent: str,
+        input_schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
+        output_schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
+        constraints: Optional[List[Constraint]] = None,
+        distributed: bool = False,
+        identifier: Optional[str] = None
+    )
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `intent` | `str` | Natural language description of what the model should do. |
+| `input_schema` | `Optional[Union[Dict[str, Any], Type[BaseModel]]]` | Schema defining input data structure. Can be a dictionary or Pydantic model. |
+| `output_schema` | `Optional[Union[Dict[str, Any], Type[BaseModel]]]` | Schema defining output data structure. Can be a dictionary or Pydantic model. |
+| `constraints` | `Optional[List[Constraint]]` | List of constraints the model should adhere to. |
+| `distributed` | `bool` | Whether to use distributed execution (Ray) when building. Default: `False`. |
+| `identifier` | `Optional[str]` | Custom identifier for the model. If not provided, one will be generated. |
+
+**Methods:**
+
+#### `build`
+
+```python
+def build(
+    self,
+    datasets: Optional[List[Union[pd.DataFrame, DatasetGenerator]]] = None,
+    provider: Optional[Union[str, ProviderConfig]] = None,
+    max_iterations: Optional[int] = None,
+    timeout: Optional[int] = None,
+    chain_of_thought: bool = False,
+    callbacks: Optional[List[Callback]] = None
+) -> None
+```
+
+Builds the model using the provided datasets and configuration.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `datasets` | `Optional[List[Union[pd.DataFrame, DatasetGenerator]]]` | List of pandas DataFrames or DatasetGenerator objects for training data. |
+| `provider` | `Optional[Union[str, ProviderConfig]]` | LLM provider to use, either as a string ("openai/gpt-4o-mini") or ProviderConfig object. |
+| `max_iterations` | `Optional[int]` | Maximum number of iterations to attempt. |
+| `timeout` | `Optional[int]` | Maximum time (in seconds) for build process. |
+| `chain_of_thought` | `bool` | Whether to enable verbose output of agent reasoning. Default: `False`. |
+| `callbacks` | `Optional[List[Callback]]` | List of callback objects for monitoring the build process. |
+
+**Returns:** `None`
+
+#### `predict`
+
+```python
+def predict(
+    self,
+    input_data: Union[Dict[str, Any], BaseModel],
+    validate_input: bool = False,
+    validate_output: bool = False
+) -> Union[Dict[str, Any], Any]
+```
+
+Makes a prediction using the trained model.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `input_data` | `Union[Dict[str, Any], BaseModel]` | Input data for prediction. |
+| `validate_input` | `bool` | Whether to validate input against schema. Default: `False`. |
+| `validate_output` | `bool` | Whether to validate output against schema. Default: `False`. |
+
+**Returns:** `Union[Dict[str, Any], Any]` - Prediction result
+
+#### `get_state`
+
+```python
+def get_state(self) -> ModelState
+```
+
+Returns the current state of the model.
+
+**Returns:** `ModelState` enum value: `DRAFT`, `BUILDING`, `READY`, or `ERROR`
+
+#### `get_metadata`
+
+```python
+def get_metadata(self) -> Dict[str, Any]
+```
+
+Returns metadata about the model.
+
+**Returns:** Dictionary containing metadata
+
+#### `get_metrics`
+
+```python
+def get_metrics(self) -> Optional[Dict[str, Any]]
+```
+
+Returns metrics for the trained model if available.
+
+**Returns:** Dictionary containing metrics or `None`
+
+#### `describe`
+
+```python
+def describe(self) -> ModelDescription
+```
+
+Returns a detailed description of the model.
+
+**Returns:** `ModelDescription` object
+
+### `DatasetGenerator`
+
+Class for generating synthetic data or augmenting existing data.
+
+```python
+class DatasetGenerator:
+    def __init__(
+        self,
+        description: str,
+        provider: str,
+        schema: Type[BaseModel],
+        data: Optional[pd.DataFrame] = None
+    )
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `description` | `str` | Description of the data to generate. |
+| `provider` | `str` | LLM provider to use for generation. |
+| `schema` | `Type[BaseModel]` | Pydantic model describing the data structure. |
+| `data` | `Optional[pd.DataFrame]` | Existing data to augment (optional). |
+
+### `Callback`
+
+Base class for callbacks that monitor the build process.
+
+```python
+class Callback:
+    def on_build_start(self, info: BuildStateInfo) -> None:
+        pass
+
+    def on_iteration_start(self, info: BuildStateInfo) -> None:
+        pass
+
+    def on_iteration_end(self, info: BuildStateInfo) -> None:
+        pass
+
+    def on_build_end(self, info: BuildStateInfo) -> None:
+        pass
+```
+
+See [Callbacks Reference](/library/reference/callbacks) for more details.
+
+### `Constraint`
+
+Represents rules or conditions that the model should satisfy.
+
+```python
+class Constraint:
+    def __init__(self, condition: Callable[[Any, Any], bool], description: str)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `condition` | `Callable[[Any, Any], bool]` | Function that evaluates the constraint. |
+| `description` | `str` | Human-readable description of the constraint. |
+
+## Core Functions
+
+### `save_model`
+
+```python
+def save_model(model: Model, file_path: str) -> str
+```
+
+Saves a trained model to a file.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `model` | `Model` | The model to save. |
+| `file_path` | `str` | Path where the model should be saved. |
+
+**Returns:** `str` - Path to the saved model file
+
+### `load_model`
+
+```python
+def load_model(file_path: str) -> Model
+```
+
+Loads a trained model from a file.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `file_path` | `str` | Path to the saved model file. |
+
+**Returns:** `Model` - The loaded model
+
+### `configure_logging`
+
+```python
+def configure_logging(
+    level: int = logging.INFO,
+    handlers: Optional[List[logging.Handler]] = None,
+    disable_existing_loggers: bool = True
+) -> None
+```
+
+Configures logging for the Plexe library.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `level` | `int` | Logging level (from `logging` module). |
+| `handlers` | `Optional[List[logging.Handler]]` | List of logging handlers. |
+| `disable_existing_loggers` | `bool` | Whether to disable existing loggers. |
+
+**Returns:** `None`
+
+## Enums and Constants
+
+### `ModelState`
+
+Enum representing the possible states of a model.
+
+```python
+class ModelState(Enum):
+    DRAFT = "draft"        # Initial state, before building
+    BUILDING = "building"  # During the build process
+    READY = "ready"        # Build complete, model ready for use
+    ERROR = "error"        # Build failed
+```
+
+## Provider Configuration
+
+### `ProviderConfig`
+
+Class for configuring different LLM providers for different agent roles.
+
+```python
+class ProviderConfig:
+    def __init__(
+        self,
+        default_provider: str,
+        orchestrator_provider: Optional[str] = None,
+        research_provider: Optional[str] = None,
+        engineer_provider: Optional[str] = None,
+        ops_provider: Optional[str] = None,
+        tool_provider: Optional[str] = None
+    )
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `default_provider` | `str` | Default provider for all roles. |
+| `orchestrator_provider` | `Optional[str]` | Provider for the orchestrator agent. |
+| `research_provider` | `Optional[str]` | Provider for the research agent. |
+| `engineer_provider` | `Optional[str]` | Provider for the engineer agent. |
+| `ops_provider` | `Optional[str]` | Provider for the ops agent. |
+| `tool_provider` | `Optional[str]` | Provider for tool agents. |
+
+## Performance Metrics
+
+### `Performance`
+
+Class representing a performance metric for a model.
+
+```python
+class Performance:
+    def __init__(self, name: str, value: float)
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `name` | `str` | Name of the metric (e.g., "accuracy", "rmse"). |
+| `value` | `float` | Value of the metric. |
+
+## Type Hints
+
+The library uses the following type hints:
+
+```python
+SchemaType = Union[Dict[str, Any], Type[BaseModel]]
+DatasetType = Union[pd.DataFrame, DatasetGenerator]
+ProviderType = Union[str, ProviderConfig]
+```
+
+## Usage Example
+
+```python
+import plexe
+import pandas as pd
+
+# Load data
+df = pd.read_csv("housing.csv")
+
+# Create model
+model = plexe.Model(
+    intent="Predict house prices based on features",
+    input_schema={"square_footage": float, "bedrooms": int, "bathrooms": float},
+    output_schema={"price": float}
+)
+
+# Build model
+model.build(
+    datasets=[df],
+    provider="openai/gpt-4o-mini",
+    max_iterations=3,
+    chain_of_thought=True
+)
+
+# Make prediction
+prediction = model.predict({"square_footage": 2000, "bedrooms": 3, "bathrooms": 2})
+print(f"Predicted price: {prediction}")
+
+# Save model
+save_path = plexe.save_model(model, "housing_model.tar.gz")
+
+# Load model
+loaded_model = plexe.load_model(save_path)
+```
+
+For more details on specific components, see the other reference sections:
+- [Callbacks Reference](/library/reference/callbacks)
+- [Datasets Reference](/library/reference/datasets)
+- [Exceptions Reference](/library/reference/exceptions)

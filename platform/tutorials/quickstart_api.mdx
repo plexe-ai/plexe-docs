@@ -1,220 +1,250 @@
 ---
 title: 'Platform API Quickstart'
-description: 'Learn how to build and deploy ML models using the Plexe Platform API.'
+description: 'Build, deploy, and use your first model using the Plexe Platform REST API.'
 ---
 
-This guide walks you through the core functionality of the Plexe Platform API, allowing you to build machine learning models and make predictions without managing any infrastructure.
+This tutorial walks you through the basic workflow of using the Plexe Platform API to create and use a machine learning model without managing infrastructure.
+
+**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
 
 ## Prerequisites
 
-* An account on the Plexe Platform (sign up at [console.plexe.ai](https://console.plexe.ai) if you don't have one)
-* An API key with the appropriate permissions (can be created in the Console)
-* Basic knowledge of making HTTP requests (we'll use `curl` in examples, but you can use any HTTP client)
+1.  **Account:** You need a Plexe Platform account. Sign up at [console.plexe.ai](https://console.plexe.ai) (Replace with actual URL).
+2.  **API Key:** Generate an API key from your account settings in the Plexe Console.
+3.  **Tools:** You'll need a tool to make HTTP requests, like `curl`, Postman, or a scripting language (Python with `requests` is used here).
 
-## Authentication
+## 1. Authentication
 
-All API requests require a valid API key passed in the `x-api-key` header:
+All API requests must include your API key in the `x-api-key` header.
 
-```bash
-curl -X GET https://api.plexe.ai/v1/user/profile \
-  -H "x-api-key: YOUR_API_KEY_HERE"
-```
+```python
+import requests
+import os
+import time
+import json
 
-<Note>
-Protect your API key! Anyone with your key can make API calls on your behalf and incur usage charges.
-</Note>
+# It's best practice to load API keys from environment variables or a secure vault
+# export PLEXE_API_KEY="YOUR_API_KEY"
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
 
-## Step 1: Upload Data
-
-First, let's upload a dataset to use for model training. The API accepts CSV, JSON, or Parquet files.
-
-```bash
-curl -X POST https://api.plexe.ai/v1/data/upload \
-  -H "x-api-key: YOUR_API_KEY_HERE" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@housing_data.csv" \
-  -F "name=Housing Prices Dataset" \
-  -F "description=Housing data with price predictions"
-```
-
-A successful response will include a `dataset_id` that you'll need for the next step:
-
-```json
-{
-  "dataset_id": "ds_abc123def456",
-  "name": "Housing Prices Dataset",
-  "status": "READY",
-  "rows": 1200,
-  "columns": 4,
-  "created_at": "2023-06-15T08:12:34Z"
+base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
 }
+
+print("Authentication headers prepared.")
 ```
 
-## Step 2: Create a Model
+## 2. Upload Data (Optional but Recommended)
 
-Now, let's build a model using the uploaded dataset. You'll specify the model's intent in natural language:
+While Plexe can sometimes infer schemas or work without explicit data for certain intents, providing data generally leads to better results. Let's assume you have `housing_data.csv`.
 
-```bash
-curl -X POST https://api.plexe.ai/v1/models/build \
-  -H "x-api-key: YOUR_API_KEY_HERE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "intent": "Predict house prices based on square footage, bedrooms, and bathrooms",
-    "dataset_id": "ds_abc123def456",
-    "input_schema": {
-      "square_footage": "float",
-      "bedrooms": "integer",
-      "bathrooms": "float"
-    },
-    "output_schema": {
-      "price": "float"
+There are typically two ways to upload data to the Plexe API:
+
+**Method 1: Direct Upload**
+
+```python
+# Simple direct upload example
+file_path = "housing_data.csv"
+with open(file_path, 'rb') as f:
+    files = {'file': (os.path.basename(file_path), f)}
+    response = requests.post(f"{base_url}/v1/uploads", 
+                           headers={"x-api-key": api_key}, 
+                           files=files)
+    if response.status_code == 200:
+        upload_result = response.json()
+        upload_id = upload_result.get("upload_id")
+        print(f"Data uploaded successfully. Upload ID: {upload_id}")
+    else:
+        print(f"Data upload failed: {response.status_code} - {response.text}")
+        upload_id = None  # Set upload_id to None if upload fails
+```
+
+**Method 2: Using Pre-signed URLs**
+
+```python
+# Step 2a: Request pre-signed URL
+file_path = "housing_data.csv"
+file_name = os.path.basename(file_path)
+print(f"Requesting upload URL for {file_name}...")
+try:
+    response = requests.post(
+        f"{base_url}/v1/uploads",
+        headers=headers,
+        json={"filename": file_name, "content_type": "text/csv"}
+    )
+    response.raise_for_status()
+    upload_info = response.json()
+    presigned_url = upload_info.get("presigned_url")
+    temp_upload_id = upload_info.get("upload_id")
+    s3_key = upload_info.get("key")
+    print(f"Obtained pre-signed URL. Temporary Upload ID: {temp_upload_id}")
+
+    # Step 2b: Upload file to S3
+    print("Uploading data to S3...")
+    with open(file_path, 'rb') as f:
+        upload_response = requests.put(presigned_url, data=f, headers={'Content-Type': 'text/csv'})
+        upload_response.raise_for_status()
+    print("Data uploaded to S3.")
+
+    # Step 2c: Confirm upload completion
+    print("Confirming upload status...")
+    confirm_response = requests.post(
+        f"{base_url}/v1/uploads/status",
+        headers=headers,
+        json={"upload_id": temp_upload_id, "filename": file_name, "s3_key": s3_key}
+    )
+    confirm_response.raise_for_status()
+    upload_status = confirm_response.json()
+    upload_id = upload_status.get("upload_id")
+    print(f"Upload confirmed. Final Upload ID: {upload_id}")
+
+except requests.exceptions.RequestException as e:
+    print(f"Error during data upload: {e}")
+    if e.response is not None:
+        print(f"Response content: {e.response.text}")
+    upload_id = None
+
+except json.JSONDecodeError as e:
+    print(f"Error decoding JSON response: {e}")
+    upload_id = None
+
+
+# Use a known public dataset URL if local upload fails/is skipped
+if not upload_id:
+     print("\nUsing public dataset URL as fallback.")
+     dataset_reference = "https://raw.githubusercontent.com/plotly/datasets/master/housing_new-york.csv"
+else:
+     dataset_reference = upload_id
+```
+
+<Warning>
+The exact data upload process depends on the API implementation. Check the [Data Management API Reference](/platform/reference/endpoints/data) for details.
+</Warning>
+
+## 3. Build the Model
+
+Submit a request to build a model. Provide a unique `model_name`, your `intent`, and the reference to your data (`upload_id` or URL).
+
+```python
+model_name = "api-quickstart-housing" # Choose a unique name
+build_payload = {
+    "intent": "Predict house prices in USD based on features like sqft, beds, baths.",
+    "data_reference": dataset_reference, # Use upload_id or URL from previous step
+    "metric": "rmse" # Optional: suggest a metric (lower is better for RMSE)
+    # You might also specify schemas here if not inferring
+    # "input_schema": {"sqft": float, ...},
+    # "output_schema": {"price": float}
+}
+
+print(f"\nSubmitting build request for model: {model_name}")
+try:
+    response = requests.post(
+        f"{base_url}/v1/models/{model_name}",
+        headers=headers,
+        json=build_payload
+    )
+    response.raise_for_status()
+    build_result = response.json()
+    model_id = build_result.get("model_id")
+    print(f"Build request accepted. Model ID: {model_id}")
+
+except requests.exceptions.RequestException as e:
+    print(f"Error submitting build request: {e}")
+    if e.response is not None:
+        print(f"Response content: {e.response.text}")
+    model_id = None
+except json.JSONDecodeError as e:
+    print(f"Error decoding JSON response: {e}")
+    model_id = None
+```
+
+## 4. Monitor Build Status
+
+Model building is asynchronous. Poll the status endpoint until it's `completed` or `failed`.
+
+```python
+if model_id:
+    print(f"\nMonitoring build status for Model ID: {model_id}...")
+    status = "pending"
+    while status in ["pending", "processing", "building"]:
+        time.sleep(15) # Wait before checking again
+        try:
+            # Extract name and version from model_id (format may vary)
+            parts = model_id.split(':')
+            if len(parts) != 2:
+                print(f"Cannot extract name/version from model_id: {model_id}. Stopping monitor.")
+                break
+            m_name, m_version = parts[0], parts[1]
+
+            status_url = f"{base_url}/v1/models/{m_name}/{m_version}/status"
+            response = requests.get(status_url, headers=headers)
+            response.raise_for_status()
+            status_result = response.json()
+            status = status_result.get("status")
+            print(f"  Current status: {status}...")
+
+            if status == "completed":
+                metric_name = status_result.get("result", {}).get("metric_name")
+                metric_value = status_result.get("result", {}).get("metric_value")
+                print(f"  Build completed! Metric ({metric_name}): {metric_value}")
+                break
+            elif status == "failed":
+                error_details = status_result.get("error", "Unknown error")
+                print(f"  Build failed: {error_details}")
+                model_id = None # Indicate failure
+                break
+        except requests.exceptions.RequestException as e:
+            print(f"  Error checking status: {e}")
+            time.sleep(30) # Longer wait on error
+        except json.JSONDecodeError as e:
+            print(f"  Error decoding status response: {e}")
+            break
+        except Exception as e:
+            print(f"  An unexpected error occurred: {e}")
+            break
+else:
+    print("\nSkipping status monitoring as model build failed to start.")
+```
+
+## 5. Perform Inference
+
+Once the model status is `completed`, you can use the inference endpoint.
+
+```python
+if model_id and status == "completed":
+    print("\nPerforming inference...")
+    # Prepare input data matching the model's expected input schema
+    inference_payload = {
+        # Use feature names consistent with your data/intent/schema
+        "sqft": 1950.0,
+        "beds": 3,
+        "baths": 2.5
     }
-  }'
+
+    try:
+        # Extract name and version from model_id
+        m_name, m_version = model_id.split(':')
+        infer_url = f"{base_url}/v1/models/{m_name}/{m_version}/infer"
+        response = requests.post(infer_url, headers=headers, json=inference_payload)
+        response.raise_for_status()
+        prediction = response.json()
+        print(f"Inference successful. Prediction: {prediction}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error during inference: {e}")
+        if e.response is not None:
+            print(f"Response content: {e.response.text}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding inference response: {e}")
+    except Exception as e:
+         print(f"An unexpected error occurred during inference: {e}")
+
+else:
+    print("\nModel not ready for inference.")
 ```
 
-The response will include a `job_id` that you can use to track the model building progress:
-
-```json
-{
-  "job_id": "job_xyz789uvw123",
-  "status": "PENDING",
-  "model_id": "mdl_456ghi789jkl",
-  "created_at": "2023-06-15T08:15:45Z"
-}
-```
-
-## Step 3: Monitor Model Building Progress
-
-Building a model can take a few minutes. You can check the status:
-
-```bash
-curl -X GET https://api.plexe.ai/v1/jobs/job_xyz789uvw123 \
-  -H "x-api-key: YOUR_API_KEY_HERE"
-```
-
-Response while building:
-
-```json
-{
-  "job_id": "job_xyz789uvw123",
-  "status": "RUNNING",
-  "model_id": "mdl_456ghi789jkl",
-  "progress": 65,
-  "created_at": "2023-06-15T08:15:45Z",
-  "updated_at": "2023-06-15T08:17:12Z"
-}
-```
-
-Once complete:
-
-```json
-{
-  "job_id": "job_xyz789uvw123",
-  "status": "COMPLETED",
-  "model_id": "mdl_456ghi789jkl",
-  "progress": 100,
-  "created_at": "2023-06-15T08:15:45Z",
-  "completed_at": "2023-06-15T08:19:23Z",
-  "metrics": {
-    "rmse": 15234.56,
-    "r2": 0.87,
-    "mae": 12345.67
-  }
-}
-```
-
-## Step 4: Deploy the Model
-
-Once the model is built, you can deploy it to make it available for predictions:
-
-```bash
-curl -X POST https://api.plexe.ai/v1/models/mdl_456ghi789jkl/deploy \
-  -H "x-api-key: YOUR_API_KEY_HERE"
-```
-
-Response:
-
-```json
-{
-  "deployment_id": "dep_789mno012pqr",
-  "model_id": "mdl_456ghi789jkl",
-  "status": "DEPLOYING",
-  "endpoint": "https://api.plexe.ai/v1/predict/dep_789mno012pqr",
-  "created_at": "2023-06-15T08:20:45Z"
-}
-```
-
-## Step 5: Make Predictions
-
-After the model is deployed (check status with `/models/mdl_456ghi789jkl` until `deployment_status` is `READY`), you can make predictions:
-
-```bash
-curl -X POST https://api.plexe.ai/v1/predict/dep_789mno012pqr \
-  -H "x-api-key: YOUR_API_KEY_HERE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "square_footage": 1850.0,
-    "bedrooms": 3,
-    "bathrooms": 2.5
-  }'
-```
-
-Response:
-
-```json
-{
-  "request_id": "req_123stu456vwx",
-  "result": {
-    "price": 385000.0
-  },
-  "model_id": "mdl_456ghi789jkl",
-  "created_at": "2023-06-15T08:25:12Z"
-}
-```
-
-## Getting Model Information
-
-You can get details about a model:
-
-```bash
-curl -X GET https://api.plexe.ai/v1/models/mdl_456ghi789jkl \
-  -H "x-api-key: YOUR_API_KEY_HERE"
-```
-
-Response:
-
-```json
-{
-  "model_id": "mdl_456ghi789jkl",
-  "name": "Housing Price Predictor",
-  "intent": "Predict house prices based on square footage, bedrooms, and bathrooms",
-  "status": "READY",
-  "deployment_status": "READY",
-  "endpoint": "https://api.plexe.ai/v1/predict/dep_789mno012pqr",
-  "metrics": {
-    "rmse": 15234.56,
-    "r2": 0.87,
-    "mae": 12345.67
-  },
-  "input_schema": {
-    "square_footage": "float",
-    "bedrooms": "integer",
-    "bathrooms": "float"
-  },
-  "output_schema": {
-    "price": "float"
-  },
-  "created_at": "2023-06-15T08:15:45Z",
-  "last_updated": "2023-06-15T08:20:45Z"
-}
-```
-
-## Conclusion
-
-You've now learned the basics of using the Plexe Platform API to:
-1. Upload training data
-2. Build a model with a natural language intent
-3. Deploy the model
-4. Make predictions
-
-The platform handles all the infrastructure, scaling, and ML engineering complexities for you. For more details about available endpoints and options, see the [API Reference](/platform/reference/introduction).
+This completes the basic API workflow. Explore the [Platform API Reference](/platform/reference/introduction) for details on all available endpoints and parameters.
