@@ -7,7 +7,7 @@
     "light": "#69B6FF",
     "dark": "#69B6FF"
   },
-  "favicon": "resources/plexe_favicon.svg",
+  "favicon": "resources/plexe.svg",
   "navigation": {
     "tabs": [
       {
@@ -166,8 +166,8 @@
     }
   },
   "logo": {
-    "light": "resources/plexe.svg",
-    "dark": "resources/plexe.svg"
+    "light": "resources/plexe-logo-long-light.png",
+    "dark": "resources/plexe-logo-long-dark.png"
   },
   "navbar": {
     "links": [
