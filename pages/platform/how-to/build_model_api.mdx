@@ -5,7 +5,7 @@ description: 'Initiate and configure machine learning model builds using the Ple
 
 You can start the automated model building process on the Plexe Platform by making a `POST` request to the model creation endpoint.
 
-**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
+**Base URL:** `https://api.plexe.ai`
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ api_key = os.getenv("PLEXE_API_KEY")
 if not api_key:
     raise ValueError("Please set the PLEXE_API_KEY environment variable.")
 
-base_url = "[https://api.plexe.ai](https://api.plexe.ai)" # Replace with actual API endpoint
+base_url = "https://api.plexe.ai"
 headers = {
     "x-api-key": api_key,
     "Content-Type": "application/json"
@@ -38,24 +38,23 @@ Make a `POST` request to the endpoint for creating models, typically including t
 
 The request body contains the core configuration for the build:
 
-  * **`intent`**: (Required) Natural language description of the model's goal.
-  * **`data_reference`**: (Required if not using purely synthetic generation based on intent/schema alone) Reference to your data. This could be:
-      * An `upload_id` obtained from the data upload process.
-      * A list of `upload_id`s if using multiple datasets.
+  * **`goal`**: (Required) Natural language description of the model's goal.
+  * **`upload_id`**: (Required if not using purely synthetic generation based on goal/schema alone) Reference to your data. This could be:
+      * An ID obtained from the data upload process.
       * A publicly accessible URL to a dataset (CSV, JSON, etc. - check API reference for supported URL types).
-  * **`input_schema`**: (Optional) Dictionary defining the input features and types (e.g., `{"feature1": "float", "feature2": "str"}`). Plexe will try to infer if omitted and `data_reference` is provided.
+  * **`input_schema`**: (Optional) Dictionary defining the input features and types (e.g., `{"feature1": "float", "feature2": "str"}`). Plexe will try to infer if omitted and `upload_id` is provided.
   * **`output_schema`**: (Optional) Dictionary defining the output prediction(s) and types (e.g., `{"prediction": "int", "probability": "float"}`). Plexe will try to infer if omitted.
   * **`metric`**: (Optional) Suggest a primary metric to optimize (e.g., `"accuracy"`, `"rmse"`, `"f1"`). Plexe will select an appropriate default if omitted.
   * **`max_iterations`**: (Optional) Maximum number of different modeling approaches the agent system should try (default might be 1 or 3, check API reference). Higher values increase build time and cost but may yield better models.
-  * **`provider`**: (Optional) Specify the LLM provider/model to use (e.g., `"openai/gpt-4o-mini"`). Uses the platform default if omitted. See [Configure LLM Providers](https://www.google.com/search?q=/library/how-to/configure_llm_provider) (concepts apply similarly here).
+  * **`provider`**: (Optional) Specify the LLM provider/model to use (e.g., `"openai/gpt-4o-mini"`). Uses the platform default if omitted. See [Configure LLM Providers](/library/how-to/configure_llm_provider) (concepts apply similarly here).
 
 ```python
 model_name = "customer-churn-predictor-v1" # Choose a unique name for your model
 upload_id = "YOUR_UPLOAD_ID" # Replace with the ID from your data upload
 
 build_payload = {
-  "intent": "Predict customer churn based on usage patterns like login frequency, support tickets, and subscription duration.",
-  "data_reference": upload_id, # Use the ID obtained from data upload
+  "goal": "Predict customer churn based on usage patterns like login frequency, support tickets, and subscription duration.",
+  "upload_id": upload_id, # Use the ID obtained from data upload
   # Optionally provide schemas if inference is not desired or needs guidance
   # "input_schema": {
   #   "login_frequency_last_30d": "int",
@@ -102,4 +101,49 @@ except requests.exceptions.HTTPError as http_err:
     print(f"HTTP error occurred: {http_err}")
     print(f"Response Text: {http_err.response.text}")
 except requests.exceptions.ConnectionError as conn_err:
+    print(f"Connection error occurred: {conn_err}")
+except Exception as err:
+    print(f"Other error occurred: {err}")
 ```
+
+## Checking Build Status
+
+After submitting a build request, you'll want to monitor its progress. Use the status endpoint to check on your model's build status:
+
+```python
+def check_build_status(model_name, model_version):
+    """Check the status of a model build"""
+    try:
+        status_url = f"{base_url}/models/{model_name}/{model_version}/status"
+        response = requests.get(
+            status_url,
+            headers=headers
+        )
+        response.raise_for_status()
+        status_data = response.json()
+        
+        # Print current status information
+        print(f"Model: {model_name} (Version: {model_version})")
+        print(f"Status: {status_data.get('status')}")
+        print(f"Updated: {status_data.get('updated_at')}")
+        
+        # If there's an error message, display it
+        if status_data.get('error_message'):
+            print(f"Error: {status_data.get('error_message')}")
+            
+        return status_data
+        
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        return None
+    except Exception as err:
+        print(f"Error checking status: {err}")
+        return None
+
+# Example usage after getting model_name and model_version from the build response
+if model_id and ':' in model_id:
+    m_name, m_version = model_id.split(':', 1)
+    status = check_build_status(m_name, m_version)
+```
+
+Once your model's status is `"completed"`, you can proceed to making inferences with it using the [deployed model inference API](/platform/how-to/use_deployed_model).

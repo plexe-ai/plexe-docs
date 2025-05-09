@@ -5,10 +5,10 @@ description: 'Upload your datasets to the Plexe Platform using the REST API.'
 
 To build models on the Plexe Platform using your own data, you first need to upload it. The API typically provides a mechanism to upload files, often involving pre-signed URLs for direct S3 uploads.
 
-**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
+**Base URL:** `https://api.plexe.ai`
 
 <Note>
-The exact upload mechanism can vary. The following example is based on common patterns involving pre-signed URLs, as suggested by older documentation. Always refer to the specific [Data Management API Reference](/platform/reference/endpoints/data) for the authoritative process.
+The Plexe Platform uses a secure upload mechanism with pre-signed URLs to protect your data during transfer. This allows you to upload files directly to secure cloud storage without exposing your API key in the process. For more details on the API endpoints, refer to the [Data Management API Reference](/platform/reference/endpoints/data).
 </Note>
 
 ## Authentication
@@ -24,7 +24,7 @@ api_key = os.getenv("PLEXE_API_KEY")
 if not api_key:
     raise ValueError("Please set the PLEXE_API_KEY environment variable.")
 
-base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+base_url = "https://api.plexe.ai"
 headers = {
     "x-api-key": api_key,
     "Content-Type": "application/json" # Usually for control requests
@@ -151,4 +151,30 @@ else:
     print("\nData upload process failed or was skipped.")
 ```
 
-You can now use the final `upload_id` when submitting model build requests that require this dataset. You can upload multiple files and reference them by their respective `upload_id`s.
+You can now use the final `upload_id` when submitting model build requests that require this dataset. For example:
+
+```python
+# Example of how to use the upload_id in a model build request
+if upload_id:
+    model_build_data = {
+        "upload_id": upload_id,  # Use the upload_id returned from the upload process
+        "goal": "Predict customer churn based on usage patterns",  # Natural language description of your model's purpose
+        "metric": "f1_score"  # The metric to optimize for
+    }
+    
+    try:
+        model_name = "customer_churn_model"
+        model_build_response = requests.post(
+            f"{base_url}/models/{model_name}",
+            headers=headers,
+            json=model_build_data
+        )
+        model_build_response.raise_for_status()
+        build_result = model_build_response.json()
+        print(f"Model build initiated successfully: {build_result}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error initiating model build: {e}")
+        if e.response is not None: print(f"Response: {e.response.text}")
+```
+
+You can upload multiple files and reference them by their respective `upload_id`s for different model building tasks.

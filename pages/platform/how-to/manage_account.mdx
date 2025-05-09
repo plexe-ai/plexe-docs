@@ -7,7 +7,7 @@ Manage your Plexe Platform account through the web console.
 
 ## Signing Up
 
-1.  Go to the [Plexe Console](https://console.plexe.ai) (Replace with actual URL).
+1.  Go to the [Plexe Console](https://console.plexe.ai).
 2.  Follow the on-screen instructions to sign up using your preferred method (e.g., email/password, Google, GitHub - depending on supported providers).
 3.  Verify your email address if required.
 
@@ -35,3 +35,44 @@ Plexe Platform operations, such as model building and inference, consume compute
 </Info>
 
 Refer to the [Billing Explanation](/platform/explanation/billing) page for more details on how credits and consumption work.
+
+## Managing Account via API
+
+You can also view your account details and usage information through the API:
+
+```python
+import requests
+import os
+
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "https://api.plexe.ai"
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+
+# Get user profile with usage information
+try:
+    response = requests.get(
+        f"{base_url}/usage/profile",
+        headers=headers
+    )
+    response.raise_for_status()
+    
+    profile = response.json()
+    print(f"User ID: {profile.get('user_id')}")
+    print(f"Email: {profile.get('email')}")
+    print(f"Name: {profile.get('name')}")
+    print(f"Credits Available: {profile.get('usage', {}).get('credits', 0)}")
+    print(f"Consumption: {profile.get('usage', {}).get('consumption', 0)}")
+    
+except requests.exceptions.HTTPError as http_err:
+    print(f"HTTP error occurred: {http_err}")
+except Exception as err:
+    print(f"Error occurred: {err}")
+```
+
+The `/usage/current` endpoint can also be used to get just your current credit usage without the profile information.

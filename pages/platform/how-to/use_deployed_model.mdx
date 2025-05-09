@@ -23,25 +23,17 @@ Before making predictions, you need to know your model's endpoint URL. You can o
 3. Select your deployment
 4. Copy the endpoint URL from the **Overview** tab
 
-### From the API
+### Via the API
 
-```bash
-# Get deployment details including the endpoint URL
-curl -X GET https://api.plexe.ai/deployments/{deployment_id} \
-  -H "x-api-key: YOUR_API_KEY"
+When you deploy a model on the Plexe Platform, you'll be able to get the inference URL from the model status. The URL will be in the format:
+
+```
+https://api.plexe.ai/models/{model_name}/{model_version}/infer
 ```
 
-Response (excerpt):
-
-```json
-{
-  "deployment_id": "dep_abc123def456",
-  "status": "READY",
-  "endpoint": "https://api.plexe.ai/predict/dep_abc123def456",
-  "model_id": "model_789xyz",
-  "created_at": "2024-05-01T12:00:00Z"
-}
-```
+Where:
+- `{model_name}` is the name of your model
+- `{model_version}` is the version number of your model
 
 ## Making Single Predictions
 
@@ -50,7 +42,7 @@ For predictions with a single data point, use the simple prediction endpoint.
 ### Using cURL
 
 ```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id} \
+curl -X POST https://api.plexe.ai/models/{model_name}/{model_version}/infer \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -82,7 +74,8 @@ import requests
 import json
 
 API_KEY = "YOUR_API_KEY"
-DEPLOYMENT_ID = "dep_abc123def456"
+MODEL_NAME = "your_model_name"
+MODEL_VERSION = "1"  # Typically "1" for the first version
 BASE_URL = "https://api.plexe.ai"
 
 def get_prediction(input_data):
@@ -100,7 +93,7 @@ def get_prediction(input_data):
         "Content-Type": "application/json"
     }
     
-    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}"
+    endpoint = f"{BASE_URL}/models/{MODEL_NAME}/{MODEL_VERSION}/infer"
     
     try:
         response = requests.post(
@@ -138,8 +131,9 @@ if result:
 ```javascript
 async function getPrediction(inputData) {
   const apiKey = "YOUR_API_KEY";
-  const deploymentId = "dep_abc123def456";
-  const endpoint = `https://api.plexe.ai/predict/${deploymentId}`;
+  const modelName = "your_model_name";
+  const modelVersion = "1";  // Typically "1" for the first version
+  const endpoint = `https://api.plexe.ai/models/${modelName}/${modelVersion}/infer`;
   
   try {
     const response = await fetch(endpoint, {
@@ -181,186 +175,9 @@ getPrediction(inputData)
   });
 ```
 
-## Making Batch Predictions
+<!-- Note: Batch prediction capabilities will be added in a future release. Currently, predictions should be made one at a time using the single prediction endpoint. -->
 
-For efficiently processing multiple predictions at once, use the batch prediction endpoint.
-
-### Using cURL
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}/batch \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "inputs": [
-      {"feature1": "value1", "feature2": 42},
-      {"feature1": "value2", "feature2": 17},
-      {"feature1": "value3", "feature2": 98}
-    ]
-  }'
-```
-
-The response will contain an array of predictions:
-
-```json
-{
-  "request_id": "batch_req_345678",
-  "results": [
-    {"predicted_class": "category_b", "confidence": 0.87},
-    {"predicted_class": "category_a", "confidence": 0.92},
-    {"predicted_class": "category_c", "confidence": 0.78}
-  ],
-  "model_id": "model_789xyz",
-  "model_version": "1",
-  "processing_time_ms": 85
-}
-```
-
-### Using Python
-
-```python
-import requests
-import json
-
-API_KEY = "YOUR_API_KEY"
-DEPLOYMENT_ID = "dep_abc123def456"
-BASE_URL = "https://api.plexe.ai"
-
-def get_batch_predictions(input_data_list):
-    """
-    Get predictions for multiple inputs from a deployed model.
-    
-    Args:
-        input_data_list (list): List of input data dictionaries
-        
-    Returns:
-        dict: The batch prediction results
-    """
-    headers = {
-        "x-api-key": API_KEY,
-        "Content-Type": "application/json"
-    }
-    
-    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}/batch"
-    
-    try:
-        response = requests.post(
-            endpoint,
-            headers=headers,
-            data=json.dumps({"inputs": input_data_list})
-        )
-        response.raise_for_status()
-        
-        return response.json()
-    
-    except requests.exceptions.RequestException as e:
-        print(f"Error making batch prediction: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            print(f"Response: {e.response.text}")
-        return None
-
-# Example usage
-input_data_list = [
-    {
-        "square_footage": 1950,
-        "bedrooms": 3,
-        "bathrooms": 2.5,
-        "location": "suburban"
-    },
-    {
-        "square_footage": 850,
-        "bedrooms": 1,
-        "bathrooms": 1.0,
-        "location": "urban"
-    },
-    {
-        "square_footage": 3200,
-        "bedrooms": 4,
-        "bathrooms": 3.5,
-        "location": "rural"
-    }
-]
-
-results = get_batch_predictions(input_data_list)
-if results:
-    print(f"Batch request ID: {results['request_id']}")
-    print(f"Processing time: {results['processing_time_ms']} ms")
-    
-    for i, result in enumerate(results['results']):
-        print(f"Prediction {i+1}: {result}")
-```
-
-## Streaming Large Batch Predictions
-
-For very large prediction tasks, use the asynchronous batch prediction endpoint:
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}/async-batch \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input_upload_id": "upload_def456",
-    "input_column_mapping": {
-      "csv_column1": "feature1",
-      "csv_column2": "feature2"
-    },
-    "output_format": "csv",
-    "notification_email": "user@example.com"
-  }'
-```
-
-Response:
-
-```json
-{
-  "job_id": "job_batch_hij789",
-  "status": "PENDING",
-  "created_at": "2024-05-01T14:30:00Z"
-}
-```
-
-You can then [monitor the job](/platform/how-to/monitor_jobs) to check when it's complete and download results.
-
-## Input Validation
-
-To validate your input data against the model's schema before sending:
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}/validate \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feature1": "value1",
-    "feature2": 42,
-    "feature3": true
-  }'
-```
-
-Response for valid input:
-
-```json
-{
-  "valid": true
-}
-```
-
-Response for invalid input:
-
-```json
-{
-  "valid": false,
-  "errors": [
-    {
-      "field": "feature2",
-      "error": "must be a string"
-    },
-    {
-      "field": "required_feature",
-      "error": "field is required"
-    }
-  ]
-}
-```
+<!-- Input validation API endpoints will be available in a future release. For now, we recommend implementing validation in your client application before sending requests to the model. -->
 
 ## Handling Errors
 
@@ -491,69 +308,7 @@ def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
     return None  # Should not reach here but just in case
 ```
 
-## Advanced Features
-
-### Controlling Response Fields
-
-Specify which fields to include in the response:
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}?include=result,processing_time_ms \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feature1": "value1",
-    "feature2": 42
-  }'
-```
-
-### Explanation Requests
-
-For models that support it, get explanations for predictions:
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}?explain=true \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feature1": "value1",
-    "feature2": 42
-  }'
-```
-
-Response with explanation:
-
-```json
-{
-  "request_id": "req_789012",
-  "result": {
-    "predicted_class": "category_b",
-    "confidence": 0.87
-  },
-  "explanation": {
-    "type": "feature_importance",
-    "data": [
-      {"feature": "feature2", "importance": 0.65},
-      {"feature": "feature1", "importance": 0.35}
-    ]
-  },
-  "processing_time_ms": 45
-}
-```
-
-### Versioned Inference
-
-Request a specific model version:
-
-```bash
-curl -X POST https://api.plexe.ai/predict/{deployment_id}?model_version=2 \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feature1": "value1",
-    "feature2": 42
-  }'
-```
+<!-- Advanced features such as explanation requests and field filtering will be available in a future release. -->
 
 ## Best Practices
 

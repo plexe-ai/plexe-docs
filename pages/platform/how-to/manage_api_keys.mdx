@@ -8,7 +8,7 @@ securely through the Plexe Console.
 
 ## Accessing API Key Management
 
-1.  Log in to the [Plexe Console](https://console.plexe.ai) (Replace with actual URL).
+1.  Log in to the [Plexe Console](https://console.plexe.ai).
 2.  Navigate to the "Account Settings" or "API Keys" section.
 
 ## Creating an API Key
@@ -49,7 +49,7 @@ import requests
 import os
 
 api_key = "YOUR_PLEXE_API_KEY" # Replace with your actual key or load securely
-base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+base_url = "https://api.plexe.ai"
 
 headers = {
     "x-api-key": api_key
@@ -70,3 +70,118 @@ except requests.exceptions.RequestException as e:
 <Warning>
 **Treat your API keys like passwords.** Do not share them, embed them directly in public code (like frontend JavaScript), or commit them to version control. Use environment variables or secure secret management solutions.
 </Warning>
+
+## Managing API Keys via API
+
+You can also manage your API keys programmatically:
+
+### Viewing Your API Keys
+
+```python
+import requests
+import os
+
+# Get API key from environment or config
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "https://api.plexe.ai"
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+
+try:
+    response = requests.get(
+        f"{base_url}/auth/api-keys",
+        headers=headers
+    )
+    response.raise_for_status()
+    
+    keys_data = response.json()
+    print(f"You have {len(keys_data.get('keys', []))} API key(s):")
+    
+    for idx, key in enumerate(keys_data.get('keys', []), 1):
+        print(f"{idx}. {key.get('name', 'Unnamed Key')} - Created: {key.get('created_at')}")
+        print(f"   Preview: {key.get('preview', '****')}")
+        
+except requests.exceptions.HTTPError as http_err:
+    print(f"HTTP error occurred: {http_err}")
+except Exception as err:
+    print(f"Error occurred: {err}")
+```
+
+### Creating a New API Key
+
+```python
+import requests
+import os
+
+# Get existing API key for authentication
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "https://api.plexe.ai"
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+
+try:
+    response = requests.post(
+        f"{base_url}/auth/api-keys", 
+        headers=headers
+    )
+    response.raise_for_status()
+    
+    new_key_data = response.json()
+    
+    # The full API key is only returned once
+    print(f"New API Key created:")
+    print(f"Full API Key (copy now): {new_key_data.get('api_key')}")
+    print(f"Preview: {new_key_data.get('api_key_preview')}")
+    print(f"Created at: {new_key_data.get('created_at')}")
+    print("\nIMPORTANT: Store this key securely. You won't be able to see it again.")
+    
+except requests.exceptions.HTTPError as http_err:
+    print(f"HTTP error occurred: {http_err}")
+except Exception as err:
+    print(f"Error occurred: {err}")
+```
+
+### Revoking an API Key
+
+```python
+import requests
+import os
+
+# Get existing API key for authentication
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "https://api.plexe.ai"
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+
+# The key ID of the API key you want to revoke (get this from listing your keys)
+key_id_to_revoke = "YOUR_KEY_ID"
+
+try:
+    response = requests.delete(
+        f"{base_url}/auth/api-keys/{key_id_to_revoke}",
+        headers=headers
+    )
+    response.raise_for_status()
+    
+    print(f"API Key {key_id_to_revoke} successfully revoked.")
+    
+except requests.exceptions.HTTPError as http_err:
+    print(f"HTTP error occurred: {http_err}")
+except Exception as err:
+    print(f"Error occurred: {err}")
+```
