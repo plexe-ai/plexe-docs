@@ -21,10 +21,6 @@ The `BuildStateInfo` object passed to these methods contains contextual informat
 
 Plexe includes some useful built-in callbacks:
 
-### `ChainOfThoughtModelCallback`
-
-This callback is automatically added when you set `chain_of_thought=True` in `model.build()`. It captures the agent reasoning steps and emits them using an emitter (defaults to `ConsoleEmitter`). You generally don't need to instantiate this directly.
-
 ### `MLFlowCallback`
 
 This callback logs parameters, metrics, and artifacts from the build process to an [MLflow Tracking](https://mlflow.org/docs/latest/tracking.html) server.

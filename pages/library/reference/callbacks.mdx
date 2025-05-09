@@ -30,35 +30,59 @@ class Callback:
 
 ## BuildStateInfo
 
-The `BuildStateInfo` object provides context about the current state of the build process and is passed to all callback methods:
+The `BuildStateInfo` dataclass provides context about the current state of the build process and is passed to all callback methods:
 
 ```python
+@dataclass
 class BuildStateInfo:
-    def __init__(
-        self,
-        model: Optional['Model'] = None,
-        intent: Optional[str] = None,
-        provider: Optional[Union[str, ProviderConfig]] = None,
-        input_schema: Optional[SchemaType] = None,
-        output_schema: Optional[SchemaType] = None,
-        datasets: Optional[List[Union[pd.DataFrame, DatasetGenerator]]] = None,
-        iteration: Optional[int] = None,
-        max_iterations: Optional[int] = None,
-        node: Optional['Node'] = None
-    )
+    # Common identification fields
+    intent: str
+    """The natural language description of the model's intent."""
+
+    provider: str
+    """The provider (LLM) used for generating the model."""
+
+    # Schema fields
+    input_schema: Optional[Type[BaseModel]] = None
+    """The input schema for the model."""
+
+    output_schema: Optional[Type[BaseModel]] = None
+    """The output schema for the model."""
+
+    run_timeout: Optional[int] = None
+    """Maximum time in seconds for each individual training run."""
+
+    max_iterations: Optional[int] = None
+    """Maximum number of iterations for the model building process."""
+
+    timeout: Optional[int] = None
+    """Maximum total time in seconds for the entire model building process."""
+
+    # Iteration fields
+    iteration: int = 0
+    """Current iteration number (0-indexed)."""
+
+    # Dataset fields
+    datasets: Optional[Dict[str, TabularConvertible]] = None
+    """Dictionary of datasets used for training."""
+
+    # Current node being evaluated
+    node: Optional[Node] = None
+    """The solution node being evaluated in the current iteration."""
 ```
 
 | Attribute | Type | Description |
 | --- | --- | --- |
-| `model` | `Optional['Model']` | Reference to the model being built |
-| `intent` | `Optional[str]` | The natural language description of the model's goal |
-| `provider` | `Optional[Union[str, ProviderConfig]]` | LLM provider configuration |
-| `input_schema` | `Optional[SchemaType]` | Input schema for the model |
-| `output_schema` | `Optional[SchemaType]` | Output schema for the model |
-| `datasets` | `Optional[List[Union[pd.DataFrame, DatasetGenerator]]]` | Training datasets |
-| `iteration` | `Optional[int]` | Current iteration number (0-based) |
-| `max_iterations` | `Optional[int]` | Maximum number of iterations |
-| `node` | `Optional['Node']` | Current solution node (only in iteration_end) |
+| `intent` | `str` | The natural language description of the model's intent |
+| `provider` | `str` | The provider (LLM) used for generating the model |
+| `input_schema` | `Optional[Type[BaseModel]]` | The input schema for the model |
+| `output_schema` | `Optional[Type[BaseModel]]` | The output schema for the model |
+| `run_timeout` | `Optional[int]` | Maximum time in seconds for each individual training run |
+| `max_iterations` | `Optional[int]` | Maximum number of iterations for the model building process |
+| `timeout` | `Optional[int]` | Maximum total time in seconds for the entire model building process |
+| `iteration` | `int` | Current iteration number (0-indexed) |
+| `datasets` | `Optional[Dict[str, TabularConvertible]]` | Dictionary of datasets used for training |
+| `node` | `Optional[Node]` | The solution node being evaluated in the current iteration |
 
 ## Built-in Callbacks
 
@@ -143,78 +167,9 @@ model.build(
 )
 ```
 
-### `TensorBoardCallback`
+{/* TensorBoardCallback and JSONLogCallback are not included in the current version of the library */}
 
-Logs metrics and events to TensorBoard:
-
-```python
-class TensorBoardCallback(Callback):
-    def __init__(
-        self,
-        log_dir: Optional[str] = None,
-        experiment_name: Optional[str] = None
-    )
-```
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `log_dir` | `Optional[str]` | Directory to store TensorBoard logs. Default: `"./runs"` |
-| `experiment_name` | `Optional[str]` | Name for the experiment. Default: Automatically generated |
-
-**Example:**
-
-```python
-import plexe
-from plexe.callbacks import TensorBoardCallback
-
-# Initialize TensorBoard callback
-tb_callback = TensorBoardCallback(
-    log_dir="./tb_logs",
-    experiment_name="housing_price_model"
-)
-
-model = plexe.Model(intent="Predict house prices")
-model.build(
-    datasets=[df],
-    callbacks=[tb_callback]
-)
-```
-
-### `JSONLogCallback`
-
-Logs build events and metrics to a JSON file:
-
-```python
-class JSONLogCallback(Callback):
-    def __init__(
-        self,
-        log_file: Optional[str] = None,
-        append: bool = False
-    )
-```
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `log_file` | `Optional[str]` | Path to JSON log file. Default: Auto-generated based on timestamp |
-| `append` | `bool` | Whether to append to an existing log file. Default: `False` |
-
-**Example:**
-
-```python
-import plexe
-from plexe.callbacks import JSONLogCallback
-
-# Initialize JSON log callback
-json_callback = JSONLogCallback(
-    log_file="./logs/housing_model_build.json"
-)
-
-model = plexe.Model(intent="Predict house prices")
-model.build(
-    datasets=[df],
-    callbacks=[json_callback]
-)
-```
+{/* If you need additional logging functionality, you can create custom callbacks as described below */}
 
 ## Creating Custom Callbacks
 
@@ -261,18 +216,17 @@ You can use multiple callbacks simultaneously:
 
 ```python
 import plexe
-from plexe.callbacks import MLFlowCallback, JSONLogCallback
+from plexe.callbacks import MLFlowCallback
 
 # Create callback instances
 mlflow_callback = MLFlowCallback(experiment_name="Housing Models")
-json_callback = JSONLogCallback(log_file="./logs/build_log.json")
 timing_callback = TimingCallback()  # Custom callback from above
 
 # Use all callbacks together
 model = plexe.Model(intent="Predict house prices")
 model.build(
     datasets=[df],
-    callbacks=[mlflow_callback, json_callback, timing_callback],
+    callbacks=[mlflow_callback, timing_callback],
     chain_of_thought=True  # This adds ChainOfThoughtModelCallback automatically
 )
 ```
@@ -290,49 +244,38 @@ When multiple callbacks are provided:
 
 ## Emitters for Chain of Thought
 
-The `ChainOfThoughtModelCallback` uses an `Emitter` to output the chain of thought logs. Built-in emitters include:
+The `ChainOfThoughtModelCallback` uses a `ChainOfThoughtEmitter` to output the chain of thought logs. Built-in emitters include:
 
 ### `ConsoleEmitter`
 
-Outputs logs to the console (stdout):
+Outputs logs to the console (stdout).
 
-```python
-class ConsoleEmitter(Emitter):
-    def __init__(
-        self,
-        use_color: bool = True,
-        show_timestamps: bool = False
-    )
-```
+### `LoggingEmitter`
 
-### `FileEmitter`
+Sends logs to the Python logging system.
 
-Outputs logs to a file:
+### `MultiEmitter`
 
-```python
-class FileEmitter(Emitter):
-    def __init__(
-        self,
-        file_path: str,
-        append: bool = False,
-        use_color: bool = False,
-        show_timestamps: bool = True
-    )
-```
+Combines multiple emitters into one.
 
 ### Creating Custom Emitters
 
-You can create custom emitters by subclassing `Emitter`:
+You can create custom emitters by subclassing `ChainOfThoughtEmitter`:
 
 ```python
-from plexe.callbacks.chain_of_thought import Emitter
+from plexe.internal.common.utils.chain_of_thought.emitters import ChainOfThoughtEmitter
 
-class CustomEmitter(Emitter):
-    def emit(self, message: str, category: str = None) -> None:
-        # Custom logic for emitting messages
-        formatted = f"[{category or 'INFO'}] {message}"
+class CustomEmitter(ChainOfThoughtEmitter):
+    def emit_thought(self, role: str, thought: str) -> None:
+        # Custom logic for emitting thoughts
+        formatted = f"[{role}] {thought}"
         # Do something with formatted message
         # e.g., send to logging service, web socket, etc.
+        
+    def emit_code(self, role: str, code: str, language: str = None) -> None:
+        # Custom logic for emitting code
+        formatted = f"[{role} CODE ({language})] {code}"
+        # Handle code blocks specially
 ```
 
 ## Best Practices

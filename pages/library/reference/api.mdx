@@ -16,11 +16,10 @@ class Model:
     def __init__(
         self,
         intent: str,
-        input_schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
-        output_schema: Optional[Union[Dict[str, Any], Type[BaseModel]]] = None,
-        constraints: Optional[List[Constraint]] = None,
-        distributed: bool = False,
-        identifier: Optional[str] = None
+        input_schema: Type[BaseModel] | Dict[str, type] = None,
+        output_schema: Type[BaseModel] | Dict[str, type] = None,
+        constraints: List[Constraint] = None,
+        distributed: bool = False
     )
 ```
 
@@ -29,11 +28,10 @@ class Model:
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `intent` | `str` | Natural language description of what the model should do. |
-| `input_schema` | `Optional[Union[Dict[str, Any], Type[BaseModel]]]` | Schema defining input data structure. Can be a dictionary or Pydantic model. |
-| `output_schema` | `Optional[Union[Dict[str, Any], Type[BaseModel]]]` | Schema defining output data structure. Can be a dictionary or Pydantic model. |
-| `constraints` | `Optional[List[Constraint]]` | List of constraints the model should adhere to. |
+| `input_schema` | `Type[BaseModel] | Dict[str, type]` | Schema defining input data structure. Can be a dictionary or Pydantic model. Default: `None`. |
+| `output_schema` | `Type[BaseModel] | Dict[str, type]` | Schema defining output data structure. Can be a dictionary or Pydantic model. Default: `None`. |
+| `constraints` | `List[Constraint]` | List of constraints the model should adhere to. Default: `None`. |
 | `distributed` | `bool` | Whether to use distributed execution (Ray) when building. Default: `False`. |
-| `identifier` | `Optional[str]` | Custom identifier for the model. If not provided, one will be generated. |
 
 **Methods:**
 
@@ -77,10 +75,10 @@ Builds the model using the provided datasets and configuration.
 ```python
 def predict(
     self,
-    input_data: Union[Dict[str, Any], BaseModel],
+    x: Dict[str, Any],
     validate_input: bool = False,
     validate_output: bool = False
-) -> Union[Dict[str, Any], Any]
+) -> Dict[str, Any]
 ```
 
 Makes a prediction using the trained model.
@@ -89,21 +87,21 @@ Makes a prediction using the trained model.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `input_data` | `Union[Dict[str, Any], BaseModel]` | Input data for prediction. |
+| `x` | `Dict[str, Any]` | Input data for prediction. |
 | `validate_input` | `bool` | Whether to validate input against schema. Default: `False`. |
 | `validate_output` | `bool` | Whether to validate output against schema. Default: `False`. |
 
-**Returns:** `Union[Dict[str, Any], Any]` - Prediction result
+**Returns:** `Dict[str, Any]` - Prediction result
 
 #### `get_state`
 
 ```python
-def get_state(self) -> ModelState
+def get_state(self) -> str
 ```
 
 Returns the current state of the model.
 
-**Returns:** `ModelState` enum value: `DRAFT`, `BUILDING`, `READY`, or `ERROR`
+**Returns:** `str` representing model state: `"draft"`, `"building"`, `"ready"`, or `"error"`
 
 #### `get_metadata`
 
@@ -145,11 +143,11 @@ class DatasetGenerator:
         self,
         description: str,
         provider: str,
-        schema: Union[Type[BaseModel], Dict[str, type]] = None,
-        data: Optional[pd.DataFrame] = None
-    )
+        schema: Type[BaseModel] | Dict[str, type] = None,
+        data: pd.DataFrame = None
+    ) -> None
     
-    def generate(self, num_samples: int) -> None:
+    def generate(self, num_samples: int):
         """Generates synthetic data if a provider is available."""
 ```
 
@@ -157,10 +155,10 @@ class DatasetGenerator:
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `description` | `str` | Description of the data to generate. |
-| `provider` | `str` | LLM provider to use for generation. |
-| `schema` | `Union[Type[BaseModel], Dict[str, type]]` | Schema describing the data structure. Can be a Pydantic model or dictionary. |
-| `data` | `Optional[pd.DataFrame]` | Existing data to augment (optional). |
+| `description` | `str` | Human-readable description of the dataset. |
+| `provider` | `str` | LLM provider used for synthetic data generation. |
+| `schema` | `Type[BaseModel] | Dict[str, type]` | The schema the data should match, if any. Default: `None`. |
+| `data` | `pd.DataFrame` | A dataset of real data on which to base the generation, if available. Default: `None`. |
 
 **Methods:**
 
@@ -211,33 +209,33 @@ class Constraint:
 ### `save_model`
 
 ```python
-def save_model(model: Model, file_path: str) -> str
+def save_model(model: Model, path: str | Path) -> str
 ```
 
-Saves a trained model to a file.
+Saves a trained model to a tar archive.
 
 **Parameters:**
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `model` | `Model` | The model to save. |
-| `file_path` | `str` | Path where the model should be saved. |
+| `path` | `str | Path` | Path where the model should be saved. Must end with .tar.gz. |
 
-**Returns:** `str` - Path to the saved model file
+**Returns:** `str` - Path where the model was saved
 
 ### `load_model`
 
 ```python
-def load_model(file_path: str) -> Model
+def load_model(path: str | Path) -> Model
 ```
 
-Loads a trained model from a file.
+Instantiate a model from a tar archive.
 
 **Parameters:**
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `file_path` | `str` | Path to the saved model file. |
+| `path` | `str | Path` | Path to the saved model archive (.tar.gz file). |
 
 **Returns:** `Model` - The loaded model
 
@@ -265,7 +263,7 @@ Configures logging for the Plexe library.
 
 ### `ModelState`
 
-Enum representing the possible states of a model.
+Enum representing the possible states of a model. The `get_state()` method returns the string value.
 
 ```python
 class ModelState(Enum):
@@ -273,6 +271,13 @@ class ModelState(Enum):
     BUILDING = "building"  # During the build process
     READY = "ready"        # Build complete, model ready for use
     ERROR = "error"        # Build failed
+```
+
+Note: When checking model state, compare against the string values:
+
+```python
+if model.get_state() == "ready":
+    # Ready to make predictions
 ```
 
 ## Provider Configuration
@@ -309,13 +314,19 @@ class ProviderConfig:
 
 ## Performance Metrics
 
-### `Performance`
+### `Metric`
 
 Class representing a performance metric for a model.
 
 ```python
-class Performance:
-    def __init__(self, name: str, value: float)
+class Metric:
+    def __init__(
+        self, 
+        name: str, 
+        value: float = None, 
+        comparator: MetricComparator = None,
+        is_worst: bool = False
+    )
 ```
 
 **Parameters:**
@@ -323,7 +334,31 @@ class Performance:
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `name` | `str` | Name of the metric (e.g., "accuracy", "rmse"). |
-| `value` | `float` | Value of the metric. |
+| `value` | `float` | Numeric value of the metric. Default: `None`. |
+| `comparator` | `MetricComparator` | Comparison logic for determining which metric values are better. Default: `None`. |
+| `is_worst` | `bool` | Whether this is the worst possible value for the metric. Default: `False`. |
+
+### `MetricComparator`
+
+Encapsulates comparison logic for metrics.
+
+```python
+class MetricComparator:
+    def __init__(
+        self, 
+        comparison_method: ComparisonMethod, 
+        target: float = None, 
+        epsilon: float = 1e-9
+    )
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `comparison_method` | `ComparisonMethod` | The method used to compare metrics (HIGHER_IS_BETTER, LOWER_IS_BETTER, etc.). |
+| `target` | `float` | The target value for TARGET_IS_BETTER comparisons. Default: `None`. |
+| `epsilon` | `float` | Small value used for floating point comparisons. Default: `1e-9`. |
 
 ## Type Hints
 
@@ -356,7 +391,10 @@ model.build(
     datasets=[df],
     provider="openai/gpt-4o-mini",
     max_iterations=3,
-    chain_of_thought=True
+    timeout=600,
+    run_timeout=180,
+    chain_of_thought=True,
+    verbose=False
 )
 
 # Make prediction

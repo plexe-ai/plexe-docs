@@ -67,17 +67,20 @@ class DatasetGenerator:
         self,
         description: str,
         provider: str,
-        schema: Type[BaseModel],
-        data: Optional[pd.DataFrame] = None
-    )
+        schema: Type[BaseModel] | Dict[str, type] = None,
+        data: pd.DataFrame = None
+    ) -> None
+    
+    def generate(self, num_samples: int):
+        """Generates synthetic data if a provider is available."""
 ```
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `description` | `str` | Description of the data to generate |
-| `provider` | `str` | LLM provider to use for generation |
-| `schema` | `Type[BaseModel]` | Pydantic model defining the data structure |
-| `data` | `Optional[pd.DataFrame]` | Existing data to augment (optional) |
+| `description` | `str` | Human-readable description of the dataset |
+| `provider` | `str` | LLM provider used for synthetic data generation |
+| `schema` | `Type[BaseModel] | Dict[str, type]` | The schema the data should match, if any. Can be a Pydantic model or dictionary. |
+| `data` | `pd.DataFrame` | A dataset of real data on which to base the generation, if available |
 
 ### Generating Synthetic Data
 
@@ -107,6 +110,9 @@ generator = DatasetGenerator(
     provider="openai/gpt-4o-mini",
     schema=CustomerData
 )
+
+# Generate synthetic data
+generator.generate(num_samples=100)
 
 # Use generator with model
 model = plexe.Model(intent="Predict customer churn")
@@ -144,6 +150,9 @@ generator = DatasetGenerator(
     schema=ProductReview,
     data=existing_reviews
 )
+
+# Generate additional samples based on existing data
+generator.generate(num_samples=200)
 
 # Use generator with model
 model = plexe.Model(intent="Classify review sentiment")
@@ -212,6 +221,9 @@ synthetic_generator = DatasetGenerator(
     provider="openai/gpt-4o-mini",
     schema=CustomerSchema
 )
+
+# Generate synthetic data
+synthetic_generator.generate(num_samples=100)
 
 # Combine both in the datasets parameter
 model.build(datasets=[real_data, synthetic_generator])
