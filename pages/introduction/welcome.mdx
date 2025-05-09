@@ -1,55 +1,53 @@
 ---
 title: 'Welcome to Plexe'
-description: 'Build and deploy machine learning models from natural language.'
+description: 'Build ML models from natural language in minutes'
 ---
 
-Plexe is a system designed to drastically simplify the process of building and deploying machine learning models. It allows you to define your model requirements using natural language, and an intelligent agent system handles the complexities of data preparation, code generation, training, and evaluation.
+Plexe revolutionizes machine learning development by enabling you to create and deploy high-quality models using natural language instructions. Our intelligent agent system handles data preparation, code generation, training, and deployment—dramatically reducing the complexity of machine learning workflows.
 
-## Two Ways to Use Plexe
-
-Plexe offers two primary ways to leverage its capabilities:
-
-1.  **Plexe Python Library (`plexe`)**:
-    * An open-source Python library (`pip install plexe`) providing the core ML engineering agent.
-    * Ideal for developers who want to integrate Plexe's model-building capabilities directly into their Python applications, notebooks, or ML pipelines.
-    * Offers fine-grained control over the model building process through Python code.
-    * You manage your own compute environment, data, and LLM provider keys.
-
-2.  **Plexe Platform (`console.plexe.ai` / `api.plexe.ai`)**:
-    * A hosted, managed platform providing a UI (Console) and a REST API.
-    * Built on top of the core `plexe` library, offering a SaaS experience.
-    * Handles infrastructure, scaling, model deployment, authentication, and billing.
-    * Ideal for users who prefer a web interface or API integration without managing the underlying infrastructure.
+## Plexe Ecosystem
 
 <CardGroup cols={2}>
-  <Card title="Plexe Python Library" icon="python" href="/library/tutorials/quickstart">
-    Integrate the core ML agent directly into your Python code. Full control and flexibility.
+  <Card title="Python Library" icon="python" href="/library/tutorials/quickstart">
+    Open-source library for direct integration into your Python applications. Full control with maximum flexibility.
   </Card>
-  <Card title="Plexe Platform" icon="cloud" href="/platform/tutorials/quickstart_api">
-    Use the managed Console UI or REST API for a streamlined, hosted experience.
+  <Card title="Managed Platform" icon="cloud" href="/platform/tutorials/quickstart_api">
+    Hosted solution with intuitive UI and REST API. Zero infrastructure management with built-in scaling.
   </Card>
 </CardGroup>
 
-## How it Works
+### Choose Your Path
 
-At its core, Plexe uses a sophisticated multi-agent system powered by Large Language Models (LLMs). When you provide an `intent` (a natural language description of your desired model):
+**Python Library (`plexe`)**
+- Integrate directly with Python code via `pip install plexe`
+- Control your own compute resources and data
+- Bring your preferred LLM provider credentials
+- Ideal for: developers, data scientists, ML engineers
 
-1.  **Planning:** Agents analyze the intent and available data (if any) to devise a strategy for building the model.
-2.  **Code Generation:** An ML Engineer agent writes the necessary Python code for data preprocessing, model training, and evaluation, using common libraries like scikit-learn, PyTorch, TensorFlow, etc.
-3.  **Execution & Iteration:** The code is executed. Agents analyze the results (performance metrics, errors) and iteratively refine the code or plan to improve performance or fix issues.
-4.  **Inference Code:** Once a satisfactory model is trained, an ML Ops agent generates optimized inference code.
-5.  **Packaging/Deployment:**
-    * **Library:** Returns a `plexe.Model` object containing the trained model, artifacts, and predictor code, ready to use or save.
-    * **Platform:** Deploys the model to a scalable serving infrastructure (KServe/ModelMesh) accessible via an API endpoint.
+**Plexe Platform (`console.plexe.ai` / `api.plexe.ai`)**
+- Access via web interface or REST API
+- Let us manage infrastructure, scaling, and deployments
+- Simplified authentication and billing
+- Ideal for: product teams, analysts, organizations seeking enterprise-grade ML
 
-## Who is Plexe For?
+## How It Works
 
-* **Developers:** Quickly integrate custom ML models into applications without deep ML expertise.
-* **Data Scientists:** Accelerate prototyping and model development cycles. Automate repetitive coding tasks.
-* **ML Engineers:** Leverage agentic workflows for building and managing models, potentially extending the core library.
-* **Product Managers & Analysts:** Experiment with ML solutions using natural language through the platform UI or API.
+Plexe's multi-agent system powered by Large Language Models works through a sequential process:
 
-Ready to get started? Choose your path:
+1. **Planning:** Analyzes your intent and data to develop a model-building strategy
+2. **Code Generation:** Creates appropriate ML code using popular libraries (scikit-learn, PyTorch, TensorFlow)
+3. **Execution & Refinement:** Runs the generated code, evaluates results, and iteratively improves performance
+4. **Deployment:** Packages the model for inference or deploys it to production infrastructure
 
-* Dive into the [**Python Library Quickstart**](/library/tutorials/quickstart)
-* Explore the [**Platform API Quickstart**](/platform/tutorials/quickstart_api)
+## Key Benefits
+
+- **Natural Language Interface:** Describe what you want, not how to build it
+- **Rapid Iteration:** Test ideas and create models in minutes instead of days
+- **No ML Expertise Required:** Leverage state-of-the-art ML without specialized knowledge
+- **Production-Ready Code:** Generate clean, documented, and maintainable ML workflows
+- **Full Transparency:** Examine and customize all generated code
+
+Ready to start building? Choose your preferred approach:
+
+- [**Python Library Quickstart**](/library/tutorials/quickstart)
+- [**Platform API Quickstart**](/platform/tutorials/quickstart_api)

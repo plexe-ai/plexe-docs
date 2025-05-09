@@ -3,76 +3,48 @@ title: 'Quickstart'
 description: 'Build, deploy, and use your first model using the Plexe Platform REST API.'
 ---
 
-This tutorial walks you through the basic workflow of using the Plexe Platform API to create and use a machine learning model without managing infrastructure.
+This tutorial walks you through the essential steps to create and use a machine learning model with the Plexe Platform API.
 
 **Base URL:** `https://api.plexe.ai`
 
 ## Prerequisites
 
-1.  **Account:** You need a Plexe Platform account. Sign up at [console.plexe.ai](https://console.plexe.ai).
-2.  **API Key:** Generate an API key from your account settings in the Plexe Console.
-3.  **Tools:** You'll need a tool to make HTTP requests, like `curl`, Postman, or a scripting language (Python with `requests` is used here).
+1. **Account:** Sign up at [console.plexe.ai](https://console.plexe.ai)
+2. **API Key:** Generate one from your account settings
+3. **HTTP Client:** Such as `curl`, Postman, or Python with `requests`
 
 ## 1. Authentication
 
-All API requests must include your API key in the `x-api-key` header.
+All API requests require your API key in the `x-api-key` header:
 
 ```python
-import requests
-import os
-import time
-import json
+import requests, os, time, json
 
-# It's best practice to load API keys from environment variables or a secure vault
-# export PLEXE_API_KEY="YOUR_API_KEY"
+# Load API key from environment
 api_key = os.getenv("PLEXE_API_KEY")
 if not api_key:
     raise ValueError("Please set the PLEXE_API_KEY environment variable.")
 
-base_url = "https://api.plexe.ai" # Replace with actual API endpoint
 headers = {
     "x-api-key": api_key,
     "Content-Type": "application/json"
 }
-
-print("Authentication headers prepared.")
+base_url = "https://api.plexe.ai"
 ```
 
-## 2. Upload Data (Optional but Recommended)
+## 2. Upload Data
 
-While Plexe can sometimes infer schemas or work without explicit data for certain intents, providing data generally leads to better results. Let's assume you have `housing_data.csv`.
-
-There are typically two ways to upload data to the Plexe API:
-
-**Method 1: Direct Upload**
+While optional, providing data yields better results. Use a pre-signed URL approach:
 
 ```python
-# Simple direct upload example
-file_path = "housing_data.csv"
-with open(file_path, 'rb') as f:
-    files = {'file': (os.path.basename(file_path), f)}
-    response = requests.post(f"{base_url}/data/upload",
-                           headers={"x-api-key": api_key}, 
-                           files=files)
-    if response.status_code == 200:
-        upload_result = response.json()
-        upload_id = upload_result.get("upload_id")
-        print(f"Data uploaded successfully. Upload ID: {upload_id}")
-    else:
-        print(f"Data upload failed: {response.status_code} - {response.text}")
-        upload_id = None  # Set upload_id to None if upload fails
-```
-
-**Method 2: Using Pre-signed URLs**
-
-```python
-# Step 2a: Request pre-signed URL
+# Request pre-signed URL
 file_path = "housing_data.csv"
 file_name = os.path.basename(file_path)
-print(f"Requesting upload URL for {file_name}...")
+
 try:
+    # Get upload URL
     response = requests.post(
-        f"{base_url}/data/upload",
+        f"{base_url}/uploads",
         headers=headers,
         json={"filename": file_name, "content_type": "text/csv"}
     )
@@ -81,173 +53,110 @@ try:
     presigned_url = upload_info.get("presigned_url")
     temp_upload_id = upload_info.get("upload_id")
     s3_key = upload_info.get("key")
-    print(f"Obtained pre-signed URL. Temporary Upload ID: {temp_upload_id}")
-
-    # Step 2b: Upload file to S3
-    print("Uploading data to S3...")
+    
+    # Upload file to S3
     with open(file_path, 'rb') as f:
-        upload_response = requests.put(presigned_url, data=f, headers={'Content-Type': 'text/csv'})
-        upload_response.raise_for_status()
-    print("Data uploaded to S3.")
-
-    # Step 2c: Confirm upload completion
-    print("Confirming upload status...")
+        requests.put(presigned_url, data=f, headers={'Content-Type': 'text/csv'}).raise_for_status()
+    
+    # Confirm upload completion
     confirm_response = requests.post(
-        f"{base_url}/data/use-upload",
+        f"{base_url}/uploads/status",
         headers=headers,
-        json={"upload_id": temp_upload_id, "filename": file_name}
+        json={"upload_id": temp_upload_id, "filename": file_name, "s3_key": s3_key}
     )
     confirm_response.raise_for_status()
-    upload_status = confirm_response.json()
-    upload_id = upload_status.get("upload_id")
-    print(f"Upload confirmed. Final Upload ID: {upload_id}")
+    upload_id = confirm_response.json().get("upload_id")
+    print(f"Upload confirmed. ID: {upload_id}")
 
-except requests.exceptions.RequestException as e:
-    print(f"Error during data upload: {e}")
-    if e.response is not None:
-        print(f"Response content: {e.response.text}")
-    upload_id = None
-
-except json.JSONDecodeError as e:
-    print(f"Error decoding JSON response: {e}")
-    upload_id = None
-
-
-# Use a known public dataset URL if local upload fails/is skipped
-if not upload_id:
-     print("\nUsing public dataset URL as fallback.")
-     dataset_reference = "https://raw.githubusercontent.com/plotly/datasets/master/housing_new-york.csv"
-else:
-     dataset_reference = upload_id
+except Exception as e:
+    print(f"Upload error: {e}")
+    # Fallback to public dataset
+    upload_id = "https://raw.githubusercontent.com/plotly/datasets/master/housing_new-york.csv"
 ```
 
 <Note>
-Data uploads use a two-step process: first get a pre-signed URL, then upload to that URL directly. This allows for secure and efficient handling of large files.
+The two-step upload process (pre-signed URL → direct upload) enables secure and efficient handling of large files.
 </Note>
 
 ## 3. Build the Model
 
-Submit a request to build a model. Provide a unique `model_name`, your `intent`, and the reference to your data (`upload_id` or URL).
+Submit a build request with your model name, goal, and data reference:
 
 ```python
-model_name = "api-quickstart-housing" # Choose a unique name
-build_payload = {
-    "goal": "Predict house prices in USD based on features like sqft, beds, baths.",
-    "upload_id": dataset_reference, # Use upload_id or URL from previous step
-    "metric": "rmse" # Optional: suggest a metric (lower is better for RMSE)
-    # You might also specify schemas here if not inferring
-    # "input_schema": {"sqft": "float", ...},
-    # "output_schema": {"price": "float"}
-}
-
-print(f"\nSubmitting build request for model: {model_name}")
-try:
-    response = requests.post(
-        f"{base_url}/models/{model_name}",
-        headers=headers,
-        json=build_payload
-    )
-    response.raise_for_status()
-    build_result = response.json()
-    model_id = build_result.get("model_id")
-    print(f"Build request accepted. Model ID: {model_id}")
-
-except requests.exceptions.RequestException as e:
-    print(f"Error submitting build request: {e}")
-    if e.response is not None:
-        print(f"Response content: {e.response.text}")
-    model_id = None
-except json.JSONDecodeError as e:
-    print(f"Error decoding JSON response: {e}")
-    model_id = None
+model_name = "api-quickstart-housing"
+response = requests.post(
+    f"{base_url}/models/{model_name}",
+    headers=headers,
+    json={
+        "goal": "Predict house prices in USD based on sqft, beds, baths.",
+        "upload_id": upload_id,
+        "metric": "rmse"  # Optional: suggest optimization metric
+    }
+)
+response.raise_for_status()
+model_id = response.json().get("model_id")
+print(f"Build requested. Model ID: {model_id}")
 ```
 
 ## 4. Monitor Build Status
 
-Model building is asynchronous. Poll the status endpoint until it's `completed` or `failed`.
+Model building happens asynchronously. Poll until complete:
 
 ```python
 if model_id:
-    print(f"\nMonitoring build status for Model ID: {model_id}...")
+    # Extract name and version from model_id (format: name:version)
+    m_name, m_version = model_id.split(':')
     status = "pending"
+    
+    # Poll until completed or failed
     while status in ["pending", "processing", "building"]:
-        time.sleep(15) # Wait before checking again
+        time.sleep(15)  # Wait between checks
+        
         try:
-            # Extract name and version from model_id (format may vary)
-            parts = model_id.split(':')
-            if len(parts) != 2:
-                print(f"Cannot extract name/version from model_id: {model_id}. Stopping monitor.")
-                break
-            m_name, m_version = parts[0], parts[1]
-
-            status_url = f"{base_url}/models/{m_name}/{m_version}/status"
-            response = requests.get(status_url, headers=headers)
+            response = requests.get(
+                f"{base_url}/models/{m_name}/{m_version}/status", 
+                headers=headers
+            )
             response.raise_for_status()
             status_result = response.json()
             status = status_result.get("status")
-            print(f"  Current status: {status}...")
-
+            print(f"Status: {status}")
+            
             if status == "completed":
-                metric_name = status_result.get("result", {}).get("metric_name")
-                metric_value = status_result.get("result", {}).get("metric_value")
-                print(f"  Build completed! Metric ({metric_name}): {metric_value}")
+                print("Build successful!")
                 break
             elif status == "failed":
-                error_details = status_result.get("error", "Unknown error")
-                print(f"  Build failed: {error_details}")
-                model_id = None # Indicate failure
+                print(f"Build failed: {status_result.get('error', 'Unknown error')}")
+                model_id = None
                 break
-        except requests.exceptions.RequestException as e:
-            print(f"  Error checking status: {e}")
-            time.sleep(30) # Longer wait on error
-        except json.JSONDecodeError as e:
-            print(f"  Error decoding status response: {e}")
-            break
+                
         except Exception as e:
-            print(f"  An unexpected error occurred: {e}")
-            break
-else:
-    print("\nSkipping status monitoring as model build failed to start.")
+            print(f"Status check error: {e}")
+            time.sleep(30)  # Longer wait on error
 ```
 
-## 5. Perform Inference
+## 5. Make Predictions
 
-Once the model status is `completed`, you can use the inference endpoint.
+Once the model is ready, use the inference endpoint:
 
 ```python
 if model_id and status == "completed":
-    print("\nPerforming inference...")
-    # Prepare input data matching the model's expected input schema
-    inference_payload = {
-        # Use feature names consistent with your data/intent/schema
-        "inputs": {
-            "sqft": 1950.0,
-            "beds": 3,
-            "baths": 2.5
-        }
-    }
-
     try:
-        # Extract name and version from model_id
-        m_name, m_version = model_id.split(':')
-        infer_url = f"{base_url}/models/{m_name}/{m_version}/infer"
-        response = requests.post(infer_url, headers=headers, json=inference_payload)
-        response.raise_for_status()
-        prediction_result = response.json()
-        prediction = prediction_result.get("predictions", {})
-        print(f"Inference successful. Prediction: {prediction}")
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error during inference: {e}")
-        if e.response is not None:
-            print(f"Response content: {e.response.text}")
-    except json.JSONDecodeError as e:
-        print(f"Error decoding inference response: {e}")
+        # Prepare sample input matching your data schema
+        prediction = requests.post(
+            f"{base_url}/models/{m_name}/{m_version}/infer",
+            headers=headers,
+            json={
+                "sqft": 1950.0,
+                "beds": 3,
+                "baths": 2.5
+            }
+        ).json()
+        
+        print(f"Prediction result: {prediction}")
+        
     except Exception as e:
-         print(f"An unexpected error occurred during inference: {e}")
-
-else:
-    print("\nModel not ready for inference.")
+        print(f"Inference error: {e}")
 ```
 
 This completes the basic API workflow. Explore the [Platform API Reference](/platform/reference/introduction) for details on all available endpoints and parameters.
