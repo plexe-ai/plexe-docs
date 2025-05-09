@@ -91,7 +91,10 @@ model.build(
     datasets=datasets,
     provider="openai/gpt-4o-mini", # Specify your preferred LLM provider
     max_iterations=5,              # Try up to 5 different model approaches
-    chain_of_thought=True         # Show detailed reasoning steps (optional)
+    timeout=600,                   # Set a maximum of 10 minutes for the entire process
+    run_timeout=180,               # Maximum 3 minutes per individual run
+    chain_of_thought=True,         # Show detailed reasoning steps (default: True)
+    verbose=False                  # Don't show detailed agent logs (default: False)
 )
 
 print(f"Model build finished. Model state: {model.get_state()}")
@@ -107,7 +110,7 @@ print(f"Model build finished. Model state: {model.get_state()}")
 Once the model state is `READY`, you can use the `predict` method.
 
 ```python
-if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+if model.get_state() == "ready":
     # Prepare input data as a dictionary
     input_data = {
         "square_footage": 1900.0,
@@ -133,7 +136,7 @@ else:
 You can get metadata and a description of the built model.
 
 ```python
-if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+if model.get_state() == "ready":
     print("\nModel Metadata:")
     print(model.get_metadata())
 
@@ -156,7 +159,7 @@ Persist your trained model for later use.
 ```python
 import os
 
-if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+if model.get_state() == "ready":
     model_filename = f"{model.identifier}.tar.gz"
     save_path = plexe.save_model(model, model_filename)
     print(f"\nModel saved to: {save_path}")

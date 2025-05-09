@@ -48,8 +48,12 @@ class CustomerData(BaseModel):
 # Create a generator for synthetic data
 generator = DatasetGenerator(
     description="Generate customer data with churn information",
+    provider="openai/gpt-4o-mini",  # Specify LLM provider for generation
     schema=CustomerData
 )
+
+# Generate data (specify number of samples)
+generator.generate(num_samples=100)
 
 # Use the generator when building the model
 model = plexe.Model(intent="Predict customer churn")
@@ -58,8 +62,9 @@ model.build(datasets=[generator])
 
 The `DatasetGenerator`:
 - Creates realistic synthetic data based on the schema and description
-- Can be based on existing data to create augmented samples
-- Generates samples during the model building process
+- Requires a provider specification for the LLM that will generate the data
+- Can augment existing data by passing an existing DataFrame in the constructor
+- Explicitly generates samples with the `generate()` method before model building
 
 ## Schemas
 

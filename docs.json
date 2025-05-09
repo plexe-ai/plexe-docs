@@ -7,7 +7,7 @@
     "light": "#69B6FF",
     "dark": "#69B6FF"
   },
-  "favicon": "/plexe_favicon.svg",
+  "favicon": "resources/plexe_favicon.svg",
   "navigation": {
     "tabs": [
       {
@@ -16,7 +16,7 @@
           {
             "group": "Introduction",
             "pages": [
-              "introduction/welcome"
+              "pages/introduction/welcome"
             ]
           },
           {
@@ -25,37 +25,37 @@
               {
                 "group": "Tutorials",
                 "pages": [
-                  "library/tutorials/quickstart",
-                  "library/tutorials/using_callbacks",
-                  "library/tutorials/distributed_training"
+                  "pages/library/tutorials/quickstart",
+                  "pages/library/tutorials/using_callbacks",
+                  "pages/library/tutorials/distributed_training"
                 ]
               },
               {
                 "group": "How-To Guides",
                 "pages": [
-                  "library/how-to/install_plexe",
-                  "library/how-to/provide_schemas",
-                  "library/how-to/use_datasets",
-                  "library/how-to/configure_llm_provider",
-                  "library/how-to/save_load_models"
+                  "pages/library/how-to/install_plexe",
+                  "pages/library/how-to/provide_schemas",
+                  "pages/library/how-to/use_datasets",
+                  "pages/library/how-to/configure_llm_provider",
+                  "pages/library/how-to/save_load_models"
                 ]
               },
               {
                 "group": "Concepts",
                 "pages": [
-                  "library/explanation/concepts",
-                  "library/explanation/providers",
-                  "library/explanation/datasets_schemas",
-                  "library/explanation/callbacks_logging"
+                  "pages/library/explanation/concepts",
+                  "pages/library/explanation/providers",
+                  "pages/library/explanation/datasets_schemas",
+                  "pages/library/explanation/callbacks_logging"
                 ]
               },
               {
                 "group": "Library Reference",
                 "pages": [
-                  "library/reference/api",
-                  "library/reference/callbacks",
-                  "library/reference/datasets",
-                  "library/reference/exceptions"
+                  "pages/library/reference/api",
+                  "pages/library/reference/callbacks",
+                  "pages/library/reference/datasets",
+                  "pages/library/reference/exceptions"
                 ]
               }
             ]
@@ -66,39 +66,39 @@
               {
                 "group": "Tutorials",
                 "pages": [
-                  "platform/tutorials/quickstart_api"
+                  "pages/platform/tutorials/quickstart_api"
                 ]
               },
               {
                 "group": "How-To Guides",
                 "pages": [
-                  "platform/how-to/manage_account",
-                  "platform/how-to/manage_api_keys",
-                  "platform/how-to/upload_data_api",
-                  "platform/how-to/build_model_api",
-                  "platform/how-to/monitor_jobs",
-                  "platform/how-to/use_deployed_model",
-                  "platform/how-to/manage_models"
+                  "pages/platform/how-to/manage_account",
+                  "pages/platform/how-to/manage_api_keys",
+                  "pages/platform/how-to/upload_data_api",
+                  "pages/platform/how-to/build_model_api",
+                  "pages/platform/how-to/monitor_jobs",
+                  "pages/platform/how-to/use_deployed_model",
+                  "pages/platform/how-to/manage_models"
                 ]
               },
               {
                 "group": "Concepts",
                 "pages": [
-                  "platform/explanation/concepts",
-                  "platform/explanation/authentication",
-                  "platform/explanation/deployment"
+                  "pages/platform/explanation/concepts",
+                  "pages/platform/explanation/authentication",
+                  "pages/platform/explanation/deployment"
                 ]
               },
               {
                 "group": "API Reference",
                 "pages": [
-                  "platform/reference/introduction",
+                  "pages/platform/reference/introduction",
                   {
                     "group": "Endpoints",
                     "pages": [
-                      "platform/reference/endpoints/auth",
-                      "platform/reference/endpoints/data",
-                      "platform/reference/endpoints/models"
+                      "pages/platform/reference/endpoints/auth",
+                      "pages/platform/reference/endpoints/data",
+                      "pages/platform/reference/endpoints/models"
                     ]
                   }
                 ]
@@ -113,15 +113,15 @@
           {
             "group": "Overview",
             "pages": [
-              "platform/reference/introduction"
+              "pages/platform/reference/introduction"
             ]
           },
           {
             "group": "Endpoints",
             "pages": [
-              "platform/reference/endpoints/auth",
-              "platform/reference/endpoints/data",
-              "platform/reference/endpoints/models"
+              "pages/platform/reference/endpoints/auth",
+              "pages/platform/reference/endpoints/data",
+              "pages/platform/reference/endpoints/models"
             ]
           }
         ]
@@ -132,15 +132,15 @@
           {
             "group": "Core API",
             "pages": [
-              "library/reference/api"
+              "pages/library/reference/api"
             ]
           },
           {
             "group": "Components",
             "pages": [
-              "library/reference/callbacks",
-              "library/reference/datasets",
-              "library/reference/exceptions"
+              "pages/library/reference/callbacks",
+              "pages/library/reference/datasets",
+              "pages/library/reference/exceptions"
             ]
           }
         ]
@@ -167,8 +167,8 @@
     }
   },
   "logo": {
-    "light": "/plexe.svg",
-    "dark": "/plexe.svg"
+    "light": "resources/plexe.svg",
+    "dark": "resources/plexe.svg"
   },
   "navbar": {
     "links": [

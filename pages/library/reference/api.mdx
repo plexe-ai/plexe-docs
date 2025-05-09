@@ -42,12 +42,14 @@ class Model:
 ```python
 def build(
     self,
-    datasets: Optional[List[Union[pd.DataFrame, DatasetGenerator]]] = None,
-    provider: Optional[Union[str, ProviderConfig]] = None,
-    max_iterations: Optional[int] = None,
+    datasets: List[Union[pd.DataFrame, DatasetGenerator]],
+    provider: Union[str, ProviderConfig] = "openai/gpt-4o-mini",
     timeout: Optional[int] = None,
-    chain_of_thought: bool = False,
-    callbacks: Optional[List[Callback]] = None
+    max_iterations: Optional[int] = None,
+    run_timeout: int = 1800,
+    callbacks: Optional[List[Callback]] = None,
+    verbose: bool = False,
+    chain_of_thought: bool = True
 ) -> None
 ```
 
@@ -57,14 +59,18 @@ Builds the model using the provided datasets and configuration.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `datasets` | `Optional[List[Union[pd.DataFrame, DatasetGenerator]]]` | List of pandas DataFrames or DatasetGenerator objects for training data. |
-| `provider` | `Optional[Union[str, ProviderConfig]]` | LLM provider to use, either as a string ("openai/gpt-4o-mini") or ProviderConfig object. |
+| `datasets` | `List[Union[pd.DataFrame, DatasetGenerator]]` | List of pandas DataFrames or DatasetGenerator objects for training data. |
+| `provider` | `Union[str, ProviderConfig]` | LLM provider to use, either as a string ("openai/gpt-4o-mini") or ProviderConfig object. Default: "openai/gpt-4o-mini". |
+| `timeout` | `Optional[int]` | Maximum total time (in seconds) for the entire build process (all iterations). |
 | `max_iterations` | `Optional[int]` | Maximum number of iterations to attempt. |
-| `timeout` | `Optional[int]` | Maximum time (in seconds) for build process. |
-| `chain_of_thought` | `bool` | Whether to enable verbose output of agent reasoning. Default: `False`. |
+| `run_timeout` | `int` | Maximum time (in seconds) for each individual training run. Default: 1800 (30 minutes). |
 | `callbacks` | `Optional[List[Callback]]` | List of callback objects for monitoring the build process. |
+| `verbose` | `bool` | Whether to display detailed agent logs. Default: `False`. |
+| `chain_of_thought` | `bool` | Whether to enable verbose output of agent reasoning. Default: `True`. |
 
 **Returns:** `None`
+
+**Note:** At least one of `timeout` or `max_iterations` must be provided.
 
 #### `predict`
 
@@ -139,19 +145,29 @@ class DatasetGenerator:
         self,
         description: str,
         provider: str,
-        schema: Type[BaseModel],
+        schema: Union[Type[BaseModel], Dict[str, type]] = None,
         data: Optional[pd.DataFrame] = None
     )
+    
+    def generate(self, num_samples: int) -> None:
+        """Generates synthetic data if a provider is available."""
 ```
 
-**Parameters:**
+**Constructor Parameters:**
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `description` | `str` | Description of the data to generate. |
 | `provider` | `str` | LLM provider to use for generation. |
-| `schema` | `Type[BaseModel]` | Pydantic model describing the data structure. |
+| `schema` | `Union[Type[BaseModel], Dict[str, type]]` | Schema describing the data structure. Can be a Pydantic model or dictionary. |
 | `data` | `Optional[pd.DataFrame]` | Existing data to augment (optional). |
+
+**Methods:**
+
+| Method | Description |
+| --- | --- |
+| `generate(num_samples: int)` | Generates the specified number of synthetic data samples. |
+| `data` property | Returns the dataset as a pandas DataFrame. |
 
 ### `Callback`
 
@@ -229,9 +245,8 @@ Loads a trained model from a file.
 
 ```python
 def configure_logging(
-    level: int = logging.INFO,
-    handlers: Optional[List[logging.Handler]] = None,
-    disable_existing_loggers: bool = True
+    level: Union[str, int] = logging.INFO,
+    file: Optional[str] = None
 ) -> None
 ```
 
@@ -241,9 +256,8 @@ Configures logging for the Plexe library.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `level` | `int` | Logging level (from `logging` module). |
-| `handlers` | `Optional[List[logging.Handler]]` | List of logging handlers. |
-| `disable_existing_loggers` | `bool` | Whether to disable existing loggers. |
+| `level` | `Union[str, int]` | Logging level (from `logging` module or as string). |
+| `file` | `Optional[str]` | Path to a log file. If provided, logs will be written to this file in addition to stdout. |
 
 **Returns:** `None`
 
@@ -265,9 +279,11 @@ class ModelState(Enum):
 
 ### `ProviderConfig`
 
-Class for configuring different LLM providers for different agent roles.
+Class for configuring different LLM providers for different agent roles (imported from `plexe.internal.common.provider`).
 
 ```python
+from plexe.internal.common.provider import ProviderConfig
+
 class ProviderConfig:
     def __init__(
         self,
@@ -284,12 +300,12 @@ class ProviderConfig:
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `default_provider` | `str` | Default provider for all roles. |
-| `orchestrator_provider` | `Optional[str]` | Provider for the orchestrator agent. |
-| `research_provider` | `Optional[str]` | Provider for the research agent. |
-| `engineer_provider` | `Optional[str]` | Provider for the engineer agent. |
-| `ops_provider` | `Optional[str]` | Provider for the ops agent. |
-| `tool_provider` | `Optional[str]` | Provider for tool agents. |
+| `default_provider` | `str` | Default provider for all roles (e.g., "openai/gpt-4o-mini"). |
+| `orchestrator_provider` | `Optional[str]` | Provider for the orchestrator agent (coordinates the overall process). |
+| `research_provider` | `Optional[str]` | Provider for the research agent (analyzes problems and plans solutions). |
+| `engineer_provider` | `Optional[str]` | Provider for the engineer agent (generates training code). |
+| `ops_provider` | `Optional[str]` | Provider for the ops agent (generates inference code). |
+| `tool_provider` | `Optional[str]` | Provider for tool agents (performs specialized tasks). |
 
 ## Performance Metrics
 

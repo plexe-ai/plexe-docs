@@ -156,15 +156,16 @@ For more control over logging format:
 
 ```python
 import logging
+from plexe.config import configure_logging
 
 # Create a custom handler
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 # Configure with more options
-plexe.configure_logging(
+configure_logging(
     level=logging.INFO,
-    handlers=[handler]
+    file="plexe_build.log"  # Optional: also log to a file
 )
 ```
 
@@ -182,16 +183,12 @@ By default, Plexe logs to the console (stdout), but you can redirect logs:
 
 ```python
 import logging
+from plexe.config import configure_logging
 
-# Log to file
-file_handler = logging.FileHandler("plexe_build.log")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-# Configure Plexe logging
-plexe.configure_logging(
+# Configure Plexe logging to a file
+configure_logging(
     level=logging.DEBUG,
-    handlers=[file_handler]
+    file="plexe_build.log"  # Will create a file handler automatically
 )
 ```
 

@@ -45,7 +45,8 @@ If you don't specify a provider, Plexe uses a default provider optimized for mod
 For more advanced use cases, Plexe allows setting different LLM providers for different agent roles through the `ProviderConfig` class. This lets you optimize for performance in critical stages like code writing while using faster/cheaper models for more routine tasks.
 
 ```python
-from plexe.provider import ProviderConfig
+# Import ProviderConfig from internal module
+from plexe.internal.common.provider import ProviderConfig
 
 # Create a custom provider configuration
 provider_config = ProviderConfig(

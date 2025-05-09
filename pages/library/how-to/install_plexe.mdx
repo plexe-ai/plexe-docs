@@ -49,9 +49,9 @@ import plexe
 
 print(f"Plexe library imported successfully.")
 # You can also check the internal configuration for available packages
-# from plexe.config import config
-# print(f"Allowed packages: {config.code_generation.allowed_packages}")
-# print(f"Deep learning available: {config.code_generation.deep_learning_available}")
+from plexe.config import config
+print(f"Allowed packages: {config.code_generation.allowed_packages}")
+print(f"Deep learning available: {config.code_generation.deep_learning_available}")
 ```
 
 ## Setting API Keys
