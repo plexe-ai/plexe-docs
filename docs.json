@@ -75,8 +75,7 @@
                   "pages/platform/how-to/manage_account",
                   "pages/platform/how-to/upload_data_api",
                   "pages/platform/how-to/build_model_api",
-                  "pages/platform/how-to/use_deployed_model",
-                  "pages/platform/how-to/manage_models"
+                  "pages/platform/how-to/use_deployed_model"
                 ]
               },
               {
