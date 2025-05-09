@@ -22,11 +22,11 @@ After creating models on the Plexe Platform, effective management helps you orga
 
 ```bash
 # List all models
-curl -X GET https://api.plexe.ai/v1/models \
+curl -X GET https://api.plexe.ai/models \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get details for a specific model
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+curl -X GET https://api.plexe.ai/models/{model_name}/{model_version} \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -46,7 +46,7 @@ The Plexe Platform automatically handles versioning when you create new iteratio
 #### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/versions \
+curl -X POST https://api.plexe.ai/models/{model_name}/versions \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -72,7 +72,7 @@ curl -X POST https://api.plexe.ai/v1/models/{model_name}/versions \
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/compare?version1=1&version2=2 \
+curl -X GET https://api.plexe.ai/models/{model_name}/compare?version1=1&version2=2 \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -92,7 +92,7 @@ Adding metadata helps with organization and searchability.
 #### Via API
 
 ```bash
-curl -X PATCH https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+curl -X PATCH https://api.plexe.ai/models/{model_name}/{model_version} \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -118,7 +118,7 @@ Tags help you categorize and filter models.
 #### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/tags \
+curl -X POST https://api.plexe.ai/models/{model_name}/{model_version}/tags \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -137,7 +137,7 @@ curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/tags \
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models?tags=production,classification \
+curl -X GET https://api.plexe.ai/models?tags=production,classification \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -155,7 +155,7 @@ curl -X GET https://api.plexe.ai/v1/models?tags=production,classification \
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/metrics \
+curl -X GET https://api.plexe.ai/models/{model_name}/{model_version}/metrics \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -173,7 +173,7 @@ curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/metrics 
 #### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/alerts \
+curl -X POST https://api.plexe.ai/models/{model_name}/{model_version}/alerts \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -206,7 +206,7 @@ Each model can have multiple deployments across environments.
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/deployments \
+curl -X GET https://api.plexe.ai/models/{model_name}/deployments \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -227,7 +227,7 @@ When a new model version passes testing, promote it to production.
 #### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/deploy \
+curl -X POST https://api.plexe.ai/models/{model_name}/{model_version}/deploy \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -252,7 +252,7 @@ curl -X POST https://api.plexe.ai/v1/models/{model_name}/{model_version}/deploy 
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/export \
+curl -X GET https://api.plexe.ai/models/{model_name}/{model_version}/export \
   -H "x-api-key: YOUR_API_KEY" \
   -o model_export.zip
 ```
@@ -271,7 +271,7 @@ You can access the code generated to train your model.
 #### Via API
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/code \
+curl -X GET https://api.plexe.ai/models/{model_name}/{model_version}/code \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -291,7 +291,7 @@ curl -X GET https://api.plexe.ai/v1/models/{model_name}/{model_version}/code \
 #### Via API
 
 ```bash
-curl -X DELETE https://api.plexe.ai/v1/models/{model_name}/{model_version} \
+curl -X DELETE https://api.plexe.ai/models/{model_name}/{model_version} \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -311,7 +311,7 @@ This removes all versions and associated deployments.
 #### Via API
 
 ```bash
-curl -X DELETE https://api.plexe.ai/v1/models/{model_name} \
+curl -X DELETE https://api.plexe.ai/models/{model_name} \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -337,7 +337,7 @@ For team accounts, you can control access to models.
 #### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/access \
+curl -X POST https://api.plexe.ai/models/{model_name}/access \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -377,7 +377,7 @@ For enterprise customers, the Model Registry provides:
 Test different model versions against each other:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/experiments \
+curl -X POST https://api.plexe.ai/experiments \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -397,7 +397,7 @@ curl -X POST https://api.plexe.ai/v1/experiments \
 Set up automatic retraining schedules:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/{model_name}/schedules \
+curl -X POST https://api.plexe.ai/models/{model_name}/schedules \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

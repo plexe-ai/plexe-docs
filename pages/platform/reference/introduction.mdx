@@ -10,7 +10,7 @@ The Plexe Platform API provides programmatic access to the Plexe machine learnin
 All API endpoints are accessible via this base URL:
 
 ```
-https://api.plexe.ai/v1
+https://api.plexe.ai
 ```
 
 ## Authentication
@@ -20,14 +20,14 @@ All API requests require authentication using an API key. You have two options f
 Option 1: Include your key in the `Authorization` header as a Bearer token:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/list \
+curl -X GET https://api.plexe.ai/models/list \
   -H "Authorization: Bearer YOUR_API_KEY_HERE"
 ```
 
 Option 2: Include your key in the `x-api-key` header:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models/list \
+curl -X GET https://api.plexe.ai/models/list \
   -H "x-api-key: YOUR_API_KEY_HERE"
 ```
 
@@ -38,7 +38,7 @@ You can generate API keys in the [Plexe Console](https://console.plexe.ai) under
 For endpoints that accept data (POST, PUT, PATCH), provide a JSON-formatted request body with the appropriate Content-Type header:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/models/build \
+curl -X POST https://api.plexe.ai/models/build \
   -H "Authorization: Bearer YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{
@@ -89,7 +89,7 @@ When you exceed the rate limit, you'll receive a `429 Too Many Requests` respons
 List endpoints (those returning multiple items) support pagination using the `limit` and `offset` query parameters:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models?limit=10&offset=20 \
+curl -X GET https://api.plexe.ai/models?limit=10&offset=20 \
   -H "x-api-key: YOUR_API_KEY_HERE"
 ```
 

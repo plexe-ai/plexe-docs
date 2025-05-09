@@ -94,7 +94,7 @@ Retrieves detailed information about a specific model.
   "description": "Model predicts likelihood of customer churn in the next 30 days",
   "status": "READY",
   "deployment_status": "DEPLOYED",
-  "endpoint": "https://api.plexe.ai/v1/predict/dep_mno345pqr678",
+  "endpoint": "https://api.plexe.ai/predict/dep_mno345pqr678",
   "metrics": {
     "accuracy": 0.92,
     "precision": 0.88,
@@ -219,7 +219,7 @@ Deploys a model, making it available for predictions. This is an asynchronous op
   "deployment_id": "dep_pqr678stu901",
   "model_id": "mdl_jkl012mno345",
   "status": "DEPLOYING",
-  "endpoint": "https://api.plexe.ai/v1/predict/dep_pqr678stu901",
+  "endpoint": "https://api.plexe.ai/predict/dep_pqr678stu901",
   "environment": "production",
   "replicas": 2,
   "auto_scale": true,
@@ -514,7 +514,7 @@ Lists all active deployments for a model.
       "status": "ACTIVE",
       "version_id": "ver_bcd890efg123",
       "version": 3,
-      "endpoint": "https://api.plexe.ai/v1/predict/dep_lmn456opq789",
+      "endpoint": "https://api.plexe.ai/predict/dep_lmn456opq789",
       "replicas": 2,
       "auto_scale": true,
       "created_at": "2023-06-20T10:00:00Z"
@@ -525,7 +525,7 @@ Lists all active deployments for a model.
       "status": "ACTIVE",
       "version_id": "ver_hij456klm789",
       "version": 2,
-      "endpoint": "https://api.plexe.ai/v1/predict/dep_rst012uvw345",
+      "endpoint": "https://api.plexe.ai/predict/dep_rst012uvw345",
       "replicas": 1,
       "auto_scale": false,
       "created_at": "2023-06-19T16:00:00Z"
@@ -651,7 +651,7 @@ Retrieves the status and results of a batch prediction job.
   "progress": 100,
   "row_count": 5000,
   "completed_at": "2023-06-21T12:25:00Z",
-  "results_url": "https://api.plexe.ai/v1/download/bjob_bcd234efg567.json",
+  "results_url": "https://api.plexe.ai/download/bjob_bcd234efg567.json",
   "expires_at": "2023-06-28T12:25:00Z"
 }
 ```

@@ -34,7 +34,7 @@ headers = {
 
 ## Starting a Build Job
 
-Make a `POST` request to the endpoint for creating models, typically including the desired model name in the path (e.g., `/v0/models/{model_name}`).
+Make a `POST` request to the endpoint for creating models, typically including the desired model name in the path (e.g., `/models/{model_name}`).
 
 The request body contains the core configuration for the build:
 
@@ -74,7 +74,7 @@ print(f"Starting build for model: {model_name}")
 
 try:
     response = requests.post(
-        f"{base_url}/v0/models/{model_name}",
+        f"{base_url}/models/{model_name}",
         headers=headers,
         json=build_payload
     )

@@ -41,7 +41,7 @@ This is typically a multi-step process:
 
 ### Step 1: Request Pre-signed Upload URL
 
-Make a `POST` request to the upload initiation endpoint (e.g., `/v1/uploads`). Provide the filename and content type.
+Make a `POST` request to the upload initiation endpoint (e.g., `/uploads`). Provide the filename and content type.
 
 ```python
 file_path = "path/to/your/training_data.csv" # Replace with your file path
@@ -52,7 +52,7 @@ print(f"Requesting upload URL for: {file_name}")
 
 try:
     init_response = requests.post(
-        f"{base_url}/v1/uploads",
+        f"{base_url}/uploads",
         headers=headers,
         json={"filename": file_name, "content_type": content_type}
     )
@@ -116,7 +116,7 @@ if upload_succeeded and temp_upload_id and s3_key:
     print("Confirming upload status with Plexe API...")
     try:
         confirm_response = requests.post(
-            f"{base_url}/v1/uploads/status",
+            f"{base_url}/uploads/status",
             headers=headers,
             json={
                 "upload_id": temp_upload_id,

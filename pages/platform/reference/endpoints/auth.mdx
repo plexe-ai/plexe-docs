@@ -262,7 +262,7 @@ DELETE /auth/api-keys/{keyId}
 Lists all users in your organization.
 
 ```http
-GET /v1/users
+GET /users
 ```
 
 #### Query Parameters
@@ -314,7 +314,7 @@ GET /v1/users
 Invites a new user to your organization.
 
 ```http
-POST /v1/users/invite
+POST /users/invite
 ```
 
 #### Request Body
@@ -355,7 +355,7 @@ POST /v1/users/invite
 Updates a user's details or role.
 
 ```http
-PATCH /v1/users/{user_id}
+PATCH /users/{user_id}
 ```
 
 #### Path Parameters
@@ -399,7 +399,7 @@ PATCH /v1/users/{user_id}
 Disables a user's access to your organization.
 
 ```http
-POST /v1/users/{user_id}/disable
+POST /users/{user_id}/disable
 ```
 
 #### Path Parameters
@@ -431,7 +431,7 @@ POST /v1/users/{user_id}/disable
 Lists all active sessions for the current user or a specific user (admin only).
 
 ```http
-GET /v1/sessions
+GET /sessions
 ```
 
 #### Query Parameters
@@ -476,7 +476,7 @@ GET /v1/sessions
 Revokes a specific session, logging out that device.
 
 ```http
-DELETE /v1/sessions/{session_id}
+DELETE /sessions/{session_id}
 ```
 
 #### Path Parameters
@@ -499,7 +499,7 @@ DELETE /v1/sessions/{session_id}
 Revokes all sessions for the current user except the current session.
 
 ```http
-DELETE /v1/sessions
+DELETE /sessions
 ```
 
 #### Response
@@ -518,7 +518,7 @@ DELETE /v1/sessions
 Checks if Multi-Factor Authentication (MFA) is enabled for the current user.
 
 ```http
-GET /v1/auth/mfa/status
+GET /auth/mfa/status
 ```
 
 #### Response
@@ -537,7 +537,7 @@ GET /v1/auth/mfa/status
 Initiates the process to enable Time-based One-Time Password (TOTP) MFA.
 
 ```http
-POST /v1/auth/mfa/totp/enable
+POST /auth/mfa/totp/enable
 ```
 
 #### Response
@@ -556,7 +556,7 @@ POST /v1/auth/mfa/totp/enable
 Verifies the TOTP code to complete MFA setup.
 
 ```http
-POST /v1/auth/mfa/totp/verify
+POST /auth/mfa/totp/verify
 ```
 
 #### Request Body
@@ -598,7 +598,7 @@ POST /v1/auth/mfa/totp/verify
 Disables Multi-Factor Authentication for the current user.
 
 ```http
-POST /v1/auth/mfa/disable
+POST /auth/mfa/disable
 ```
 
 #### Request Body

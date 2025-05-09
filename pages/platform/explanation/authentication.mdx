@@ -23,7 +23,7 @@ For programmatic access to the Plexe API, API keys are the primary authenticatio
 Example API request with authentication:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models \
+curl -X GET https://api.plexe.ai/models \
   -H "x-api-key: plx_sk_12345abcdef67890ghijklmnop"
 ```
 
@@ -132,7 +132,7 @@ headers = {
 
 # Make authenticated request
 response = requests.get(
-    "https://api.plexe.ai/v1/models",
+    "https://api.plexe.ai/models",
     headers=headers
 )
 
@@ -166,7 +166,7 @@ headers = {
 # Step 1: Create a new API key
 try:
     create_response = requests.post(
-        "https://api.plexe.ai/v1/keys",
+        "https://api.plexe.ai/keys",
         headers=headers,
         json={
             "name": "Rotated Key " + datetime.now().strftime("%Y-%m-%d"),
@@ -190,7 +190,7 @@ try:
     }
     
     verify_response = requests.get(
-        "https://api.plexe.ai/v1/models",
+        "https://api.plexe.ai/models",
         headers=verify_headers
     )
     
@@ -199,7 +199,7 @@ try:
         
         # Step 3: Revoke the old key
         revoke_response = requests.delete(
-            f"https://api.plexe.ai/v1/keys/{old_key_id}",
+            f"https://api.plexe.ai/keys/{old_key_id}",
             headers=verify_headers
         )
         

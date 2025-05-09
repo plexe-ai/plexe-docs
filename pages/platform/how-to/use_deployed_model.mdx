@@ -27,7 +27,7 @@ Before making predictions, you need to know your model's endpoint URL. You can o
 
 ```bash
 # Get deployment details including the endpoint URL
-curl -X GET https://api.plexe.ai/v1/deployments/{deployment_id} \
+curl -X GET https://api.plexe.ai/deployments/{deployment_id} \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -37,7 +37,7 @@ Response (excerpt):
 {
   "deployment_id": "dep_abc123def456",
   "status": "READY",
-  "endpoint": "https://api.plexe.ai/v1/predict/dep_abc123def456",
+  "endpoint": "https://api.plexe.ai/predict/dep_abc123def456",
   "model_id": "model_789xyz",
   "created_at": "2024-05-01T12:00:00Z"
 }
@@ -50,7 +50,7 @@ For predictions with a single data point, use the simple prediction endpoint.
 ### Using cURL
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id} \
+curl -X POST https://api.plexe.ai/predict/{deployment_id} \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -83,7 +83,7 @@ import json
 
 API_KEY = "YOUR_API_KEY"
 DEPLOYMENT_ID = "dep_abc123def456"
-BASE_URL = "https://api.plexe.ai/v1"
+BASE_URL = "https://api.plexe.ai"
 
 def get_prediction(input_data):
     """
@@ -139,7 +139,7 @@ if result:
 async function getPrediction(inputData) {
   const apiKey = "YOUR_API_KEY";
   const deploymentId = "dep_abc123def456";
-  const endpoint = `https://api.plexe.ai/v1/predict/${deploymentId}`;
+  const endpoint = `https://api.plexe.ai/predict/${deploymentId}`;
   
   try {
     const response = await fetch(endpoint, {
@@ -188,7 +188,7 @@ For efficiently processing multiple predictions at once, use the batch predictio
 ### Using cURL
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/batch \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}/batch \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -224,7 +224,7 @@ import json
 
 API_KEY = "YOUR_API_KEY"
 DEPLOYMENT_ID = "dep_abc123def456"
-BASE_URL = "https://api.plexe.ai/v1"
+BASE_URL = "https://api.plexe.ai"
 
 def get_batch_predictions(input_data_list):
     """
@@ -295,7 +295,7 @@ if results:
 For very large prediction tasks, use the asynchronous batch prediction endpoint:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/async-batch \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}/async-batch \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -326,7 +326,7 @@ You can then [monitor the job](/platform/how-to/monitor_jobs) to check when it's
 To validate your input data against the model's schema before sending:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/validate \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}/validate \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -400,7 +400,7 @@ import time
 
 API_KEY = "YOUR_API_KEY"
 DEPLOYMENT_ID = "dep_abc123def456"
-BASE_URL = "https://api.plexe.ai/v1"
+BASE_URL = "https://api.plexe.ai"
 
 def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
     """
@@ -498,7 +498,7 @@ def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
 Specify which fields to include in the response:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?include=result,processing_time_ms \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}?include=result,processing_time_ms \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -512,7 +512,7 @@ curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?include=result,proc
 For models that support it, get explanations for predictions:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?explain=true \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}?explain=true \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -546,7 +546,7 @@ Response with explanation:
 Request a specific model version:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?model_version=2 \
+curl -X POST https://api.plexe.ai/predict/{deployment_id}?model_version=2 \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

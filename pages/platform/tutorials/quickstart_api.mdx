@@ -51,7 +51,7 @@ There are typically two ways to upload data to the Plexe API:
 file_path = "housing_data.csv"
 with open(file_path, 'rb') as f:
     files = {'file': (os.path.basename(file_path), f)}
-    response = requests.post(f"{base_url}/v1/uploads", 
+    response = requests.post(f"{base_url}/uploads",
                            headers={"x-api-key": api_key}, 
                            files=files)
     if response.status_code == 200:
@@ -72,7 +72,7 @@ file_name = os.path.basename(file_path)
 print(f"Requesting upload URL for {file_name}...")
 try:
     response = requests.post(
-        f"{base_url}/v1/uploads",
+        f"{base_url}/uploads",
         headers=headers,
         json={"filename": file_name, "content_type": "text/csv"}
     )
@@ -93,7 +93,7 @@ try:
     # Step 2c: Confirm upload completion
     print("Confirming upload status...")
     confirm_response = requests.post(
-        f"{base_url}/v1/uploads/status",
+        f"{base_url}/uploads/status",
         headers=headers,
         json={"upload_id": temp_upload_id, "filename": file_name, "s3_key": s3_key}
     )
@@ -143,7 +143,7 @@ build_payload = {
 print(f"\nSubmitting build request for model: {model_name}")
 try:
     response = requests.post(
-        f"{base_url}/v1/models/{model_name}",
+        f"{base_url}/models/{model_name}",
         headers=headers,
         json=build_payload
     )
@@ -180,7 +180,7 @@ if model_id:
                 break
             m_name, m_version = parts[0], parts[1]
 
-            status_url = f"{base_url}/v1/models/{m_name}/{m_version}/status"
+            status_url = f"{base_url}/models/{m_name}/{m_version}/status"
             response = requests.get(status_url, headers=headers)
             response.raise_for_status()
             status_result = response.json()
@@ -228,7 +228,7 @@ if model_id and status == "completed":
     try:
         # Extract name and version from model_id
         m_name, m_version = model_id.split(':')
-        infer_url = f"{base_url}/v1/models/{m_name}/{m_version}/infer"
+        infer_url = f"{base_url}/models/{m_name}/{m_version}/infer"
         response = requests.post(infer_url, headers=headers, json=inference_payload)
         response.raise_for_status()
         prediction = response.json()

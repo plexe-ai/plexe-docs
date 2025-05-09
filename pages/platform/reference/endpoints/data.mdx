@@ -83,7 +83,7 @@ GET /data/uploads
 Retrieves detailed information about a specific upload.
 
 ```http
-GET /v1/uploads/{upload_id}
+GET /uploads/{upload_id}
 ```
 
 #### Path Parameters
@@ -121,7 +121,7 @@ GET /v1/uploads/{upload_id}
         {"name": "plan_type", "type": "string", "nullable": false, "unique": false},
         {"name": "referral_source", "type": "string", "nullable": true, "unique": false}
       ],
-      "preview_url": "https://api.plexe.ai/v1/uploads/upload_abc123def456/files/customers.csv/preview",
+      "preview_url": "https://api.plexe.ai/uploads/upload_abc123def456/files/customers.csv/preview",
       "s3_key": "uploads/user123/customers.csv",
       "content_type": "text/csv",
       "created_at": "2024-05-01T12:00:00Z"
@@ -141,7 +141,7 @@ GET /v1/uploads/{upload_id}
         {"name": "discount", "type": "float", "nullable": true, "unique": false},
         {"name": "payment_method", "type": "string", "nullable": false, "unique": false}
       ],
-      "preview_url": "https://api.plexe.ai/v1/uploads/upload_abc123def456/files/transactions.csv/preview",
+      "preview_url": "https://api.plexe.ai/uploads/upload_abc123def456/files/transactions.csv/preview",
       "s3_key": "uploads/user123/transactions.csv",
       "content_type": "text/csv",
       "created_at": "2024-05-01T12:00:00Z"
@@ -230,7 +230,7 @@ After receiving the pre-signed URLs, you must upload each file directly to the p
 Confirms completion of file uploads to S3 and updates the upload status.
 
 ```http
-POST /v1/uploads/{upload_id}/status
+POST /uploads/{upload_id}/status
 ```
 
 #### Path Parameters
@@ -282,7 +282,7 @@ After confirming the uploads, the system will process the files (validating, par
 Deletes an upload and its associated files.
 
 ```http
-DELETE /v1/uploads/{upload_id}
+DELETE /uploads/{upload_id}
 ```
 
 #### Path Parameters
@@ -387,7 +387,7 @@ For JSON files:
 Performs automated analysis on an uploaded dataset.
 
 ```http
-POST /v1/data/analyze
+POST /data/analyze
 ```
 
 #### Request Body
@@ -423,7 +423,7 @@ This initiates an asynchronous job. You can check the job status using the Jobs 
 Retrieves the results of a completed dataset analysis.
 
 ```http
-GET /v1/data/analysis/{job_id}
+GET /data/analysis/{job_id}
 ```
 
 #### Path Parameters
@@ -503,14 +503,14 @@ GET /v1/data/analysis/{job_id}
         {
           "type": "histogram",
           "title": "Age Distribution",
-          "data_url": "https://api.plexe.ai/v1/data/visualizations/viz_yza123bcd456",
-          "thumbnail_url": "https://api.plexe.ai/v1/data/visualizations/viz_yza123bcd456/thumbnail"
+          "data_url": "https://api.plexe.ai/data/visualizations/viz_yza123bcd456",
+          "thumbnail_url": "https://api.plexe.ai/data/visualizations/viz_yza123bcd456/thumbnail"
         },
         {
           "type": "bar_chart",
           "title": "Churn by Country",
-          "data_url": "https://api.plexe.ai/v1/data/visualizations/viz_efg789hij012",
-          "thumbnail_url": "https://api.plexe.ai/v1/data/visualizations/viz_efg789hij012/thumbnail"
+          "data_url": "https://api.plexe.ai/data/visualizations/viz_efg789hij012",
+          "thumbnail_url": "https://api.plexe.ai/data/visualizations/viz_efg789hij012/thumbnail"
         }
       ]
     }
@@ -672,7 +672,7 @@ For visualization results:
 Retrieves the history of queries for a data session.
 
 ```http
-GET /v1/data/sessions/{session_id}/queries
+GET /data/sessions/{session_id}/queries
 ```
 
 #### Path Parameters
@@ -709,7 +709,7 @@ GET /v1/data/sessions/{session_id}/queries
 Ends a data session, releasing resources.
 
 ```http
-DELETE /v1/data/sessions/{session_id}
+DELETE /data/sessions/{session_id}
 ```
 
 #### Path Parameters
@@ -735,7 +735,7 @@ DELETE /v1/data/sessions/{session_id}
 Initiates an export job for a dataset.
 
 ```http
-POST /v1/data/export
+POST /data/export
 ```
 
 #### Request Body
@@ -774,7 +774,7 @@ POST /v1/data/export
 Checks the status of an export job.
 
 ```http
-GET /v1/data/export/{export_id}
+GET /data/export/{export_id}
 ```
 
 #### Path Parameters
@@ -795,7 +795,7 @@ GET /v1/data/export/{export_id}
     {
       "filename": "customers.csv",
       "size_bytes": 1048576,
-      "download_url": "https://api.plexe.ai/v1/data/export/export_cde456fgh789/customers.csv",
+      "download_url": "https://api.plexe.ai/data/export/export_cde456fgh789/customers.csv",
       "expires_at": "2024-05-08T16:04:30Z"
     }
   ]
@@ -807,7 +807,7 @@ GET /v1/data/export/{export_id}
 Downloads an exported file.
 
 ```http
-GET /v1/data/export/{export_id}/{filename}
+GET /data/export/{export_id}/{filename}
 ```
 
 #### Path Parameters

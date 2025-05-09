@@ -75,7 +75,7 @@ For programmatic monitoring, use the Jobs API endpoints.
 ### Get All Jobs
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/jobs \
+curl -X GET https://api.plexe.ai/jobs \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -126,7 +126,7 @@ Example response:
 ### Get Job Details
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/jobs/{job_id} \
+curl -X GET https://api.plexe.ai/jobs/{job_id} \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -153,7 +153,7 @@ Example response for a model build job:
     "stage_progress": 70,
     "estimated_completion": "2024-05-01T12:30:00Z"
   },
-  "logs_url": "https://api.plexe.ai/v1/jobs/job_abc123/logs"
+  "logs_url": "https://api.plexe.ai/jobs/job_abc123/logs"
 }
 ```
 
@@ -176,10 +176,10 @@ Example response for a completed job:
   },
   "result": {
     "deployment_id": "deployment_ghi789",
-    "endpoint": "https://api.plexe.ai/v1/predict/deployment_ghi789",
+    "endpoint": "https://api.plexe.ai/predict/deployment_ghi789",
     "status": "READY"
   },
-  "logs_url": "https://api.plexe.ai/v1/jobs/job_def456/logs"
+  "logs_url": "https://api.plexe.ai/jobs/job_def456/logs"
 }
 ```
 
@@ -206,7 +206,7 @@ Example response for a failed job:
     "message": "Model training failed due to insufficient data variety",
     "details": "The dataset contains only negative examples. A mixture of positive and negative examples is required."
   },
-  "logs_url": "https://api.plexe.ai/v1/jobs/job_mno345/logs"
+  "logs_url": "https://api.plexe.ai/jobs/job_mno345/logs"
 }
 ```
 
@@ -215,7 +215,7 @@ Example response for a failed job:
 For detailed debug information:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/jobs/{job_id}/logs \
+curl -X GET https://api.plexe.ai/jobs/{job_id}/logs \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -270,7 +270,7 @@ Example response:
 To stop a running job:
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/jobs/{job_id}/cancel \
+curl -X POST https://api.plexe.ai/jobs/{job_id}/cancel \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json"
 ```
@@ -294,7 +294,7 @@ import requests
 import time
 
 API_KEY = "YOUR_API_KEY"
-BASE_URL = "https://api.plexe.ai/v1"
+BASE_URL = "https://api.plexe.ai"
 JOB_ID = "job_abc123"
 
 def check_job_status(job_id):
@@ -367,7 +367,7 @@ Instead of polling, you can set up webhooks to be notified when jobs complete:
 ### Via API
 
 ```bash
-curl -X POST https://api.plexe.ai/v1/webhooks \
+curl -X POST https://api.plexe.ai/webhooks \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
