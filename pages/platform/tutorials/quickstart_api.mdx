@@ -5,11 +5,11 @@ description: 'Build, deploy, and use your first model using the Plexe Platform R
 
 This tutorial walks you through the basic workflow of using the Plexe Platform API to create and use a machine learning model without managing infrastructure.
 
-**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
+**Base URL:** `https://api.plexe.ai`
 
 ## Prerequisites
 
-1.  **Account:** You need a Plexe Platform account. Sign up at [console.plexe.ai](https://console.plexe.ai) (Replace with actual URL).
+1.  **Account:** You need a Plexe Platform account. Sign up at [console.plexe.ai](https://console.plexe.ai).
 2.  **API Key:** Generate an API key from your account settings in the Plexe Console.
 3.  **Tools:** You'll need a tool to make HTTP requests, like `curl`, Postman, or a scripting language (Python with `requests` is used here).
 
@@ -51,7 +51,7 @@ There are typically two ways to upload data to the Plexe API:
 file_path = "housing_data.csv"
 with open(file_path, 'rb') as f:
     files = {'file': (os.path.basename(file_path), f)}
-    response = requests.post(f"{base_url}/uploads",
+    response = requests.post(f"{base_url}/data/upload",
                            headers={"x-api-key": api_key}, 
                            files=files)
     if response.status_code == 200:
@@ -72,7 +72,7 @@ file_name = os.path.basename(file_path)
 print(f"Requesting upload URL for {file_name}...")
 try:
     response = requests.post(
-        f"{base_url}/uploads",
+        f"{base_url}/data/upload",
         headers=headers,
         json={"filename": file_name, "content_type": "text/csv"}
     )
@@ -93,9 +93,9 @@ try:
     # Step 2c: Confirm upload completion
     print("Confirming upload status...")
     confirm_response = requests.post(
-        f"{base_url}/uploads/status",
+        f"{base_url}/data/use-upload",
         headers=headers,
-        json={"upload_id": temp_upload_id, "filename": file_name, "s3_key": s3_key}
+        json={"upload_id": temp_upload_id, "filename": file_name}
     )
     confirm_response.raise_for_status()
     upload_status = confirm_response.json()
@@ -121,9 +121,9 @@ else:
      dataset_reference = upload_id
 ```
 
-<Warning>
-The exact data upload process depends on the API implementation. Check the [Data Management API Reference](/platform/reference/endpoints/data) for details.
-</Warning>
+<Note>
+Data uploads use a two-step process: first get a pre-signed URL, then upload to that URL directly. This allows for secure and efficient handling of large files.
+</Note>
 
 ## 3. Build the Model
 
@@ -132,12 +132,12 @@ Submit a request to build a model. Provide a unique `model_name`, your `intent`,
 ```python
 model_name = "api-quickstart-housing" # Choose a unique name
 build_payload = {
-    "intent": "Predict house prices in USD based on features like sqft, beds, baths.",
-    "data_reference": dataset_reference, # Use upload_id or URL from previous step
+    "goal": "Predict house prices in USD based on features like sqft, beds, baths.",
+    "upload_id": dataset_reference, # Use upload_id or URL from previous step
     "metric": "rmse" # Optional: suggest a metric (lower is better for RMSE)
     # You might also specify schemas here if not inferring
-    # "input_schema": {"sqft": float, ...},
-    # "output_schema": {"price": float}
+    # "input_schema": {"sqft": "float", ...},
+    # "output_schema": {"price": "float"}
 }
 
 print(f"\nSubmitting build request for model: {model_name}")
@@ -220,9 +220,11 @@ if model_id and status == "completed":
     # Prepare input data matching the model's expected input schema
     inference_payload = {
         # Use feature names consistent with your data/intent/schema
-        "sqft": 1950.0,
-        "beds": 3,
-        "baths": 2.5
+        "inputs": {
+            "sqft": 1950.0,
+            "beds": 3,
+            "baths": 2.5
+        }
     }
 
     try:
@@ -231,7 +233,8 @@ if model_id and status == "completed":
         infer_url = f"{base_url}/models/{m_name}/{m_version}/infer"
         response = requests.post(infer_url, headers=headers, json=inference_payload)
         response.raise_for_status()
-        prediction = response.json()
+        prediction_result = response.json()
+        prediction = prediction_result.get("predictions", {})
         print(f"Inference successful. Prediction: {prediction}")
 
     except requests.exceptions.RequestException as e:

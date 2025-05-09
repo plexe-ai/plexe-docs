@@ -108,24 +108,22 @@ A **deployment** makes a specific model version available for inference. Deploym
 ### API Keys
 
 **API keys** are used for authentication with the Plexe API. Each key:
-- Has specific permissions
+- Has specific permissions (read-only or read-write)
 - Is associated with your account
 - Can be revoked if compromised
-- Can be used to track usage and billing
+- Is used to track usage and credit consumption
 
 ## Architecture Overview
 
 At a high level, the Plexe Platform architecture follows a microservices approach:
 
-1. **API Gateway Service:** Handles authentication, rate limiting, and request routing
-2. **User Service:** Manages accounts, permissions, and API keys
+1. **API Gateway:** Handles authentication, rate limiting, and request routing
+2. **Auth Service:** Manages accounts, permissions, and API keys
 3. **Data Service:** Handles data uploads, storage, and pre-processing
 4. **Model Service:** Coordinates model building and versioning
-5. **Agent Orchestration Service:** Manages the AI agents that build models
-6. **Execution Service:** Runs the generated code in secure environments
-7. **Deployment Service:** Manages model deployments to serving infrastructure
-8. **Inference Service:** Handles prediction requests to deployed models
-9. **Monitoring Service:** Collects metrics and logs across the platform
+5. **Execution Service:** Runs the generated code in secure environments
+6. **Inference Service:** Handles prediction requests to deployed models
+7. **Billing Service:** Tracks usage and manages credits
 
 ## Differences from the Python Library
 
@@ -136,7 +134,7 @@ While the Plexe Platform builds on the same core technology as the Python librar
 | **Environment** | Runs in your local or custom environment | Fully managed cloud environment |
 | **Infrastructure** | You manage compute resources | Plexe manages all infrastructure |
 | **Scalability** | Limited by your local resources | Auto-scaling based on demand |
-| **Authentication** | Environment variables for API keys | Multi-factor auth & API key management |
+| **Authentication** | Environment variables for API keys | JWT tokens & API key management |
 | **Persistence** | Manual save/load to files | Automatic versioning and storage |
 | **Deployment** | Manual integration with your services | One-click deployment to endpoints |
 | **Monitoring** | Basic callbacks and logging | Comprehensive monitoring & alerting |
@@ -147,22 +145,22 @@ While the Plexe Platform builds on the same core technology as the Python librar
 
 The Plexe Platform implements several security measures:
 
-1. **Authentication:** API keys and user authentication with optional MFA
-2. **Authorization:** Fine-grained permissions for API keys and users
+1. **Authentication:** API keys and user authentication (JWT tokens)
+2. **Authorization:** Role-based permissions for API keys
 3. **Isolation:** Secure execution environments for code generation and training
 4. **Encryption:** Data encryption in transit and at rest
-5. **Monitoring:** Logging of security events and access patterns
-6. **Compliance:** Regular security audits and updates
+5. **Monitoring:** Logging of access patterns and usage
 
-## Environments
+## Deployment Options
 
-The Platform supports different environments for different stages of the development lifecycle:
+The Platform can be deployed in different configurations depending on your needs:
 
-- **Development:** For experimentation and iteration
-- **Staging:** For testing before production deployment
-- **Production:** For live, customer-facing deployments
+- **Hosted Service:** The standard managed offering at api.plexe.ai
+- **Enterprise Mode:** For self-hosted deployments without authentication requirements
 
-Each environment has its own resources, settings, and access controls.
+<Note>
+Multiple environment support (Development/Staging/Production) is planned for a future release.
+</Note>
 
 ## Next Steps
 
