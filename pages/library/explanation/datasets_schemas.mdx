@@ -1,0 +1,180 @@
+---
+title: 'Datasets and Schemas'
+description: 'How Plexe handles data inputs and defines the structure of ML models.'
+---
+
+In Plexe, datasets and schemas work together to define what data your model consumes and what outputs it produces. Understanding how these components interact is key to creating effective models.
+
+## Datasets
+
+Datasets provide the training data for your models. Plexe offers flexible options for working with data:
+
+### Pandas DataFrames
+
+The most common way to provide data to Plexe is through Pandas DataFrames, which offer a tabular structure that's ideal for machine learning:
+
+```python
+import pandas as pd
+import plexe
+
+# Load data into a DataFrame
+df = pd.read_csv("customer_data.csv")
+
+# Create a model and build it with the DataFrame
+model = plexe.Model(intent="Predict customer churn")
+model.build(datasets=[df])
+```
+
+When using DataFrames:
+- Plexe works with one or more DataFrames (pass them as a list)
+- It automatically analyzes columns to understand data types and identify potential targets
+- For multiple DataFrames, Plexe can detect relationships between them based on column names and data
+
+### DatasetGenerator
+
+For cases where you have limited or no existing data, you can use the `DatasetGenerator` class to create synthetic training data:
+
+```python
+from plexe import DatasetGenerator
+from pydantic import BaseModel
+
+# Define schema for synthetic data
+class CustomerData(BaseModel):
+    age: int
+    subscription_months: int
+    monthly_spend: float
+    churn: bool
+
+# Create a generator for synthetic data
+generator = DatasetGenerator(
+    description="Generate customer data with churn information",
+    provider="openai/gpt-4o-mini",  # Specify LLM provider for generation
+    schema=CustomerData
+)
+
+# Generate data (specify number of samples)
+generator.generate(num_samples=100)
+
+# Use the generator when building the model
+model = plexe.Model(intent="Predict customer churn")
+model.build(datasets=[generator])
+```
+
+The `DatasetGenerator`:
+- Creates realistic synthetic data based on the schema and description
+- Requires a provider specification for the LLM that will generate the data
+- Can augment existing data by passing an existing DataFrame in the constructor
+- Explicitly generates samples with the `generate()` method before model building
+
+## Schemas
+
+Schemas define the structure and validation rules for inputs and outputs of your model. Plexe supports two ways to define schemas:
+
+### Dictionary-Based Schemas
+
+The simplest way to define schemas is with Python dictionaries mapping field names to types:
+
+```python
+import plexe
+
+# Create a model with dictionary schemas
+model = plexe.Model(
+    intent="Predict house prices",
+    input_schema={
+        "square_footage": float,
+        "bedrooms": int,
+        "bathrooms": float,
+        "location": str
+    },
+    output_schema={
+        "price": float
+    }
+)
+```
+
+Dictionary schemas:
+- Are intuitive and quick to define
+- Support basic Python types (`int`, `float`, `str`, `bool`)
+- Are automatically converted to Pydantic models internally
+
+### Pydantic Models
+
+For more complex schemas with validation rules, descriptions, or nested structures, Pydantic models provide greater flexibility:
+
+```python
+import plexe
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+# Define input schema
+class PropertyFeatures(BaseModel):
+    square_footage: float = Field(description="Total area in square feet", gt=0)
+    bedrooms: int = Field(description="Number of bedrooms", ge=0)
+    bathrooms: float = Field(description="Number of bathrooms (e.g., 2.5)", ge=0)
+    location: str = Field(description="Neighborhood or area")
+    amenities: Optional[List[str]] = Field(default=None, description="List of property amenities")
+
+# Define output schema
+class PricePrediction(BaseModel):
+    price: float = Field(description="Predicted sale price in USD", gt=0)
+    confidence: Optional[float] = Field(default=None, description="Prediction confidence score (0-1)")
+
+# Create model with Pydantic schemas
+model = plexe.Model(
+    intent="Predict house prices based on property features",
+    input_schema=PropertyFeatures,
+    output_schema=PricePrediction
+)
+```
+
+Pydantic schemas:
+- Provide rich validation (min/max values, regex patterns, etc.)
+- Support field descriptions that help the ML Engineer agent understand the data
+- Handle complex nested structures and optional fields
+- Enable detailed documentation
+
+## Schema Inference
+
+If you don't provide explicit schemas but do provide datasets, Plexe will attempt to infer the schemas:
+
+```python
+import pandas as pd
+import plexe
+
+# Load data
+df = pd.read_csv("housing_data.csv")
+
+# Create model without schemas
+model = plexe.Model(intent="Predict house prices based on property features")
+
+# Build with data - schemas will be inferred
+model.build(datasets=[df])
+
+# Access the inferred schemas
+print("Inferred input schema:", model.input_schema)
+print("Inferred output schema:", model.output_schema)
+```
+
+During schema inference:
+1. Plexe analyzes the DataFrame columns to determine types
+2. It uses the model intent and column names to identify likely target variables
+3. Input features and output targets are separated based on this analysis
+
+## How Plexe Uses Schemas and Datasets Internally
+
+When you call `model.build()`:
+
+1. **Schema Analysis**: Plexe examines the provided schemas (or infers them) to understand the data structure
+2. **Data Exploration**: The ML agent explores the datasets to understand patterns, distributions, and relationships
+3. **Feature Engineering**: The agent determines which transformations or feature engineering steps are needed
+4. **Model Selection**: Based on the schemas and data, the agent selects appropriate ML algorithms
+5. **Training**: The model is trained on the provided data
+6. **Validation**: Plexe ensures the trained model adheres to the output schema
+
+## Best Practices
+
+- **Provide Explicit Schemas** when possible for clarity and more accurate model building
+- **Use Descriptive Field Names** that clearly communicate the meaning of each field
+- **Add Field Descriptions** in Pydantic models to guide the ML agent
+- **Clean Your Data** before passing to Plexe for better results
+- **Ensure Representative Data** to help Plexe build more accurate models

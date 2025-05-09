@@ -1,0 +1,378 @@
+---
+title: 'Model Deployment'
+description: 'Understanding how models are deployed and served on the Plexe Platform.'
+---
+
+## Overview
+
+After successfully building a model on the Plexe Platform, deployment is the process of making that model available
+for inference (predictions) via a dedicated API endpoint. The deployment system handles infrastructure provisioning,
+scaling, monitoring, and request processing.
+
+## Deployment Architecture
+
+The Plexe Platform uses a modern, container-based architecture for model deployments:
+
+1. **Packaging:** The model and its dependencies are packaged into a container image
+2. **Deployment:** The container is deployed to a scalable serving infrastructure (based on Kubernetes)
+3. **Endpoint Creation:** A unique HTTPS endpoint is created for the deployment
+4. **Load Balancing:** Traffic is distributed across multiple instances for high availability
+5. **Autoscaling:** Resources dynamically adjust based on traffic and latency requirements
+
+## Deployment Types
+
+Plexe offers multiple deployment options to match your specific requirements:
+
+### Standard Deployments
+
+The default deployment type, suitable for most use cases:
+- Balanced between performance and cost
+- Automatic scaling between 1-5 instances
+- 99.9% availability target
+- Suitable for models up to 5GB in size
+
+### High-Performance Deployments
+
+For mission-critical or high-throughput scenarios:
+- Optimized for low-latency and high throughput
+- Automatic scaling between 3-20 instances
+- 99.99% availability target
+- Pre-warmed instances to minimize cold starts
+- Premium hardware with GPU options
+- Suitable for models up to 20GB in size
+
+### Dedicated Deployments
+
+For enterprise customers with specialized needs:
+- Isolated infrastructure for maximum security and performance
+- Custom scaling configurations
+- Advanced monitoring and alerting
+- Support for custom runtimes and dependencies
+- Private network integration options
+- Suitable for models of any size
+
+## Deployment Lifecycle
+
+### Creating a Deployment
+
+To deploy a model, use the Console UI or the API:
+
+**Via Console:**
+1. Navigate to the model details page
+2. Click "Deploy Model"
+3. Select deployment options
+4. Click "Deploy"
+
+**Via API:**
+```bash
+curl -X POST https://api.plexe.ai/v1/models/{model_id}/deploy \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deployment_type": "standard",
+    "min_replicas": 1,
+    "max_replicas": 5,
+    "environment": "production"
+  }'
+```
+
+### Deployment Status
+
+After initiating a deployment, it progresses through several states:
+
+1. **PENDING:** Initial state when deployment is requested
+2. **DEPLOYING:** Container is being built and infrastructure provisioned
+3. **READY:** Deployment is successful and available for inference
+4. **ERROR:** Deployment failed (with error details)
+5. **UPDATING:** Deployment is being updated (during scaling or config changes)
+6. **TERMINATING:** Deployment is being shut down
+
+You can check the status via the Console or API:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/deployments/{deployment_id} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+### Updating a Deployment
+
+You can update certain deployment parameters without creating a new deployment:
+
+- Scaling settings (min/max replicas)
+- Resource allocations
+- Timeout settings
+- Environment variables
+
+Updates are performed with minimal downtime using rolling updates.
+
+### Deleting a Deployment
+
+When a deployment is no longer needed, you can delete it to free up resources:
+
+**Via Console:**
+1. Navigate to the deployments page
+2. Select the deployment
+3. Click "Delete Deployment"
+4. Confirm the action
+
+**Via API:**
+```bash
+curl -X DELETE https://api.plexe.ai/v1/deployments/{deployment_id} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+## Making Inference Requests
+
+Once a model is deployed, you can make inference (prediction) requests to its endpoint:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id} \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42,
+    "feature3": true
+  }'
+```
+
+The response will contain the model's prediction:
+
+```json
+{
+  "request_id": "req_abc123",
+  "result": {
+    "prediction": 0.87,
+    "confidence": 0.92
+  },
+  "processing_time_ms": 38
+}
+```
+
+### Batch Inference
+
+For processing multiple predictions efficiently, use the batch inference endpoint:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/batch \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": [
+      {"feature1": "value1", "feature2": 42},
+      {"feature1": "value2", "feature2": 17},
+      {"feature1": "value3", "feature2": 98}
+    ]
+  }'
+```
+
+The response will contain multiple predictions:
+
+```json
+{
+  "request_id": "req_batch_def456",
+  "results": [
+    {"prediction": 0.87, "confidence": 0.92},
+    {"prediction": 0.23, "confidence": 0.85},
+    {"prediction": 0.65, "confidence": 0.78}
+  ],
+  "processing_time_ms": 120
+}
+```
+
+## Deployment Performance
+
+### Scaling Behavior
+
+Deployments automatically scale based on:
+
+- Request volume
+- CPU/Memory utilization
+- Request latency
+
+You can configure scaling parameters:
+- `min_replicas`: Minimum number of instances (even during idle periods)
+- `max_replicas`: Maximum number of instances during peak load
+- `target_utilization`: CPU/memory threshold that triggers scaling
+
+### Cold Starts
+
+When a deployment scales up or recovers from idle, new instances may experience "cold starts" - slight delays in the first few requests as the model loads into memory. Plexe mitigates this through:
+
+- Pre-warmed instances for high-performance deployments
+- Optimized container images
+- Model caching
+- Intelligent routing of requests to warm instances when possible
+
+### Performance Metrics
+
+The Platform collects and displays key performance metrics for deployments:
+
+- Request volume (requests per minute)
+- Average latency (milliseconds)
+- p95/p99 latency (milliseconds)
+- Error rate (percentage)
+- Resource utilization (CPU, memory)
+
+## Deployment Environments
+
+Plexe supports multiple deployment environments to support your development workflow:
+
+### Development
+
+- For testing during development
+- Lower cost but potentially higher latency
+- Limited scaling
+- Suitable for internal testing
+
+### Staging
+
+- For pre-production validation
+- Performance similar to production
+- Isolated from production traffic
+- Useful for integration testing
+
+### Production
+
+- For live, user-facing applications
+- Maximum reliability and performance
+- Enhanced monitoring
+- Production SLAs apply
+
+## Advanced Features
+
+### A/B Testing
+
+Deploy multiple versions of a model and split traffic between them:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/deployments/ab-test \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "price-model-ab-test",
+    "variants": [
+      {"deployment_id": "dep_abc123", "traffic_percentage": 50},
+      {"deployment_id": "dep_def456", "traffic_percentage": 50}
+    ],
+    "metrics": ["accuracy", "latency"]
+  }'
+```
+
+### Shadow Mode
+
+Deploy a new model version that receives the same requests as the primary model but doesn't return results to users. This allows for real-world testing without impacting users:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/deployments/{primary_dep_id}/shadow \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model_id": "mdl_ghi789",
+    "model_version": "2"
+  }'
+```
+
+### Custom Domains
+
+Enterprise customers can use custom domains for their deployments:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/deployments/{deployment_id}/domain \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "custom_domain": "ml-api.yourdomain.com",
+    "certificate_arn": "arn:aws:acm:region:account:certificate/certificate-id"
+  }'
+```
+
+### Deployment Hooks
+
+Configure actions to occur before, during, or after deployment:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/deployments/{deployment_id}/hooks \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pre_deployment": {"webhook_url": "https://your-server.com/hooks/pre-deploy"},
+    "post_deployment": {"webhook_url": "https://your-server.com/hooks/post-deploy"},
+    "on_error": {"webhook_url": "https://your-server.com/hooks/deploy-error"}
+  }'
+```
+
+## Monitoring and Logging
+
+### Deployment Logs
+
+Access logs for debugging and monitoring:
+
+**Via Console:**
+1. Navigate to the deployment details page
+2. Click on the "Logs" tab
+
+**Via API:**
+```bash
+curl -X GET https://api.plexe.ai/v1/deployments/{deployment_id}/logs \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+### Alerts
+
+Configure alerts based on deployment metrics:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/deployments/{deployment_id}/alerts \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "alert_name": "High Latency",
+    "metric": "p95_latency",
+    "threshold": 500,
+    "operator": "greater_than",
+    "duration_seconds": 300,
+    "notification_channels": ["email", "webhook"],
+    "webhook_url": "https://your-server.com/alerts"
+  }'
+```
+
+## Deployment Security
+
+Plexe implements several security measures for deployments:
+
+1. **Endpoint Security:** All endpoints are HTTPS-only with TLS 1.2+
+2. **Authentication:** API key required for all inference requests
+3. **Network Isolation:** Models run in isolated environments
+4. **Input Validation:** Optional schema validation for inference requests
+5. **Rate Limiting:** Protection against abuse
+6. **VPC Integration:** (Enterprise) Deploy within your private network
+7. **Audit Logging:** Detailed logs of all deployment operations
+
+## Best Practices
+
+1. **Start with Staging:** Deploy to staging environment first to verify performance
+2. **Monitor Performance:** Set up alerts for critical metrics
+3. **Right-size Deployments:** Match resources to actual needs
+4. **Use Batch Inference:** For high-volume prediction needs
+5. **Implement Proper Error Handling:** In client applications
+6. **Version Control:** Maintain clear naming and versioning
+7. **Regular Updates:** Periodically update models with new training data
+
+## Troubleshooting
+
+### Common Deployment Issues
+
+| Issue | Possible Causes | Solutions |
+| --- | --- | --- |
+| Deployment stuck in PENDING | Resource constraints, service issues | Check platform status, contact support |
+| High latency | Insufficient resources, complex model | Increase resources, optimize model |
+| Error responses | Invalid inputs, model errors | Check inputs against schema, review logs |
+| Scaling issues | Incorrect configuration, resource limits | Adjust min/max replicas, check quotas |
+
+### Support Resources
+
+For deployment issues, you can:
+- Check deployment logs in the Console
+- Review the [Deployment FAQ](https://docs.plexe.ai/faq/deployment) (URL is illustrative)
+- Contact support via the Console or [support@plexe.ai](mailto:support@plexe.ai)

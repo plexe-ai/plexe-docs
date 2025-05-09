@@ -1,0 +1,174 @@
+---
+title: 'Platform Concepts'
+description: 'Core concepts and architecture of the Plexe Platform.'
+---
+
+## What is the Plexe Platform?
+
+The Plexe Platform is a managed service that builds on the core capabilities of the Plexe Python library, providing a
+full-featured, scalable system for creating, managing, and deploying machine learning models. It offers both a
+web-based Console UI and a comprehensive REST API.
+
+While the Plexe library is designed for users who want to integrate model creation directly into their Python
+workflows, the Platform provides a service-oriented approach with additional features for deployment, management,
+and monitoring.
+
+## Key Components
+
+The Plexe Platform consists of several interconnected components:
+
+### Console UI
+
+The web-based interface at [console.plexe.ai](https://console.plexe.ai) where users can:
+- Create and manage models visually
+- Upload and analyze datasets
+- Monitor model training
+- View metrics and logs
+- Manage deployments
+- Handle API keys and account settings
+
+### REST API
+
+Available at [api.plexe.ai](https://api.plexe.ai), the REST API provides programmatic access to all platform features, allowing for
+integration with applications, scripts, and workflows. All actions possible in the Console UI can also be performed
+via the API.
+
+### Model Building System
+
+The core engine that powers model creation, using multi-agent AI systems to:
+- Analyze user intent and data
+- Generate appropriate ML code
+- Execute training processes
+- Evaluate models 
+- Produce optimized inference code
+
+### Serving Infrastructure
+
+Once a model is built, it can be deployed to Plexe's serving infrastructure, which provides:
+- Scalable inference endpoints
+- Load balancing
+- Monitoring and logging
+- High availability
+- Performance optimization
+
+### Storage System
+
+Manages various types of data and artifacts:
+- User data uploads
+- Trained models and artifacts
+- Inference logs
+- Analytics data
+
+## Core Workflow
+
+The standard workflow for using the Plexe Platform follows these steps:
+
+1. **Authentication:** Access the platform using API keys or Console UI login
+2. **Data Upload:** Provide your training data (optional but recommended)
+3. **Model Building:** Define your model requirements using natural language
+4. **Status Monitoring:** Track the model building progress
+5. **Deployment:** Deploy successful models for production use
+6. **Inference:** Use deployed models to make predictions via API
+7. **Monitoring & Maintenance:** Monitor performance and update as needed
+
+## Key Concepts
+
+### Jobs
+
+Any long-running operation (like model building) is represented as a **job**. Jobs have:
+- A unique ID
+- Status tracking
+- Progress information
+- Results upon completion
+
+### Models
+
+A **model** in the Plexe Platform represents a specific ML solution created to address your needs. Each model has:
+- A unique name
+- One or more versions (iterations)
+- Associated metadata
+- Performance metrics
+- Input/output schemas
+
+### Versions
+
+Each model can have multiple **versions**, representing different iterations or updates. Each version:
+- Has unique metrics and characteristics
+- Can be deployed independently
+- Maintains its own artifacts and code
+
+### Deployments
+
+A **deployment** makes a specific model version available for inference. Deployments:
+- Have a unique URL endpoint
+- Can be scaled up or down
+- Can be monitored for performance and usage
+- Can be updated or rolled back
+
+### API Keys
+
+**API keys** are used for authentication with the Plexe API. Each key:
+- Has specific permissions
+- Is associated with your account
+- Can be revoked if compromised
+- Can be used to track usage and billing
+
+## Architecture Overview
+
+At a high level, the Plexe Platform architecture follows a microservices approach:
+
+1. **API Gateway Service:** Handles authentication, rate limiting, and request routing
+2. **User Service:** Manages accounts, permissions, and API keys
+3. **Data Service:** Handles data uploads, storage, and pre-processing
+4. **Model Service:** Coordinates model building and versioning
+5. **Agent Orchestration Service:** Manages the AI agents that build models
+6. **Execution Service:** Runs the generated code in secure environments
+7. **Deployment Service:** Manages model deployments to serving infrastructure
+8. **Inference Service:** Handles prediction requests to deployed models
+9. **Monitoring Service:** Collects metrics and logs across the platform
+
+## Differences from the Python Library
+
+While the Plexe Platform builds on the same core technology as the Python library, there are some key differences:
+
+| Feature | Python Library | Platform |
+| --- | --- | --- |
+| **Environment** | Runs in your local or custom environment | Fully managed cloud environment |
+| **Infrastructure** | You manage compute resources | Plexe manages all infrastructure |
+| **Scalability** | Limited by your local resources | Auto-scaling based on demand |
+| **Authentication** | Environment variables for API keys | Multi-factor auth & API key management |
+| **Persistence** | Manual save/load to files | Automatic versioning and storage |
+| **Deployment** | Manual integration with your services | One-click deployment to endpoints |
+| **Monitoring** | Basic callbacks and logging | Comprehensive monitoring & alerting |
+| **Collaboration** | Code-based sharing | Team access and permissions |
+| **Billing** | Pay only for LLM API usage | Platform subscription & usage-based billing |
+
+## Security Model
+
+The Plexe Platform implements several security measures:
+
+1. **Authentication:** API keys and user authentication with optional MFA
+2. **Authorization:** Fine-grained permissions for API keys and users
+3. **Isolation:** Secure execution environments for code generation and training
+4. **Encryption:** Data encryption in transit and at rest
+5. **Monitoring:** Logging of security events and access patterns
+6. **Compliance:** Regular security audits and updates
+
+## Environments
+
+The Platform supports different environments for different stages of the development lifecycle:
+
+- **Development:** For experimentation and iteration
+- **Staging:** For testing before production deployment
+- **Production:** For live, customer-facing deployments
+
+Each environment has its own resources, settings, and access controls.
+
+## Next Steps
+
+Now that you understand the core concepts of the Plexe Platform, you can:
+
+- Learn how to [manage your account](/platform/how-to/manage_account)
+- Explore how to [work with API keys](/platform/how-to/manage_api_keys)
+- See how to [upload data](/platform/how-to/upload_data_api) for your models
+- Follow the [quickstart tutorial](/platform/tutorials/quickstart_api) to build your first model

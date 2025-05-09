@@ -1,0 +1,95 @@
+---
+title: 'Core Concepts'
+description: 'Understand the fundamental concepts behind the Plexe Python library.'
+---
+
+The Plexe Python library (`plexe`) provides a powerful way to build machine learning models using natural language. Understanding these core concepts will help you use it effectively.
+
+## Model (`plexe.Model`)
+
+This is the central class you interact with. A `Model` object represents a machine learning task and, once built, the resulting trained model.
+
+* **Initialization:** You create a `Model` by specifying its `intent` and optionally its `input_schema`, `output_schema`, and `constraints`.
+* **State:** A `Model` progresses through states: `DRAFT` (initial), `BUILDING` (during `build()` call), `READY` (successfully built), `ERROR` (build failed).
+* **Building:** The `build()` method triggers the agentic workflow to generate, train, and evaluate the model based on the intent and provided data.
+* **Prediction:** The `predict()` method uses the trained model (once `READY`) to make predictions on new data.
+* **Persistence:** `save_model()` and `load_model()` allow you to store and retrieve trained models.
+
+## Intent
+
+The `intent` is a natural language string describing *what* you want the machine learning model to do. It's the primary instruction given to the Plexe agent system.
+
+* **Example:** `"Predict the likelihood of customer churn based on their recent activity and subscription plan."`
+* **Clarity is Key:** A clear and specific intent leads to better model planning and results. Include context about the goal, inputs, and outputs if possible.
+
+## Schemas (`input_schema`, `output_schema`)
+
+Schemas define the structure and data types of the model's expected inputs and outputs.
+
+* **Purpose:** They ensure data consistency and help the agents understand the data format.
+* **Formats:** Can be provided as Pydantic models (recommended) or Python dictionaries.
+* **Inference:** If not provided, Plexe attempts to infer schemas from the `datasets` supplied during the `build` call, using LLM analysis to identify the likely target variable(s). Explicitly defining schemas is often more reliable.
+
+## Build Process (`model.build()`)
+
+This method orchestrates the core model creation workflow.
+
+* **Inputs:** Requires `datasets` (list of Pandas DataFrames or `DatasetGenerator` objects) and a `provider` configuration (LLM to use). Optional arguments include `max_iterations`, `timeout`, `callbacks`, etc.
+* **Agent System (`PlexeAgent`):** Internally, `build` invokes a multi-agent system (`PlexeAgent`) comprising specialized roles:
+  * **Orchestrator:** Manages the overall workflow, delegating tasks.
+  * **ML Researcher:** Analyzes the problem, proposes solution plans.
+  * **ML Engineer:** Writes and refines the model training code based on the plan.
+  * **ML Ops Engineer:** Generates the inference code for the final model.
+  * **(Tool Agents):** Smaller, specialized agents perform tasks like metric selection, schema inference, code validation, and execution using defined "tools".
+* **Iteration:** The system may try multiple approaches (`max_iterations`) to find the best model according to the selected performance metric. Each attempt involves planning, code generation, execution, and evaluation.
+* **Output:** Updates the `Model` object's state (`READY` or `ERROR`), populates its `predictor`, `metric`, `metadata`, `artifacts`, and source code attributes.
+
+## Provider (`provider`, `ProviderConfig`)
+
+Specifies the Large Language Model(s) (LLMs) used by the agent system.
+
+* **Simple String:** `"openai/gpt-4o-mini"` or `"anthropic/claude-3-haiku-20240307"`. Uses this model for most agent tasks.
+* **`ProviderConfig` Object:** Allows assigning different models to different agent roles (Orchestrator, Researcher, Engineer, Ops, Tool) for fine-grained control over cost and capability.
+* **Dependencies:** Relies on [LiteLLM](https://docs.litellm.ai/docs/) for multi-provider support. Requires appropriate API keys set as environment variables.
+
+## Datasets (`datasets`, `DatasetGenerator`)
+
+Data used for training and evaluation.
+
+* **Input:** Pass data to `model.build()` as a list containing Pandas DataFrames.
+* **`DatasetGenerator`:** A class (`plexe.DatasetGenerator`) can be used to define requirements for a dataset, including generating synthetic data based on a schema or augmenting existing data using an LLM provider. Pass instances of this class in the `datasets` list if needed.
+
+## Callbacks (`plexe.Callback`, `MLFlowCallback`)
+
+Classes that allow you to hook into the `build()` process lifecycle (`on_build_start`, `on_iteration_start`, `on_iteration_end`, `on_build_end`).
+
+* **Purpose:** Used for logging, monitoring, custom artifact handling, etc.
+* **Built-in:** Includes `MLFlowCallback` for easy integration with MLflow tracking. The `ChainOfThoughtModelCallback` provides verbose agent step logging when `chain_of_thought=True` is set in `build()`.
+* **Custom:** You can create your own callbacks by inheriting from `plexe.Callback`.
+
+## Constraints (`plexe.Constraint`)
+
+Represents rules or conditions that a model's input/output pairs should satisfy. Constraints enable you to specify business rules and validation criteria for your model's behavior.
+
+* **Definition:** Create constraints with a `condition` function that takes input and output data and returns a boolean
+* **Composability:** Combine constraints using logical operators (`&` for AND, `|` for OR, `~` for NOT)
+* **Usage Example:**
+  ```python
+  # Constraint ensuring price predictions are positive
+  positive_price = Constraint(
+      condition=lambda inputs, outputs: outputs["price"] > 0,
+      description="Predicted prices must be positive"
+  )
+  
+  # Constraint requiring predictions to have a confidence value
+  has_confidence = Constraint(
+      condition=lambda inputs, outputs: "confidence" in outputs,
+      description="Predictions must include a confidence score"
+  )
+  
+  # Combined constraint
+  valid_model = positive_price & has_confidence
+  
+  # Apply constraints when creating a model
+  model = Model(intent="...", constraints=[valid_model])
+  ```

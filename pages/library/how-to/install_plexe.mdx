@@ -1,0 +1,68 @@
+---
+title: 'Installation'
+description: 'Learn how to install the Plexe Python library with different dependency sets.'
+---
+
+Install the `plexe` library using pip. Choose the installation method that best suits your needs.
+
+## Standard Installation
+
+This installs the core `plexe` library along with common dependencies needed for most tasks, excluding large deep learning libraries.
+
+```bash
+pip install plexe
+```
+
+This includes libraries like `pandas`, `scikit-learn`, `xgboost`, `litellm`, and `smolagents`.
+
+## Lightweight Installation
+
+For minimal dependencies, suitable if you only need the basic structure or plan to install other dependencies manually.
+
+```bash
+pip install plexe[lightweight]
+```
+
+This installs only the absolute minimum required packages to run the core agent logic, without data handling or specific ML libraries. Use this if you are managing dependencies tightly in a constrained environment.
+
+## Installation with Deep Learning Support
+
+To include optional deep learning libraries like TensorFlow and PyTorch (CPU versions by default), use the `[all]` extra. This is needed if you expect Plexe to generate models using these frameworks.
+
+```bash
+pip install plexe[all]
+```
+
+This installs everything in the standard installation plus `tensorflow-cpu` and `torch`.
+
+{/* Note component with proper JSX syntax */}
+<Note>
+  If you require GPU support for TensorFlow or PyTorch, you will need to install the appropriate GPU-enabled versions separately *after* installing `plexe[all]`. Consult the official TensorFlow and PyTorch documentation for GPU installation instructions specific to your system and CUDA version.
+</Note>
+
+## Verifying Installation
+
+After installation, you can verify it by importing `plexe` in a Python interpreter:
+
+```python
+import plexe
+
+print(f"Plexe library imported successfully.")
+# You can also check the internal configuration for available packages
+from plexe.config import config
+print(f"Allowed packages: {config.code_generation.allowed_packages}")
+print(f"Deep learning available: {config.code_generation.deep_learning_available}")
+```
+
+## Setting API Keys
+
+Remember to set the necessary API keys for your chosen LLM provider(s) as environment variables.
+
+```bash
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+# or
+export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
+# etc.
+```
+
+Refer to the [LiteLLM Providers documentation](https://docs.litellm.ai/docs/providers) for the correct environment variable names.

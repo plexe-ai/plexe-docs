@@ -1,0 +1,123 @@
+---
+title: 'Provide I/O Schemas'
+description: 'Define the expected structure of your model inputs and outputs using Pydantic models or dictionaries.'
+---
+
+Specifying input and output schemas helps Plexe understand the data your model will work with and what it should produce. While Plexe can often infer schemas if you provide data during the `build` process, explicitly defining them provides clarity and ensures the generated model adheres to your requirements.
+
+You can provide schemas during `plexe.Model` initialization using either Pydantic models or Python dictionaries.
+
+## Using Pydantic Models
+
+Pydantic models offer robust type validation and are the recommended way to define schemas.
+
+```python
+import plexe
+from pydantic import BaseModel, Field
+from typing import List
+
+# Define input schema using Pydantic
+class HouseFeaturesInput(BaseModel):
+    square_footage: float = Field(description="Total area in square feet")
+    bedrooms: int = Field(description="Number of bedrooms")
+    bathrooms: float = Field(description="Number of bathrooms (e.g., 2.5)")
+    zip_code: str = Field(description="Postal code of the property")
+
+# Define output schema using Pydantic
+class HousePriceOutput(BaseModel):
+    predicted_price: float = Field(description="Estimated market price of the house")
+
+# Initialize the model with Pydantic schemas
+model = plexe.Model(
+    intent="Predict house prices based on property features.",
+    input_schema=HouseFeaturesInput,
+    output_schema=HousePriceOutput
+)
+
+print("Model initialized with Pydantic schemas.")
+# You can access the schemas later:
+# print(model.input_schema.model_json_schema())
+# print(model.output_schema.model_json_schema())
+```
+
+## Using Dictionaries
+
+You can also define schemas using simple Python dictionaries mapping field names to their types.
+
+```python
+import plexe
+
+# Define input schema as a dictionary
+input_schema_dict = {
+    "square_footage": float,
+    "bedrooms": int,
+    "bathrooms": float,
+    "zip_code": str
+}
+
+# Define output schema as a dictionary
+output_schema_dict = {
+    "predicted_price": float
+}
+
+# Initialize the model with dictionary schemas
+model = plexe.Model(
+    intent="Predict house prices based on property features.",
+    input_schema=input_schema_dict,
+    output_schema=output_schema_dict
+)
+
+print("Model initialized with dictionary schemas.")
+# Plexe converts these dictionaries into Pydantic models internally
+# print(model.input_schema.model_json_schema())
+# print(model.output_schema.model_json_schema())
+```
+
+{/* Note component with proper JSX syntax */}
+<Note>
+  When using dictionaries, Plexe currently supports basic Python types like `int`, `float`, `str`, and `bool`. For more complex types or validation rules, use Pydantic models directly.
+</Note>
+
+## Schema Inference
+
+If you don't provide `input_schema` or `output_schema` but *do* provide `datasets` during the `model.build()` call, Plexe will attempt to infer the schemas:
+
+1.  **Identify Target:** An LLM analyzes the column names and your `intent` to identify the most likely target variable(s) for the output schema.
+2.  **Determine Types:** Data types are inferred from the provided Pandas DataFrame(s).
+3.  **Construct Schemas:** Inferred input and output schemas are created.
+
+```python
+import plexe
+import pandas as pd
+
+# --- Prepare Data ---
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+# --------------------
+
+# Initialize model WITHOUT schemas
+model_infer = plexe.Model(
+    intent="Predict house prices based on square footage, bedrooms, and bathrooms."
+)
+
+print("Model initialized without explicit schemas.")
+
+# Build the model - schemas will be inferred here
+model_infer.build(
+    datasets=datasets,
+    provider="openai/gpt-4o-mini",
+    max_iterations=1 # Keep low for quick example
+)
+
+print(f"Build finished. Inferred Input Schema: {plexe.internal.common.utils.pydantic_utils.format_schema(model_infer.input_schema)}")
+print(f"Build finished. Inferred Output Schema: {plexe.internal.common.utils.pydantic_utils.format_schema(model_infer.output_schema)}")
+
+```
+
+While schema inference is convenient, providing explicit schemas is generally recommended for clarity and control, especially for complex models or specific data validation requirements.

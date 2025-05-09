@@ -1,0 +1,157 @@
+---
+title: 'Introduction'
+description: 'Overview of the Plexe Platform API endpoints and authentication.'
+---
+
+The Plexe Platform API provides programmatic access to the Plexe machine learning platform, allowing you to build, deploy, and use ML models without managing infrastructure.
+
+## Base URL
+
+All API endpoints are accessible via this base URL:
+
+```
+https://api.plexe.ai/v1
+```
+
+## Authentication
+
+All API requests require authentication using an API key. You have two options for authentication:
+
+Option 1: Include your key in the `Authorization` header as a Bearer token:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/list \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE"
+```
+
+Option 2: Include your key in the `x-api-key` header:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/list \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+You can generate API keys in the [Plexe Console](https://console.plexe.ai) under Settings > API Keys. See the [Manage API Keys](/platform/how-to/manage_api_keys) guide for details.
+
+## Request Format
+
+For endpoints that accept data (POST, PUT, PATCH), provide a JSON-formatted request body with the appropriate Content-Type header:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/build \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Model",
+    "intent": "Predict customer churn"
+  }'
+```
+
+## Response Format
+
+All responses are returned in JSON format. Successful responses include the requested data, while error responses include an error message and relevant details. The HTTP status code indicates the result of the operation.
+
+Example success response:
+
+```json
+{
+  "model_id": "mdl_abc123def456",
+  "name": "Customer Churn Predictor",
+  "status": "READY",
+  "created_at": "2023-06-15T08:15:45Z"
+}
+```
+
+Example error response:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Missing required field: intent",
+    "status": 400
+  }
+}
+```
+
+## Rate Limits
+
+The API enforces rate limits to ensure fair usage. Current limits are:
+
+- **Basic tier**: 100 requests per minute
+- **Pro tier**: 500 requests per minute
+- **Enterprise tier**: Custom limits available
+
+When you exceed the rate limit, you'll receive a `429 Too Many Requests` response with a `Retry-After` header indicating how many seconds to wait before retrying.
+
+## Pagination
+
+List endpoints (those returning multiple items) support pagination using the `limit` and `offset` query parameters:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models?limit=10&offset=20 \
+  -H "x-api-key: YOUR_API_KEY_HERE"
+```
+
+Paginated responses include metadata about the total count and pagination:
+
+```json
+{
+  "models": [ ... ],
+  "pagination": {
+    "total": 45,
+    "limit": 10,
+    "offset": 20,
+    "has_more": true
+  }
+}
+```
+
+## API Categories
+
+The Plexe Platform API is organized into these main categories:
+
+1. **[Authentication](/platform/reference/endpoints/auth)**: Managing API keys and user access
+2. **[Data Management](/platform/reference/endpoints/data)**: Uploading, retrieving, and managing datasets
+3. **[Model Management](/platform/reference/endpoints/models)**: Building, deploying, and managing ML models
+
+## Using the API
+
+For a step-by-step guide on using the API, see the [Platform API Quickstart](/platform/tutorials/quickstart_api) tutorial.
+
+## API Versioning
+
+The current API version is `v1`. We maintain backward compatibility within a major version. When breaking changes are necessary, we'll introduce a new major version (e.g., `v2`) while continuing to support the previous version for a reasonable transition period.
+
+## Client Libraries
+
+We provide official client libraries for several programming languages:
+
+* **Python**: `pip install plexe-client`
+* **JavaScript/TypeScript**: `npm install @plexe/client`
+* **Java**: Available via Maven Central
+* **Go**: `go get github.com/plexe-ai/plexe-go-client`
+
+Example using the Python client:
+
+```python
+from plexe_client import PlexeClient
+
+client = PlexeClient(api_key="YOUR_API_KEY_HERE")
+
+# List models
+models = client.models.list()
+print(models)
+
+# Get a specific model
+model = client.models.get("mdl_abc123def456")
+print(model)
+```
+
+## Need Help?
+
+If you need assistance with the API:
+
+* Check our [FAQ](/platform/reference/faq)
+* Join our [Discord community](https://discord.gg/SefZDepGMv)
+* Contact our support team at [support@plexe.ai](mailto:support@plexe.ai)

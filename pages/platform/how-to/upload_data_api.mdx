@@ -1,0 +1,154 @@
+---
+title: 'Upload Data via API'
+description: 'Upload your datasets to the Plexe Platform using the REST API.'
+---
+
+To build models on the Plexe Platform using your own data, you first need to upload it. The API typically provides a mechanism to upload files, often involving pre-signed URLs for direct S3 uploads.
+
+**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
+
+<Note>
+The exact upload mechanism can vary. The following example is based on common patterns involving pre-signed URLs, as suggested by older documentation. Always refer to the specific [Data Management API Reference](/platform/reference/endpoints/data) for the authoritative process.
+</Note>
+
+## Authentication
+
+Ensure you have your API key included in the `x-api-key` header.
+
+```python
+import requests
+import os
+import json
+
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json" # Usually for control requests
+}
+```
+
+## Upload Process (Using Pre-signed URLs)
+
+This is typically a multi-step process:
+
+1.  **Request Upload URL:** Tell the API you want to upload a file and get a secure, temporary URL to upload directly to storage (usually S3).
+2.  **Upload File:** Use the provided URL to upload your file data.
+3.  **Confirm Upload:** Notify the API that the upload to the storage location is complete.
+
+### Step 1: Request Pre-signed Upload URL
+
+Make a `POST` request to the upload initiation endpoint (e.g., `/v1/uploads`). Provide the filename and content type.
+
+```python
+file_path = "path/to/your/training_data.csv" # Replace with your file path
+file_name = os.path.basename(file_path)
+content_type = "text/csv" # Adjust based on your file type (e.g., 'application/json', 'application/octet-stream')
+
+print(f"Requesting upload URL for: {file_name}")
+
+try:
+    init_response = requests.post(
+        f"{base_url}/v1/uploads",
+        headers=headers,
+        json={"filename": file_name, "content_type": content_type}
+    )
+    init_response.raise_for_status()
+    upload_info = init_response.json()
+
+    presigned_url = upload_info.get("presigned_url")
+    temp_upload_id = upload_info.get("upload_id")
+    s3_key = upload_info.get("key")
+
+    if not presigned_url or not temp_upload_id or not s3_key:
+        raise ValueError("Incomplete upload information received from API.")
+
+    print(f"Successfully obtained upload URL. Temporary Upload ID: {temp_upload_id}")
+
+except requests.exceptions.RequestException as e:
+    print(f"Error requesting upload URL: {e}")
+    if e.response is not None: print(f"Response: {e.response.text}")
+    presigned_url, temp_upload_id, s3_key = None, None, None
+except (ValueError, json.JSONDecodeError) as e:
+     print(f"Error processing API response: {e}")
+     presigned_url, temp_upload_id, s3_key = None, None, None
+```
+
+### Step 2: Upload File to Pre-signed URL
+
+Use the `presigned_url` obtained in Step 1 to `PUT` your file data. **Note:** Do *not* include your `x-api-key` header in this request; authentication is handled by the pre-signed URL itself. The `Content-Type` header *must* match the one you specified when requesting the URL.
+
+```python
+if presigned_url:
+    print(f"Uploading {file_name} to S3...")
+    try:
+        with open(file_path, 'rb') as f:
+            upload_response = requests.put(
+                presigned_url,
+                data=f,
+                headers={'Content-Type': content_type}
+            )
+            upload_response.raise_for_status()
+        print("File successfully uploaded to S3.")
+        upload_succeeded = True
+    except FileNotFoundError:
+        print(f"Error: Local file not found at {file_path}")
+        upload_succeeded = False
+    except requests.exceptions.RequestException as e:
+        print(f"Error uploading file to S3: {e}")
+        if e.response is not None: print(f"Response: {e.response.text}")
+        upload_succeeded = False
+else:
+    print("Skipping file upload due to previous error.")
+    upload_succeeded = False
+```
+
+### Step 3: Confirm Upload Completion
+
+Notify the Plexe API that the file upload to the pre-signed URL is complete using the temporary `upload_id` and `s3_key`.
+
+```python
+upload_id = None # Final ID will be set here
+if upload_succeeded and temp_upload_id and s3_key:
+    print("Confirming upload status with Plexe API...")
+    try:
+        confirm_response = requests.post(
+            f"{base_url}/v1/uploads/status",
+            headers=headers,
+            json={
+                "upload_id": temp_upload_id,
+                "filename": file_name,
+                "s3_key": s3_key
+            }
+        )
+        confirm_response.raise_for_status()
+        upload_status = confirm_response.json()
+        final_upload_id = upload_status.get("upload_id")
+        final_status = upload_status.get("status")
+
+        if final_status == "complete" and final_upload_id:
+            upload_id = final_upload_id # Store the final ID for use in model building
+            print(f"Upload confirmed successfully! Final Upload ID: {upload_id}")
+        else:
+            print(f"Upload confirmation failed or status not complete: {upload_status}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error confirming upload: {e}")
+        if e.response is not None: print(f"Response: {e.response.text}")
+    except json.JSONDecodeError as e:
+         print(f"Error processing confirmation response: {e}")
+
+else:
+     print("Skipping upload confirmation due to previous error.")
+
+
+if upload_id:
+    print(f"\nData upload process complete. Use Upload ID '{upload_id}' when building models.")
+else:
+    print("\nData upload process failed or was skipped.")
+```
+
+You can now use the final `upload_id` when submitting model build requests that require this dataset. You can upload multiple files and reference them by their respective `upload_id`s.

@@ -1,0 +1,408 @@
+---
+title: 'Monitor Jobs'
+description: 'Track the progress and status of long-running operations on the Plexe Platform.'
+---
+
+On the Plexe Platform, many operations—such as model building and large data processing tasks—run asynchronously as jobs. This guide explains how to monitor these jobs through both the Console UI and API.
+
+## Understanding Jobs
+
+Jobs represent long-running operations that may take seconds to hours to complete. Common job types include:
+
+- Model building
+- Large-scale batch predictions
+- Data processing operations
+- Model deployments (complex ones)
+
+Each job has:
+- A unique job ID
+- A current status
+- Progress indicators (when available)
+- Associated results (upon completion)
+- Error details (if it fails)
+
+## Monitoring via Console UI
+
+### Viewing All Jobs
+
+1. Log in to the [Plexe Console](https://console.plexe.ai)
+2. Navigate to the **Jobs** section from the left sidebar
+3. You'll see a list of all your jobs with their:
+   - Job ID
+   - Type
+   - Status
+   - Creation time
+   - Completion time (if finished)
+
+The list can be filtered by:
+- Status (PENDING, RUNNING, COMPLETED, FAILED)
+- Type (Build, Deploy, Predict, etc.)
+- Date range
+
+### Viewing Job Details
+
+To see detailed information about a specific job:
+
+1. From the Jobs list, click on the job ID
+2. The job details page shows:
+   - Full status information
+   - Progress percentage (for supported job types)
+   - Job parameters
+   - Runtime metrics
+   - Logs (for debugging)
+   - Results (if completed successfully)
+   - Error details (if failed)
+
+### Job Status Indicators
+
+Jobs progress through these statuses:
+
+- **PENDING**: Job has been created but hasn't started processing
+- **RUNNING**: Job is actively being processed
+- **COMPLETED**: Job finished successfully
+- **FAILED**: Job encountered an error and couldn't complete
+- **CANCELLED**: Job was manually cancelled before completion
+
+Some complex jobs may also have intermediate statuses like:
+- **PREPARING**: Setting up resources
+- **VALIDATING**: Checking inputs or prerequisites
+- **FINALIZING**: Finishing final steps before completion
+
+## Monitoring via API
+
+For programmatic monitoring, use the Jobs API endpoints.
+
+### Get All Jobs
+
+```bash
+curl -X GET https://api.plexe.ai/v1/jobs \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+Optional query parameters:
+- `status`: Filter by status
+- `type`: Filter by job type
+- `limit`: Number of results to return (default: 20, max: 100)
+- `offset`: Pagination offset
+- `sort`: Field to sort by (`created_at` or `updated_at`)
+- `order`: Sort order (`asc` or `desc`)
+
+Example response:
+
+```json
+{
+  "jobs": [
+    {
+      "job_id": "job_abc123",
+      "type": "model_build",
+      "status": "RUNNING",
+      "progress": 65,
+      "created_at": "2024-05-01T12:00:00Z",
+      "updated_at": "2024-05-01T12:15:30Z",
+      "resource_id": "model_xyz789",
+      "resource_type": "model"
+    },
+    {
+      "job_id": "job_def456",
+      "type": "model_deploy",
+      "status": "COMPLETED",
+      "progress": 100,
+      "created_at": "2024-05-01T11:30:00Z",
+      "updated_at": "2024-05-01T11:45:22Z",
+      "completed_at": "2024-05-01T11:45:22Z",
+      "resource_id": "deployment_ghi789",
+      "resource_type": "deployment"
+    }
+  ],
+  "pagination": {
+    "total": 48,
+    "limit": 20,
+    "offset": 0,
+    "has_more": true
+  }
+}
+```
+
+### Get Job Details
+
+```bash
+curl -X GET https://api.plexe.ai/v1/jobs/{job_id} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+Example response for a model build job:
+
+```json
+{
+  "job_id": "job_abc123",
+  "type": "model_build",
+  "status": "RUNNING",
+  "progress": 65,
+  "created_at": "2024-05-01T12:00:00Z",
+  "updated_at": "2024-05-01T12:15:30Z",
+  "resource_id": "model_xyz789",
+  "resource_type": "model",
+  "params": {
+    "model_name": "customer_churn_predictor",
+    "intent": "Predict customer churn based on usage patterns",
+    "upload_id": "upload_jkl012"
+  },
+  "progress_details": {
+    "current_stage": "training",
+    "total_stages": 3,
+    "stage_progress": 70,
+    "estimated_completion": "2024-05-01T12:30:00Z"
+  },
+  "logs_url": "https://api.plexe.ai/v1/jobs/job_abc123/logs"
+}
+```
+
+Example response for a completed job:
+
+```json
+{
+  "job_id": "job_def456",
+  "type": "model_deploy",
+  "status": "COMPLETED",
+  "progress": 100,
+  "created_at": "2024-05-01T11:30:00Z",
+  "updated_at": "2024-05-01T11:45:22Z",
+  "completed_at": "2024-05-01T11:45:22Z",
+  "resource_id": "deployment_ghi789",
+  "resource_type": "deployment",
+  "params": {
+    "model_id": "model_xyz789",
+    "deployment_type": "standard"
+  },
+  "result": {
+    "deployment_id": "deployment_ghi789",
+    "endpoint": "https://api.plexe.ai/v1/predict/deployment_ghi789",
+    "status": "READY"
+  },
+  "logs_url": "https://api.plexe.ai/v1/jobs/job_def456/logs"
+}
+```
+
+Example response for a failed job:
+
+```json
+{
+  "job_id": "job_mno345",
+  "type": "model_build",
+  "status": "FAILED",
+  "progress": 45,
+  "created_at": "2024-05-01T10:15:00Z",
+  "updated_at": "2024-05-01T10:25:18Z",
+  "completed_at": "2024-05-01T10:25:18Z",
+  "resource_id": "model_pqr678",
+  "resource_type": "model",
+  "params": {
+    "model_name": "fraud_detector",
+    "intent": "Detect fraudulent transactions",
+    "upload_id": "upload_stu901"
+  },
+  "error": {
+    "code": "training_failed",
+    "message": "Model training failed due to insufficient data variety",
+    "details": "The dataset contains only negative examples. A mixture of positive and negative examples is required."
+  },
+  "logs_url": "https://api.plexe.ai/v1/jobs/job_mno345/logs"
+}
+```
+
+### Get Job Logs
+
+For detailed debug information:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/jobs/{job_id}/logs \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+Optional query parameters:
+- `limit`: Number of log lines to return (default: 100, max: 1000)
+- `offset`: Pagination offset for logs
+- `level`: Minimum log level to include (INFO, WARNING, ERROR)
+
+Example response:
+
+```json
+{
+  "job_id": "job_abc123",
+  "logs": [
+    {
+      "timestamp": "2024-05-01T12:01:05Z",
+      "level": "INFO",
+      "message": "Job started: Building model 'customer_churn_predictor'"
+    },
+    {
+      "timestamp": "2024-05-01T12:02:10Z",
+      "level": "INFO",
+      "message": "Validating upload_id: upload_jkl012"
+    },
+    {
+      "timestamp": "2024-05-01T12:03:22Z",
+      "level": "INFO",
+      "message": "Data validation complete. Found 5000 rows, 12 features."
+    },
+    {
+      "timestamp": "2024-05-01T12:05:45Z",
+      "level": "INFO",
+      "message": "Beginning model training. Iteration 1/3."
+    },
+    {
+      "timestamp": "2024-05-01T12:10:15Z",
+      "level": "WARNING",
+      "message": "Feature 'last_purchase_date' contains 150 missing values. Using imputation."
+    }
+  ],
+  "pagination": {
+    "total": 78,
+    "limit": 100,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Cancel a Job
+
+To stop a running job:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/jobs/{job_id}/cancel \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+Example response:
+
+```json
+{
+  "job_id": "job_abc123",
+  "status": "CANCELLING",
+  "message": "Job cancellation initiated"
+}
+```
+
+## Polling for Job Completion
+
+When building workflow automation, you often need to wait for a job to complete. Here's a Python example of polling:
+
+```python
+import requests
+import time
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://api.plexe.ai/v1"
+JOB_ID = "job_abc123"
+
+def check_job_status(job_id):
+    """Poll job status until completion or failure"""
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    terminal_states = ["COMPLETED", "FAILED", "CANCELLED"]
+    polling_interval = 5  # seconds
+    max_attempts = 60  # 5 minutes max
+    
+    for attempt in range(max_attempts):
+        try:
+            response = requests.get(
+                f"{BASE_URL}/jobs/{job_id}",
+                headers=headers
+            )
+            response.raise_for_status()
+            job_data = response.json()
+            
+            status = job_data.get("status")
+            progress = job_data.get("progress", 0)
+            
+            print(f"Job status: {status}, Progress: {progress}%")
+            
+            if status in terminal_states:
+                print("Job reached terminal state:")
+                if status == "COMPLETED":
+                    print(f"Success! Result: {job_data.get('result')}")
+                    return job_data.get('result')
+                elif status == "FAILED":
+                    error = job_data.get("error", {})
+                    print(f"Job failed: {error.get('message')}")
+                    raise Exception(f"Job failed: {error.get('message')}")
+                else:  # CANCELLED
+                    print("Job was cancelled")
+                    raise Exception("Job was cancelled")
+            
+            # Not in terminal state, wait and retry
+            time.sleep(polling_interval)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Error checking job status: {e}")
+            time.sleep(polling_interval)
+    
+    raise TimeoutError(f"Job did not complete within the allotted time ({max_attempts * polling_interval} seconds)")
+
+# Usage
+try:
+    result = check_job_status(JOB_ID)
+    print("Proceed with using the result")
+except Exception as e:
+    print(f"Handling error: {e}")
+```
+
+## Setting Up Notifications
+
+Instead of polling, you can set up webhooks to be notified when jobs complete:
+
+### Via Console UI
+
+1. Go to **Settings** → **Notifications**
+2. Click **Add Webhook**
+3. Enter your webhook URL
+4. Select the events you want to be notified about (e.g., `job.completed`, `job.failed`)
+5. Click **Save**
+
+### Via API
+
+```bash
+curl -X POST https://api.plexe.ai/v1/webhooks \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-server.com/webhook",
+    "events": ["job.completed", "job.failed"],
+    "description": "Job status notifications"
+  }'
+```
+
+Your server will receive a POST request with job details when any job completes or fails.
+
+## Troubleshooting
+
+### Common Issues
+
+| Issue | Possible Causes | Solutions |
+|-------|-----------------|-----------|
+| Job stuck in PENDING | Resource constraints, service backlog | Wait or contact support if persists for >30 min |
+| Job failed with "resource not found" | Referenced resource (upload, model) doesn't exist | Verify IDs are correct and resources exist |
+| Job failed with "permission denied" | API key lacks required permissions | Use an API key with appropriate permissions |
+| Missing job details | Job data expired (older than 30 days) | Jobs data is retained for 30 days, export needed data |
+
+### Getting Support
+
+For issues with specific jobs:
+1. Note the job ID
+2. Check the job logs for error messages
+3. If unable to resolve, contact Plexe support with the job ID and logs
+4. For urgent issues, include "URGENT" in your support ticket
+
+## Best Practices
+
+1. **Include Job IDs in logs:** Always record job IDs in your application logs for traceability
+2. **Implement exponential backoff:** When polling job status, use increasing intervals
+3. **Set reasonable timeouts:** Define how long your application will wait for job completion
+4. **Handle errors gracefully:** Design your application to recover from job failures
+5. **Use webhooks for production:** Prefer webhooks over polling for production workloads
+6. **Implement idempotency:** Design workflows to handle possible duplicates if jobs are retried

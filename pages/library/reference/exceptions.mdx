@@ -1,0 +1,565 @@
+---
+title: 'Exceptions Reference'
+description: 'Comprehensive guide to exception handling in the Plexe Python library.'
+---
+
+Plexe defines several exception types to provide clear information about errors that may occur during model building and usage. This reference documents all exception classes, their meanings, and how to handle them effectively.
+
+## Exception Hierarchy
+
+Plexe's exceptions inherit from a base `PlexeError` class:
+
+```
+Exception
+└── PlexeError
+    ├── ConfigurationError
+    │   ├── ProviderConfigurationError
+    │   ├── SchemaConfigurationError
+    │   └── EnvironmentConfigurationError
+    ├── ValidationError
+    │   ├── InputValidationError
+    │   └── OutputValidationError
+    ├── ExecutionError
+    │   ├── TimeoutError
+    │   ├── ResourceExceededError
+    │   └── CodeExecutionError
+    ├── ModelError
+    │   ├── ModelNotReadyError
+    │   ├── ModelBuildError
+    │   └── ModelPredictionError
+    ├── DataError
+    │   ├── DatasetFormatError
+    │   ├── DataGenerationError
+    │   └── SchemaInferenceError
+    ├── ExternalServiceError
+    │   ├── LLMProviderError
+    │   └── APIConnectionError
+    └── PersistenceError
+        ├── ModelSaveError
+        └── ModelLoadError
+```
+
+## Base Exception
+
+### `PlexeError`
+
+Base exception for all Plexe-specific exceptions.
+
+```python
+class PlexeError(Exception):
+    """Base class for all Plexe-specific exceptions."""
+    pass
+```
+
+## Configuration Errors
+
+### `ConfigurationError`
+
+Base class for errors related to configuration issues.
+
+```python
+class ConfigurationError(PlexeError):
+    """Base class for configuration-related errors."""
+    pass
+```
+
+### `ProviderConfigurationError`
+
+Raised when there's an issue with the LLM provider configuration.
+
+```python
+class ProviderConfigurationError(ConfigurationError):
+    """Raised when there's an issue with the LLM provider configuration."""
+    pass
+```
+
+**Example:**
+```python
+# Missing API key
+raise ProviderConfigurationError("API key for OpenAI not found. Set the OPENAI_API_KEY environment variable.")
+
+# Invalid provider format
+raise ProviderConfigurationError("Invalid provider format: 'gpt4'. Expected format: 'vendor/model'.")
+```
+
+### `SchemaConfigurationError`
+
+Raised when there's an issue with input or output schema configuration.
+
+```python
+class SchemaConfigurationError(ConfigurationError):
+    """Raised when there's an issue with input or output schema configuration."""
+    pass
+```
+
+**Example:**
+```python
+# Invalid schema type
+raise SchemaConfigurationError("Schema must be a dictionary or a Pydantic model.")
+
+# Missing required field
+raise SchemaConfigurationError("Required field 'id' missing from input schema.")
+```
+
+### `EnvironmentConfigurationError`
+
+Raised when the environment is not properly configured.
+
+```python
+class EnvironmentConfigurationError(ConfigurationError):
+    """Raised when the environment is not properly configured."""
+    pass
+```
+
+**Example:**
+```python
+# Missing required dependency
+raise EnvironmentConfigurationError("Required dependency 'tensorflow' not found. Install with: pip install tensorflow")
+```
+
+## Validation Errors
+
+### `ValidationError`
+
+Base class for validation-related errors.
+
+```python
+class ValidationError(PlexeError):
+    """Base class for validation-related errors."""
+    pass
+```
+
+### `InputValidationError`
+
+Raised when input data fails validation against the input schema.
+
+```python
+class InputValidationError(ValidationError):
+    """Raised when input data fails validation against the input schema."""
+    pass
+```
+
+**Example:**
+```python
+# Missing required field
+raise InputValidationError("Missing required field: 'square_footage'")
+
+# Type mismatch
+raise InputValidationError("Expected int for field 'bedrooms', got string: 'three'")
+```
+
+### `OutputValidationError`
+
+Raised when model output fails validation against the output schema.
+
+```python
+class OutputValidationError(ValidationError):
+    """Raised when model output fails validation against the output schema."""
+    pass
+```
+
+**Example:**
+```python
+# Out of range value
+raise OutputValidationError("Output 'probability' value 1.5 is outside valid range [0, 1]")
+```
+
+## Execution Errors
+
+### `ExecutionError`
+
+Base class for errors that occur during execution.
+
+```python
+class ExecutionError(PlexeError):
+    """Base class for errors that occur during execution."""
+    pass
+```
+
+### `TimeoutError`
+
+Raised when an operation times out.
+
+```python
+class TimeoutError(ExecutionError):
+    """Raised when an operation times out."""
+    pass
+```
+
+**Example:**
+```python
+# Build timeout
+raise TimeoutError("Model build timed out after 600 seconds.")
+
+# Prediction timeout
+raise TimeoutError("Prediction timed out after 30 seconds.")
+```
+
+### `ResourceExceededError`
+
+Raised when a resource limit is exceeded.
+
+```python
+class ResourceExceededError(ExecutionError):
+    """Raised when a resource limit is exceeded."""
+    pass
+```
+
+**Example:**
+```python
+# Memory limit
+raise ResourceExceededError("Memory limit exceeded (4GB). Try reducing dataset size or batch size.")
+
+# CPU limit
+raise ResourceExceededError("CPU time limit exceeded. Training process was terminated.")
+```
+
+### `CodeExecutionError`
+
+Raised when there's an error executing generated code.
+
+```python
+class CodeExecutionError(ExecutionError):
+    """Raised when there's an error executing generated code."""
+    def __init__(self, message, code=None, error=None):
+        super().__init__(message)
+        self.code = code
+        self.error = error
+```
+
+**Example:**
+```python
+# Syntax error
+code_snippet = "def train(X, y)\n    model.fit(X, y)  # Missing colon after parameters"
+raise CodeExecutionError(
+    "Syntax error in generated code", 
+    code=code_snippet, 
+    error="SyntaxError: invalid syntax (<string>, line 1)"
+)
+
+# Runtime error
+raise CodeExecutionError(
+    "Runtime error while executing training code", 
+    error="ValueError: shapes (60,1) and (50,1) not aligned"
+)
+```
+
+## Model Errors
+
+### `ModelError`
+
+Base class for model-related errors.
+
+```python
+class ModelError(PlexeError):
+    """Base class for model-related errors."""
+    pass
+```
+
+### `ModelNotReadyError`
+
+Raised when attempting to use a model that's not in the READY state.
+
+```python
+class ModelNotReadyError(ModelError):
+    """Raised when attempting to use a model that's not in the READY state."""
+    pass
+```
+
+**Example:**
+```python
+# Prediction attempt on unbuilt model
+raise ModelNotReadyError("Cannot perform prediction: model is in DRAFT state. Call model.build() first.")
+
+# Access to metrics before build
+raise ModelNotReadyError("Metrics not available: model is in BUILDING state.")
+```
+
+### `ModelBuildError`
+
+Raised when there's an error during model building.
+
+```python
+class ModelBuildError(ModelError):
+    """Raised when there's an error during model building."""
+    pass
+```
+
+**Example:**
+```python
+# All iterations failed
+raise ModelBuildError("Model build failed after 3 iterations. No valid model was found.")
+
+# Data issue
+raise ModelBuildError("Unable to train model: target variable has only one unique value.")
+```
+
+### `ModelPredictionError`
+
+Raised when there's an error during model prediction.
+
+```python
+class ModelPredictionError(ModelError):
+    """Raised when there's an error during model prediction."""
+    pass
+```
+
+**Example:**
+```python
+# Internal error
+raise ModelPredictionError("Error during prediction: feature 'age' is outside the training range.")
+
+# Missing feature
+raise ModelPredictionError("Missing required feature 'location' for prediction.")
+```
+
+## Data Errors
+
+### `DataError`
+
+Base class for data-related errors.
+
+```python
+class DataError(PlexeError):
+    """Base class for data-related errors."""
+    pass
+```
+
+### `DatasetFormatError`
+
+Raised when a dataset has an invalid format.
+
+```python
+class DatasetFormatError(DataError):
+    """Raised when a dataset has an invalid format."""
+    pass
+```
+
+**Example:**
+```python
+# Invalid structure
+raise DatasetFormatError("Expected a pandas DataFrame, got list.")
+
+# Empty dataset
+raise DatasetFormatError("Dataset is empty. Provide a non-empty DataFrame.")
+```
+
+### `DataGenerationError`
+
+Raised when there's an error generating synthetic data.
+
+```python
+class DataGenerationError(DataError):
+    """Raised when there's an error generating synthetic data."""
+    pass
+```
+
+**Example:**
+```python
+# LLM generation issue
+raise DataGenerationError("Failed to generate synthetic data: LLM response did not match expected schema.")
+
+# Generation limit
+raise DataGenerationError("Failed to generate valid synthetic data after 3 attempts.")
+```
+
+### `SchemaInferenceError`
+
+Raised when there's an error inferring schemas from data.
+
+```python
+class SchemaInferenceError(DataError):
+    """Raised when there's an error inferring schemas from data."""
+    pass
+```
+
+**Example:**
+```python
+# Can't determine target
+raise SchemaInferenceError("Unable to infer target variable from provided dataset and intent.")
+
+# Complex schema
+raise SchemaInferenceError("Schema too complex to infer automatically. Please provide explicit input/output schemas.")
+```
+
+## External Service Errors
+
+### `ExternalServiceError`
+
+Base class for errors related to external services.
+
+```python
+class ExternalServiceError(PlexeError):
+    """Base class for errors related to external services."""
+    pass
+```
+
+### `LLMProviderError`
+
+Raised when there's an issue with the LLM provider service.
+
+```python
+class LLMProviderError(ExternalServiceError):
+    """Raised when there's an issue with the LLM provider service."""
+    pass
+```
+
+**Example:**
+```python
+# Rate limit
+raise LLMProviderError("OpenAI API rate limit exceeded. Please try again in a few seconds.")
+
+# Service error
+raise LLMProviderError("Anthropic API returned status code 500: Internal Server Error.")
+```
+
+### `APIConnectionError`
+
+Raised when there's an issue connecting to an external API.
+
+```python
+class APIConnectionError(ExternalServiceError):
+    """Raised when there's an issue connecting to an external API."""
+    pass
+```
+
+**Example:**
+```python
+# Connection timeout
+raise APIConnectionError("Connection to OpenAI API timed out after 10 seconds.")
+
+# Network error
+raise APIConnectionError("Network error while connecting to Anthropic API: No route to host.")
+```
+
+## Persistence Errors
+
+### `PersistenceError`
+
+Base class for errors related to model persistence.
+
+```python
+class PersistenceError(PlexeError):
+    """Base class for errors related to model persistence."""
+    pass
+```
+
+### `ModelSaveError`
+
+Raised when there's an error saving a model.
+
+```python
+class ModelSaveError(PersistenceError):
+    """Raised when there's an error saving a model."""
+    pass
+```
+
+**Example:**
+```python
+# Permission issue
+raise ModelSaveError("Unable to save model: permission denied for directory '/models'.")
+
+# Serialization error
+raise ModelSaveError("Unable to serialize model: custom Python object not serializable.")
+```
+
+### `ModelLoadError`
+
+Raised when there's an error loading a model.
+
+```python
+class ModelLoadError(PersistenceError):
+    """Raised when there's an error loading a model."""
+    pass
+```
+
+**Example:**
+```python
+# File not found
+raise ModelLoadError("Model file 'model_v1.tar.gz' not found.")
+
+# Incompatible version
+raise ModelLoadError("Model was created with Plexe v2.0, but current version is v1.0.")
+```
+
+## Handling Exceptions
+
+### Basic Exception Handling
+
+```python
+import plexe
+from plexe.exceptions import PlexeError, ModelBuildError, LLMProviderError
+
+try:
+    model = plexe.Model(intent="Predict customer churn")
+    model.build(datasets=[df])
+except ModelBuildError as e:
+    print(f"Error building model: {e}")
+except LLMProviderError as e:
+    print(f"LLM provider error: {e}")
+except PlexeError as e:
+    print(f"Plexe error: {e}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
+### Handling Different Build Phases
+
+```python
+import plexe
+from plexe.exceptions import (
+    SchemaConfigurationError, 
+    DatasetFormatError, 
+    SchemaInferenceError,
+    LLMProviderError,
+    CodeExecutionError,
+    ModelBuildError
+)
+
+try:
+    model = plexe.Model(intent="Predict customer churn")
+    model.build(datasets=[df])
+except (SchemaConfigurationError, DatasetFormatError, SchemaInferenceError) as e:
+    print(f"Data or schema setup error: {e}")
+    # Handle data and schema issues
+except LLMProviderError as e:
+    print(f"LLM provider error: {e}")
+    # Handle LLM service issues (retry, switch provider)
+except CodeExecutionError as e:
+    print(f"Code execution error: {e}")
+    if e.code:
+        print(f"Generated code with error:\n{e.code}")
+    if e.error:
+        print(f"Specific error:\n{e.error}")
+    # Handle generated code issues
+except ModelBuildError as e:
+    print(f"Model build error: {e}")
+    # Handle general build failures
+```
+
+### Prediction Error Handling
+
+```python
+import plexe
+from plexe.exceptions import ModelNotReadyError, InputValidationError, ModelPredictionError
+
+try:
+    prediction = model.predict(input_data)
+except ModelNotReadyError:
+    print("Model is not ready yet. Check model.get_state().")
+except InputValidationError as e:
+    print(f"Input validation error: {e}")
+    print("Please provide valid input data according to the schema.")
+except ModelPredictionError as e:
+    print(f"Prediction error: {e}")
+```
+
+## Best Practices
+
+1. **Catch Specific Exceptions:** Target the most specific exception class that makes sense for your use case.
+2. **Log Detailed Information:** Include full exception details in logs for debugging.
+3. **Graceful Degradation:** When possible, handle errors in a way that allows your application to continue functioning.
+4. **User-Friendly Messages:** Transform technical error details into actionable user messages.
+5. **Retry Strategies:** Implement retries for transient errors like LLM provider issues.
+
+By understanding Plexe's exception hierarchy, you can write more robust code that gracefully handles potential errors in your machine learning workflows.

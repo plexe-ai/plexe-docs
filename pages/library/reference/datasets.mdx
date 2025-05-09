@@ -1,0 +1,253 @@
+---
+title: 'Datasets Reference'
+description: 'Detailed reference documentation for dataset handling in the Plexe Python library.'
+---
+
+Plexe provides flexible options for working with datasets. This reference documents how to prepare, provide, and generate data for model building.
+
+## Supported Dataset Types
+
+Plexe accepts two types of objects in the `datasets` parameter of `model.build()`:
+
+1. **Pandas DataFrames:** For providing tabular data directly
+2. **DatasetGenerator objects:** For generating synthetic data or augmenting existing data
+
+## Using Pandas DataFrames
+
+Pandas DataFrames are the most common way to provide data to Plexe.
+
+### Basic Usage
+
+```python
+import pandas as pd
+import plexe
+
+# Load data
+df = pd.read_csv("customer_data.csv")
+
+# Build model with DataFrame
+model = plexe.Model(intent="Predict customer churn")
+model.build(datasets=[df])
+```
+
+### Multiple DataFrames
+
+You can provide multiple DataFrames for more complex scenarios:
+
+```python
+# Load data from multiple sources
+customers_df = pd.read_csv("customers.csv")
+transactions_df = pd.read_csv("transactions.csv")
+
+# Build model with multiple DataFrames
+model = plexe.Model(intent="Predict customer lifetime value")
+model.build(datasets=[customers_df, transactions_df])
+```
+
+When multiple DataFrames are provided, Plexe's ML Engineer agent will attempt to determine relationships between them based on column names and data types.
+
+### DataFrame Requirements
+
+While Plexe is flexible, following these guidelines helps ensure optimal results:
+
+- **Clean Data:** Remove or impute missing values when possible
+- **Appropriate Types:** Ensure columns have appropriate data types
+- **Meaningful Names:** Use descriptive column names
+- **Reasonable Size:** Keep DataFrames under a few million rows for optimal performance
+
+## DatasetGenerator
+
+The `DatasetGenerator` class allows you to generate synthetic data or augment existing data using LLMs.
+
+### Class Definition
+
+```python
+class DatasetGenerator:
+    def __init__(
+        self,
+        description: str,
+        provider: str,
+        schema: Type[BaseModel],
+        data: Optional[pd.DataFrame] = None
+    )
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `description` | `str` | Description of the data to generate |
+| `provider` | `str` | LLM provider to use for generation |
+| `schema` | `Type[BaseModel]` | Pydantic model defining the data structure |
+| `data` | `Optional[pd.DataFrame]` | Existing data to augment (optional) |
+
+### Generating Synthetic Data
+
+To generate completely synthetic data:
+
+```python
+import plexe
+from plexe import DatasetGenerator
+from pydantic import BaseModel, Field
+
+# Define schema for synthetic data
+class CustomerData(BaseModel):
+    age: int = Field(ge=18, le=100, description="Customer age in years")
+    income: float = Field(ge=0, description="Annual income in USD")
+    has_subscription: bool = Field(description="Whether customer has a subscription")
+    subscription_type: str = Field(description="Type of subscription (if any)")
+    churn: bool = Field(description="Whether customer churned within 3 months")
+
+# Create generator
+generator = DatasetGenerator(
+    description="""
+    Generate realistic customer data for a subscription service. 
+    Customers can have different income levels and subscription types.
+    Older customers with higher incomes tend to churn less.
+    Subscription types include 'basic', 'premium', and 'enterprise'.
+    """,
+    provider="openai/gpt-4o-mini",
+    schema=CustomerData
+)
+
+# Use generator with model
+model = plexe.Model(intent="Predict customer churn")
+model.build(datasets=[generator])
+```
+
+### Augmenting Existing Data
+
+To augment an existing but limited dataset:
+
+```python
+import pandas as pd
+import plexe
+from plexe import DatasetGenerator
+from pydantic import BaseModel, Field
+
+# Define schema matching existing data
+class ProductReview(BaseModel):
+    product_id: str = Field(description="Unique product identifier")
+    review_text: str = Field(description="Customer review text")
+    rating: int = Field(ge=1, le=5, description="Star rating (1-5)")
+    sentiment: str = Field(description="Sentiment classification (positive, neutral, negative)")
+
+# Load limited existing data
+existing_reviews = pd.read_csv("limited_reviews.csv")
+
+# Create generator with existing data
+generator = DatasetGenerator(
+    description="""
+    Generate additional product reviews following the patterns in the existing data.
+    Reviews should be diverse in length and tone.
+    Rating should generally correlate with sentiment (high ratings for positive sentiment).
+    """,
+    provider="anthropic/claude-3-sonnet-20240229",
+    schema=ProductReview,
+    data=existing_reviews
+)
+
+# Use generator with model
+model = plexe.Model(intent="Classify review sentiment")
+model.build(datasets=[generator])
+```
+
+## Generation Parameters
+
+The generation process is controlled internally based on the `description` and `schema` provided. The description should give clear guidance about:
+
+- The general nature of the data
+- Important patterns or correlations
+- Distributions of values
+- Constraints beyond what's defined in the schema
+- Relationships between fields
+
+## Dataset Schema Details
+
+When defining a schema for the `DatasetGenerator`, use Pydantic's `Field` attributes to provide rich information:
+
+```python
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from datetime import date
+
+class FinancialTransaction(BaseModel):
+    transaction_id: str = Field(description="Unique transaction identifier")
+    
+    amount: float = Field(
+        gt=0, 
+        description="Transaction amount in USD"
+    )
+    
+    category: str = Field(
+        description="Transaction category (e.g., 'food', 'transport', 'housing')"
+    )
+    
+    date: date = Field(
+        description="Transaction date"
+    )
+    
+    recurring: bool = Field(
+        description="Whether this is a recurring transaction"
+    )
+    
+    tags: Optional[List[str]] = Field(
+        default=None,
+        description="Optional tags for the transaction"
+    )
+    
+    notes: Optional[str] = Field(
+        default=None,
+        description="Optional additional notes"
+    )
+```
+
+## Combining DataFrame and Generator
+
+You can use both types together in the `datasets` parameter:
+
+```python
+# Prepare real and synthetic data sources
+real_data = pd.read_csv("real_customers.csv")
+synthetic_generator = DatasetGenerator(
+    description="Generate additional customer data to supplement real data",
+    provider="openai/gpt-4o-mini",
+    schema=CustomerSchema
+)
+
+# Combine both in the datasets parameter
+model.build(datasets=[real_data, synthetic_generator])
+```
+
+## Data Conversion Internals
+
+Internally, Plexe performs several steps when working with data:
+
+1. **DataFrame Validation:** Ensures DataFrames have the expected structure
+2. **Schema Inference:** If not provided explicitly, infers schemas from the data
+3. **Type Conversion:** Ensures data types match schema requirements
+4. **Data Splitting:** Automatically splits data for training and validation
+5. **Synthetic Generation:** Executes when `DatasetGenerator` objects are provided
+6. **Feature Engineering:** The ML Engineer agent determines appropriate transformations based on the data
+
+## Schema Inference
+
+If input/output schemas aren't explicitly provided, but datasets are, Plexe attempts to:
+
+1. Determine data types from the DataFrame columns
+2. Identify the likely target (output) variable(s) based on the model intent
+3. Classify remaining columns as input features
+
+## Best Practices
+
+1. **Provide Clear Schemas:** Explicit schemas help guide the model building process
+2. **Clean Your Data:** Remove irrelevant columns, handle missing values
+3. **Use Descriptive Names:** Clear column names help Plexe understand the data
+4. **Include Domain Knowledge:** Add rich descriptions to schema fields
+5. **Combine Approaches:** Use real data when available and synthetic data when needed
+
+## Performance Considerations
+
+- **Memory Usage:** Large DataFrames consume more memory
+- **Generation Time:** Synthetic data generation can take time, especially for complex schemas
+- **LLM Costs:** Data generation involves LLM API calls, which may incur costs
+
+By leveraging these options for dataset handling, you can provide Plexe with the data it needs to build effective machine learning models, even in scenarios where limited data is available.

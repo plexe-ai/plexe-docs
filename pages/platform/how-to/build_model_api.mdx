@@ -1,0 +1,105 @@
+---
+title: 'Build Models via API'
+description: 'Initiate and configure machine learning model builds using the Plexe Platform REST API.'
+---
+
+You can start the automated model building process on the Plexe Platform by making a `POST` request to the model creation endpoint.
+
+**Base URL:** `https://api.plexe.ai` (Replace with actual API endpoint)
+
+## Prerequisites
+
+* You have a Plexe Platform account and a valid [API Key](/platform/how-to/manage_api_keys).
+* (Optional but Recommended) You have [uploaded your data](/platform/how-to/upload_data_api) and have the resulting `upload_id`(s).
+
+## Authentication
+
+Include your API key in the `x-api-key` header.
+
+```python
+import requests
+import os
+import json
+
+api_key = os.getenv("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the PLEXE_API_KEY environment variable.")
+
+base_url = "[https://api.plexe.ai](https://api.plexe.ai)" # Replace with actual API endpoint
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+```
+
+## Starting a Build Job
+
+Make a `POST` request to the endpoint for creating models, typically including the desired model name in the path (e.g., `/v0/models/{model_name}`).
+
+The request body contains the core configuration for the build:
+
+  * **`intent`**: (Required) Natural language description of the model's goal.
+  * **`data_reference`**: (Required if not using purely synthetic generation based on intent/schema alone) Reference to your data. This could be:
+      * An `upload_id` obtained from the data upload process.
+      * A list of `upload_id`s if using multiple datasets.
+      * A publicly accessible URL to a dataset (CSV, JSON, etc. - check API reference for supported URL types).
+  * **`input_schema`**: (Optional) Dictionary defining the input features and types (e.g., `{"feature1": "float", "feature2": "str"}`). Plexe will try to infer if omitted and `data_reference` is provided.
+  * **`output_schema`**: (Optional) Dictionary defining the output prediction(s) and types (e.g., `{"prediction": "int", "probability": "float"}`). Plexe will try to infer if omitted.
+  * **`metric`**: (Optional) Suggest a primary metric to optimize (e.g., `"accuracy"`, `"rmse"`, `"f1"`). Plexe will select an appropriate default if omitted.
+  * **`max_iterations`**: (Optional) Maximum number of different modeling approaches the agent system should try (default might be 1 or 3, check API reference). Higher values increase build time and cost but may yield better models.
+  * **`provider`**: (Optional) Specify the LLM provider/model to use (e.g., `"openai/gpt-4o-mini"`). Uses the platform default if omitted. See [Configure LLM Providers](https://www.google.com/search?q=/library/how-to/configure_llm_provider) (concepts apply similarly here).
+
+```python
+model_name = "customer-churn-predictor-v1" # Choose a unique name for your model
+upload_id = "YOUR_UPLOAD_ID" # Replace with the ID from your data upload
+
+build_payload = {
+  "intent": "Predict customer churn based on usage patterns like login frequency, support tickets, and subscription duration.",
+  "data_reference": upload_id, # Use the ID obtained from data upload
+  # Optionally provide schemas if inference is not desired or needs guidance
+  # "input_schema": {
+  #   "login_frequency_last_30d": "int",
+  #   "support_tickets_last_90d": "int",
+  #   "subscription_months": "int",
+  #   "plan_type": "str"
+  # },
+  # "output_schema": {
+  #   "churn_prediction": "int" # e.g., 1 for churn, 0 for no churn
+  # },
+  "metric": "f1", # Optimize for F1 score
+  "max_iterations": 5 # Try up to 5 approaches
+}
+
+print(f"Starting build for model: {model_name}")
+
+try:
+    response = requests.post(
+        f"{base_url}/v0/models/{model_name}",
+        headers=headers,
+        json=build_payload
+    )
+    response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+
+    build_result = response.json()
+    model_id = build_result.get("model_id") # Typically format: name:version or similar
+
+    print("\nBuild request submitted successfully!")
+    print(f"  Model ID: {model_id}")
+    print(f"  Initial Status: {build_result.get('status')}")
+    print(f"Monitor progress using the status endpoint.")
+
+    # Store model_id for status checking and inference later
+    # Example: store model_name and model_version if ID is like "name:version"
+    if model_id and ':' in model_id:
+        m_name, m_version = model_id.split(':', 1)
+        print(f"  Model Name: {m_name}, Model Version: {m_version}")
+    else:
+        # Handle cases where model_id format might differ
+        print("  Could not parse model name/version from model_id.")
+
+
+except requests.exceptions.HTTPError as http_err:
+    print(f"HTTP error occurred: {http_err}")
+    print(f"Response Text: {http_err.response.text}")
+except requests.exceptions.ConnectionError as conn_err:
+```

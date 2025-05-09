@@ -1,0 +1,234 @@
+---
+title: 'Authentication'
+description: 'Understanding authentication and security in the Plexe Platform.'
+---
+
+## Authentication Overview
+
+The Plexe Platform uses a robust authentication system to secure access to your resources and services. This page
+explains how authentication works, how to manage API keys, and best practices for security.
+
+## Authentication Methods
+
+### API Keys
+
+For programmatic access to the Plexe API, API keys are the primary authentication method. API keys:
+
+- Are long, random strings prefixed with `plx_sk_`
+- Must be included in the `x-api-key` header of all API requests
+- Have specific permission levels assigned when created
+- Can be revoked or rotated at any time
+- Are tied to your account for usage tracking and billing
+
+Example API request with authentication:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models \
+  -H "x-api-key: plx_sk_12345abcdef67890ghijklmnop"
+```
+
+### Console Authentication
+
+For access to the [Plexe Console](https://console.plexe.ai), the following authentication methods are supported:
+
+1. **Email/Password:** Standard account credentials
+2. **OAuth Providers:** Sign in with Google, GitHub, etc. (if enabled)
+
+The Console uses secure, token-based authentication with automatic session expiration for security.
+
+## Managing API Keys
+
+### Creating API Keys
+
+API keys can be created in two ways:
+
+1. **Via the Console:**
+   - Navigate to the Settings → API Keys section
+   - Click "Create New API Key"
+   - Assign a descriptive name and required permissions
+   - Copy the key immediately (it will only be shown once)
+
+2. **Via the API:**
+   - You can programmatically create API keys using an existing key with appropriate permissions
+   - See the [Manage API Keys](/platform/how-to/manage_api_keys) guide for details
+
+### API Key Permissions
+
+When creating an API key, you can assign specific permission levels:
+
+- **Read-only:** Can only make GET requests to fetch information
+- **Read & Write:** Can both read data and create or modify resources
+- **Admin:** Full access to all API functionality including user management
+
+### API Key Best Practices
+
+1. **Limit Access:** Create keys with the minimum permissions needed
+2. **Use Descriptive Names:** Help identify the purpose of each key
+3. **Secure Storage:** Store keys securely; never in public repositories or client-side code
+4. **Regular Rotation:** Change keys periodically, especially for production systems
+5. **Immediate Revocation:** If a key is compromised, revoke it immediately
+
+## Security Features
+
+### TLS Encryption
+
+All communication with the Plexe Platform (both API and Console) is encrypted using TLS (HTTPS). This ensures that your data and authentication credentials are protected in transit.
+
+### Key Visibility
+
+For security, full API keys are only displayed once at creation time. After that, the Console will only show a truncated version (first few and last few characters).
+
+### Access Logs
+
+The Platform maintains comprehensive logs of authentication attempts and API key usage. These can be viewed in the Console for security monitoring and auditing.
+
+### Rate Limiting
+
+To protect against brute force and denial of service attacks, the API implements rate limiting. If you exceed the allowed request rate, you'll receive a `429 Too Many Requests` status code.
+
+### Session Management
+
+For Console users, sessions automatically expire after periods of inactivity. Sensitive actions may require re-authentication for additional security.
+
+## Multi-factor Authentication (MFA)
+
+Enterprise accounts can enable Multi-factor Authentication for added security:
+
+1. **Time-based One-Time Passwords (TOTP):** Using authentication apps like Google Authenticator or Authy
+2. **SMS Verification:** Receiving codes via text message
+3. **Email Verification:** Receiving codes via email
+4. **Hardware Security Keys:** Using physical security keys like YubiKey (where supported)
+
+## Authentication Errors
+
+Common authentication-related errors you may encounter:
+
+| HTTP Status | Error Code | Description |
+| --- | --- | --- |
+| 401 | `invalid_key` | API key is invalid or malformed |
+| 401 | `expired_key` | API key has expired |
+| 401 | `revoked_key` | API key has been revoked |
+| 403 | `insufficient_permissions` | API key lacks required permissions for this operation |
+| 429 | `rate_limit_exceeded` | Too many requests in a given time period |
+
+## Example Authentication Workflows
+
+### API Key Authentication in Python
+
+```python
+import requests
+import os
+
+# Best practice: Load API key from environment variable
+api_key = os.environ.get("PLEXE_API_KEY")
+if not api_key:
+    raise ValueError("PLEXE_API_KEY environment variable not set")
+
+# Set up headers with authentication
+headers = {
+    "x-api-key": api_key,
+    "Content-Type": "application/json"
+}
+
+# Make authenticated request
+response = requests.get(
+    "https://api.plexe.ai/v1/models",
+    headers=headers
+)
+
+# Check for authentication errors
+if response.status_code == 401:
+    print("Authentication failed: Invalid or expired API key")
+elif response.status_code == 403:
+    print("Permission denied: Your API key doesn't have access to this resource")
+else:
+    # Process successful response
+    print(f"Success! Found {len(response.json())} models")
+```
+
+### API Key Rotation Best Practice
+
+```python
+import requests
+import os
+import json
+
+# Current and new API keys (latter will be obtained from API response)
+current_api_key = os.environ.get("PLEXE_API_KEY")
+new_api_key = None
+
+# Headers for the request to create new key
+headers = {
+    "x-api-key": current_api_key,
+    "Content-Type": "application/json"
+}
+
+# Step 1: Create a new API key
+try:
+    create_response = requests.post(
+        "https://api.plexe.ai/v1/keys",
+        headers=headers,
+        json={
+            "name": "Rotated Key " + datetime.now().strftime("%Y-%m-%d"),
+            "permission_level": "read_write", # Same as current key
+            "expiration_days": 90
+        }
+    )
+    
+    if create_response.status_code == 200:
+        result = create_response.json()
+        new_api_key = result.get("key")
+        print(f"Created new API key with ID: {result.get('key_id')}")
+    else:
+        print(f"Failed to create new key: {create_response.text}")
+        exit(1)
+        
+    # Step 2: Verify the new key works
+    verify_headers = {
+        "x-api-key": new_api_key,
+        "Content-Type": "application/json"
+    }
+    
+    verify_response = requests.get(
+        "https://api.plexe.ai/v1/models",
+        headers=verify_headers
+    )
+    
+    if verify_response.status_code == 200:
+        print("New key verified working!")
+        
+        # Step 3: Revoke the old key
+        revoke_response = requests.delete(
+            f"https://api.plexe.ai/v1/keys/{old_key_id}",
+            headers=verify_headers
+        )
+        
+        if revoke_response.status_code == 200:
+            print("Old key successfully revoked")
+        else:
+            print(f"Failed to revoke old key: {revoke_response.text}")
+            
+    else:
+        print(f"New key verification failed: {verify_response.text}")
+        print("Keeping old key active")
+        
+except Exception as e:
+    print(f"Error during key rotation: {e}")
+```
+
+## Enterprise SSO Integration
+
+Enterprise customers can integrate their existing identity provider (IdP) with the Plexe Platform using SAML 2.0 or OpenID Connect (OIDC). This provides:
+
+- Centralized user management
+- Consistent security policies
+- Simplified access for team members
+- Automated user provisioning/deprovisioning
+
+Contact Plexe's support team for assistance with SSO configuration.
+
+## Further Reading
+
+- [Manage API Keys](/platform/how-to/manage_api_keys) - Step-by-step guide for API key management
+- [Manage Account](/platform/how-to/manage_account) - How to manage your account settings
+- [Billing Explanation](/platform/explanation/billing) - Understand how authentication relates to billing

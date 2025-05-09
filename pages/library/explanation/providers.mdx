@@ -1,0 +1,110 @@
+---
+title: 'LLM Providers'
+description: 'Understanding the role of LLM providers in the Plexe Python library.'
+---
+
+The Plexe Python library uses Large Language Models (LLMs) as the foundation for its AI agent system. These models power the planning, code generation, analysis, and refinement capabilities that enable Plexe to build ML models from natural language.
+
+## Supported Provider Types
+
+Plexe supports various LLM providers through integration with common APIs, giving you flexibility in choosing which models to use for different aspects of the model building process.
+
+### Standard Providers
+
+These are the primary LLM providers supported by Plexe:
+
+* **OpenAI**: Models like GPT-4o, GPT-4o-mini
+* **Anthropic**: Claude models (Haiku, Sonnet, Opus)
+* **Google**: Gemini models
+* **Cohere**: Command models
+* **Local Models**: Through providers like Ollama for self-hosting
+
+## Provider Formats
+
+When specifying a provider, use the format `"vendor/model_name"`:
+
+```python
+# OpenAI example
+model.build(datasets=datasets, provider="openai/gpt-4o-mini")
+
+# Anthropic example
+model.build(datasets=datasets, provider="anthropic/claude-3-sonnet-20240229")
+
+# Ollama (local) example
+model.build(datasets=datasets, provider="ollama/llama3")
+```
+
+## Provider Configuration
+
+### Default Provider
+
+If you don't specify a provider, Plexe uses a default provider optimized for model building tasks.
+
+### Custom Provider Configuration
+
+For more advanced use cases, Plexe allows setting different LLM providers for different agent roles through the `ProviderConfig` class. This lets you optimize for performance in critical stages like code writing while using faster/cheaper models for more routine tasks.
+
+```python
+# Import ProviderConfig from internal module
+from plexe.internal.common.provider import ProviderConfig
+
+# Create a custom provider configuration
+provider_config = ProviderConfig(
+    default_provider="openai/gpt-4o-mini",
+    research_provider="openai/gpt-4o",        # For complex planning
+    engineer_provider="openai/gpt-4o",        # For code generation
+    orchestrator_provider="anthropic/claude-3-sonnet-20240229",
+    ops_provider="anthropic/claude-3-sonnet-20240229",
+    tool_provider="openai/gpt-4o-mini"        # For internal tools/helpers
+)
+
+# Use the custom configuration
+model.build(datasets=datasets, provider=provider_config)
+```
+
+## Environment Variables for API Keys
+
+Plexe uses environment variables to securely handle API keys. Set the appropriate environment variable for your chosen provider:
+
+```bash
+# OpenAI
+export OPENAI_API_KEY="your_openai_api_key"
+
+# Anthropic
+export ANTHROPIC_API_KEY="your_anthropic_api_key"
+
+# Google Gemini
+export GEMINI_API_KEY="your_gemini_api_key"
+```
+
+## Provider Selection Strategies
+
+### Cost Optimization
+
+If you're primarily concerned with minimizing costs:
+- Use more economical models like `"openai/gpt-4o-mini"` or similar for most roles
+- Reserve more powerful models only for the engineer role which handles code generation
+- Example: `provider_config = ProviderConfig(default_provider="openai/gpt-4o-mini", engineer_provider="openai/gpt-4o")`
+
+### Performance Optimization
+
+If you prioritize quality and performance:
+- Use the most capable models for research and engineering roles
+- Example: `provider_config = ProviderConfig(default_provider="anthropic/claude-3-sonnet-20240229", research_provider="anthropic/claude-3-opus-20240229", engineer_provider="anthropic/claude-3-opus-20240229")`
+
+### Private Deployment
+
+For organizations with data privacy requirements:
+- Configure with locally-hosted models through providers like Ollama
+- Example: `provider_config = ProviderConfig(default_provider="ollama/llama3")`
+
+## Internal Provider Handling
+
+When you call `model.build()` with a provider configuration:
+
+1. **Initialization**: Plexe validates the provider configuration
+2. **Role Assignment**: Appropriate models are assigned to each agent based on the configuration
+3. **API Integration**: Plexe handles the API calls to the various providers
+4. **Fallbacks**: If a specific role provider fails, Plexe can fall back to the default provider
+
+By understanding how providers work in Plexe, you can optimize your model building process for your specific requirements, whether prioritizing cost efficiency, performance quality, or specialized capabilities.

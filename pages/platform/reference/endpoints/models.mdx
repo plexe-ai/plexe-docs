@@ -1,0 +1,673 @@
+---
+title: 'Models API'
+description: 'API reference for building, managing, and using machine learning models on the Plexe Platform.'
+---
+
+The Models API provides endpoints for creating, managing, and using machine learning models on the Plexe Platform.
+
+## Models Endpoints
+
+### List Models
+
+```http
+GET /models/list
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Retrieves a list of all models in your account.
+
+#### Query Parameters
+
+| Parameter | Type   | Required | Description                                    |
+|-----------|--------|----------|------------------------------------------------|
+| `limit`   | integer| No       | Maximum number of models to return (default: 20, max: 100) |
+| `offset`  | integer| No       | Number of models to skip (default: 0)          |
+| `status`  | string | No       | Filter by status: `DRAFT`, `BUILDING`, `READY`, `ERROR` |
+| `sort_by` | string | No       | Field to sort by: `created_at`, `name` (default: `created_at`) |
+| `sort_dir`| string | No       | Sort direction: `asc` or `desc` (default: `desc`) |
+
+#### Response
+
+```json
+{
+  "models": [
+    {
+      "model_id": "mdl_abc123def456",
+      "name": "Customer Churn Predictor",
+      "intent": "Predict customer churn based on usage patterns",
+      "status": "READY",
+      "deployment_status": "DEPLOYED",
+      "created_at": "2023-06-15T08:15:45Z",
+      "updated_at": "2023-06-15T10:30:12Z"
+    },
+    {
+      "model_id": "mdl_ghi789jkl012",
+      "name": "Product Recommendation Engine",
+      "intent": "Recommend products based on purchase history",
+      "status": "BUILDING",
+      "deployment_status": null,
+      "created_at": "2023-06-16T14:22:33Z",
+      "updated_at": "2023-06-16T14:22:33Z"
+    }
+  ],
+  "pagination": {
+    "total": 15,
+    "limit": 20,
+    "offset": 0,
+    "has_more": false
+  }
+}
+```
+
+### Get Model
+
+```http
+GET /models/{model_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Retrieves detailed information about a specific model.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description             |
+|------------|--------|----------|-------------------------|
+| `model_id` | string | Yes      | ID of the model to get  |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_abc123def456",
+  "name": "Customer Churn Predictor",
+  "intent": "Predict customer churn based on usage patterns",
+  "description": "Model predicts likelihood of customer churn in the next 30 days",
+  "status": "READY",
+  "deployment_status": "DEPLOYED",
+  "endpoint": "https://api.plexe.ai/v1/predict/dep_mno345pqr678",
+  "metrics": {
+    "accuracy": 0.92,
+    "precision": 0.88,
+    "recall": 0.85,
+    "f1_score": 0.86
+  },
+  "dataset_id": "ds_stu901vwx234",
+  "input_schema": {
+    "usage_minutes": "float",
+    "subscription_months": "integer",
+    "support_tickets": "integer",
+    "plan_type": "string"
+  },
+  "output_schema": {
+    "churn_probability": "float"
+  },
+  "created_at": "2023-06-15T08:15:45Z",
+  "updated_at": "2023-06-15T10:30:12Z",
+  "created_by": "user_yza567bcd890",
+  "tags": ["production", "customer-retention"]
+}
+```
+
+### Create Model
+
+```http
+POST /models/build
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Initiates the process of building a new model. This is an asynchronous operation that returns a job ID for tracking progress.
+
+#### Request Body
+
+```json
+{
+  "intent": "Predict customer churn based on usage patterns",
+  "name": "Customer Churn Predictor",
+  "description": "Model predicts likelihood of customer churn in the next 30 days",
+  "dataset_id": "ds_stu901vwx234",
+  "input_schema": {
+    "usage_minutes": "float",
+    "subscription_months": "integer",
+    "support_tickets": "integer",
+    "plan_type": "string"
+  },
+  "output_schema": {
+    "churn_probability": "float"
+  },
+  "tags": ["production", "customer-retention"]
+}
+```
+
+| Field         | Type   | Required | Description                                      |
+|---------------|--------|----------|--------------------------------------------------|
+| `intent`      | string | Yes      | Natural language description of the model purpose |
+| `name`        | string | No       | Display name for the model (default: generated)  |
+| `description` | string | No       | Detailed description of the model                |
+| `dataset_id`  | string | Yes      | ID of the dataset to use for training            |
+| `input_schema`| object | No       | Schema of input fields (inferred if not provided)|
+| `output_schema`| object| No       | Schema of output fields (inferred if not provided)|
+| `tags`        | array  | No       | List of tags for organizing models               |
+
+#### Response
+
+```json
+{
+  "job_id": "job_def456ghi789",
+  "status": "PENDING",
+  "model_id": "mdl_jkl012mno345",
+  "created_at": "2023-06-16T15:00:00Z"
+}
+```
+
+### Deploy Model
+
+```http
+POST /models/{model_id}/deploy
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Deploys a model, making it available for predictions. This is an asynchronous operation.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                 |
+|------------|--------|----------|-----------------------------|
+| `model_id` | string | Yes      | ID of the model to deploy   |
+
+#### Request Body
+
+```json
+{
+  "environment": "production",
+  "replicas": 2,
+  "auto_scale": true
+}
+```
+
+| Field         | Type    | Required | Description                                       |
+|---------------|---------|----------|---------------------------------------------------|
+| `environment` | string  | No       | Deployment environment (default: `production`)    |
+| `replicas`    | integer | No       | Number of replicas to deploy (default: 1)         |
+| `auto_scale`  | boolean | No       | Whether to enable auto-scaling (default: `true`)  |
+
+#### Response
+
+```json
+{
+  "deployment_id": "dep_pqr678stu901",
+  "model_id": "mdl_jkl012mno345",
+  "status": "DEPLOYING",
+  "endpoint": "https://api.plexe.ai/v1/predict/dep_pqr678stu901",
+  "environment": "production",
+  "replicas": 2,
+  "auto_scale": true,
+  "created_at": "2023-06-16T15:10:00Z"
+}
+```
+
+### Make Prediction
+
+```http
+POST /models/predict/{deployment_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Makes a prediction using a deployed model.
+
+#### Path Parameters
+
+| Parameter      | Type   | Required | Description                         |
+|----------------|--------|----------|-------------------------------------|
+| `deployment_id`| string | Yes      | ID of the deployed model to use     |
+
+#### Request Body
+
+Input data matching the model's input schema. Example:
+
+```json
+{
+  "usage_minutes": 120.5,
+  "subscription_months": 8,
+  "support_tickets": 2,
+  "plan_type": "premium"
+}
+```
+
+#### Response
+
+Output data matching the model's output schema. Example:
+
+```json
+{
+  "request_id": "req_vwx234yza567",
+  "result": {
+    "churn_probability": 0.27
+  },
+  "model_id": "mdl_jkl012mno345",
+  "created_at": "2023-06-16T15:15:00Z"
+}
+```
+
+### Update Model
+
+```http
+PATCH /models/{model_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Updates metadata for an existing model.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                 |
+|------------|--------|----------|-----------------------------|
+| `model_id` | string | Yes      | ID of the model to update   |
+
+#### Request Body
+
+```json
+{
+  "name": "Enhanced Customer Churn Predictor",
+  "description": "Updated model with improved accuracy",
+  "tags": ["production", "customer-retention", "v2"]
+}
+```
+
+| Field         | Type   | Required | Description                              |
+|---------------|--------|----------|------------------------------------------|
+| `name`        | string | No       | New display name for the model           |
+| `description` | string | No       | New description of the model             |
+| `tags`        | array  | No       | Updated list of tags                     |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_jkl012mno345",
+  "name": "Enhanced Customer Churn Predictor",
+  "description": "Updated model with improved accuracy",
+  "tags": ["production", "customer-retention", "v2"],
+  "updated_at": "2023-06-16T16:00:00Z"
+}
+```
+
+### Delete Model
+
+```http
+DELETE /models/{model_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Deletes a model and its deployments.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                 |
+|------------|--------|----------|-----------------------------|
+| `model_id` | string | Yes      | ID of the model to delete   |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_jkl012mno345",
+  "status": "DELETED",
+  "deleted_at": "2023-06-16T17:00:00Z"
+}
+```
+
+## Model Versions
+
+### List Model Versions
+
+```http
+GET /models/{model_id}/versions
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Lists all versions of a specific model.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                           |
+|------------|--------|----------|---------------------------------------|
+| `model_id` | string | Yes      | ID of the model to list versions for  |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_jkl012mno345",
+  "versions": [
+    {
+      "version_id": "ver_bcd890efg123",
+      "version": 3,
+      "status": "READY",
+      "metrics": {
+        "accuracy": 0.94,
+        "precision": 0.92,
+        "recall": 0.90,
+        "f1_score": 0.91
+      },
+      "created_at": "2023-06-20T09:00:00Z"
+    },
+    {
+      "version_id": "ver_hij456klm789",
+      "version": 2,
+      "status": "READY",
+      "metrics": {
+        "accuracy": 0.92,
+        "precision": 0.88,
+        "recall": 0.85,
+        "f1_score": 0.86
+      },
+      "created_at": "2023-06-17T14:00:00Z"
+    },
+    {
+      "version_id": "ver_nop012qrs345",
+      "version": 1,
+      "status": "READY",
+      "metrics": {
+        "accuracy": 0.89,
+        "precision": 0.85,
+        "recall": 0.82,
+        "f1_score": 0.83
+      },
+      "created_at": "2023-06-16T15:00:00Z"
+    }
+  ]
+}
+```
+
+### Create Model Version
+
+```http
+POST /models/{model_id}/versions
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Creates a new version of an existing model. This is useful for iterative model improvement.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                           |
+|------------|--------|----------|---------------------------------------|
+| `model_id` | string | Yes      | ID of the model to create version for |
+
+#### Request Body
+
+```json
+{
+  "dataset_id": "ds_tuv678wxy901",
+  "intent": "Predict customer churn with added seasonality factor",
+  "input_schema": {
+    "usage_minutes": "float",
+    "subscription_months": "integer",
+    "support_tickets": "integer",
+    "plan_type": "string",
+    "season": "string"
+  }
+}
+```
+
+| Field         | Type   | Required | Description                                      |
+|---------------|--------|----------|--------------------------------------------------|
+| `dataset_id`  | string | Yes      | ID of the dataset to use for training            |
+| `intent`      | string | No       | Updated intent (defaults to original if omitted) |
+| `input_schema`| object | No       | Updated input schema (defaults to original)      |
+| `output_schema`| object| No       | Updated output schema (defaults to original)     |
+
+#### Response
+
+```json
+{
+  "job_id": "job_zab234cde567",
+  "status": "PENDING",
+  "model_id": "mdl_jkl012mno345",
+  "version_id": "ver_fgh890ijk123",
+  "version": 4,
+  "created_at": "2023-06-21T10:00:00Z"
+}
+```
+
+## Model Deployments
+
+### List Deployments
+
+```http
+GET /models/{model_id}/deployments
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Lists all active deployments for a model.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                               |
+|------------|--------|----------|-------------------------------------------|
+| `model_id` | string | Yes      | ID of the model to list deployments for   |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_jkl012mno345",
+  "deployments": [
+    {
+      "deployment_id": "dep_lmn456opq789",
+      "environment": "production",
+      "status": "ACTIVE",
+      "version_id": "ver_bcd890efg123",
+      "version": 3,
+      "endpoint": "https://api.plexe.ai/v1/predict/dep_lmn456opq789",
+      "replicas": 2,
+      "auto_scale": true,
+      "created_at": "2023-06-20T10:00:00Z"
+    },
+    {
+      "deployment_id": "dep_rst012uvw345",
+      "environment": "staging",
+      "status": "ACTIVE",
+      "version_id": "ver_hij456klm789",
+      "version": 2,
+      "endpoint": "https://api.plexe.ai/v1/predict/dep_rst012uvw345",
+      "replicas": 1,
+      "auto_scale": false,
+      "created_at": "2023-06-19T16:00:00Z"
+    }
+  ]
+}
+```
+
+### Undeploy Model
+
+```http
+DELETE /models/{model_id}/deployments/{deployment_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Removes a specific deployment of a model.
+
+#### Path Parameters
+
+| Parameter       | Type   | Required | Description                      |
+|-----------------|--------|----------|----------------------------------|
+| `model_id`      | string | Yes      | ID of the model                  |
+| `deployment_id` | string | Yes      | ID of the deployment to remove   |
+
+#### Response
+
+```json
+{
+  "model_id": "mdl_jkl012mno345",
+  "deployment_id": "dep_rst012uvw345",
+  "status": "UNDEPLOYING",
+  "undeployed_at": "2023-06-21T11:00:00Z"
+}
+```
+
+## Batch Predictions
+
+### Create Batch Prediction Job
+
+```http
+POST /models/{model_id}/batch-predict
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
+
+Creates a batch prediction job for processing multiple inputs at once.
+
+#### Path Parameters
+
+| Parameter  | Type   | Required | Description                           |
+|------------|--------|----------|---------------------------------------|
+| `model_id` | string | Yes      | ID of the model to use for prediction |
+
+#### Request Body
+
+```json
+{
+  "dataset_id": "ds_xyz678abc901",
+  "output_format": "json",
+  "include_explanations": true
+}
+```
+
+| Field                 | Type    | Required | Description                                           |
+|-----------------------|---------|----------|-------------------------------------------------------|
+| `dataset_id`          | string  | Yes      | ID of the dataset containing inputs                   |
+| `output_format`       | string  | No       | Format for results: `json` or `csv` (default: `json`) |
+| `include_explanations`| boolean | No       | Whether to include prediction explanations            |
+
+#### Response
+
+```json
+{
+  "batch_job_id": "bjob_bcd234efg567",
+  "model_id": "mdl_jkl012mno345",
+  "dataset_id": "ds_xyz678abc901",
+  "status": "PENDING",
+  "progress": 0,
+  "estimated_completion": "2023-06-21T12:30:00Z",
+  "created_at": "2023-06-21T12:00:00Z"
+}
+```
+
+### Get Batch Prediction Results
+
+```http
+GET /models/{model_id}/batch-predict/{batch_job_id}
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Retrieves the status and results of a batch prediction job.
+
+#### Path Parameters
+
+| Parameter     | Type   | Required | Description                              |
+|---------------|--------|----------|------------------------------------------|
+| `model_id`    | string | Yes      | ID of the model used for prediction      |
+| `batch_job_id`| string | Yes      | ID of the batch prediction job           |
+
+#### Response
+
+```json
+{
+  "batch_job_id": "bjob_bcd234efg567",
+  "model_id": "mdl_jkl012mno345",
+  "dataset_id": "ds_xyz678abc901",
+  "status": "COMPLETED",
+  "progress": 100,
+  "row_count": 5000,
+  "completed_at": "2023-06-21T12:25:00Z",
+  "results_url": "https://api.plexe.ai/v1/download/bjob_bcd234efg567.json",
+  "expires_at": "2023-06-28T12:25:00Z"
+}
+```
+
+## Error Codes
+
+| HTTP Status | Error Code            | Description                                  |
+|-------------|----------------------|----------------------------------------------|
+| 400         | `invalid_request`    | Malformed request or missing parameters      |
+| 401         | `unauthorized`       | Missing or invalid API key                   |
+| 403         | `forbidden`          | Insufficient permissions for operation       |
+| 404         | `not_found`          | Model, deployment, or resource not found     |
+| 409         | `conflict`           | Resource conflict (e.g., duplicate name)     |
+| 422         | `validation_error`   | Invalid input data or schema                 |
+| 429         | `rate_limit_exceeded`| API rate limit exceeded                      |
+| 500         | `internal_error`     | Server-side error                            |
+| 503         | `service_unavailable`| Service temporarily unavailable              |
+
+For all API errors, the response will include details about the error and, where appropriate, suggestions for resolution.

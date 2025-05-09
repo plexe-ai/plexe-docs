@@ -1,0 +1,130 @@
+---
+title: 'Configure LLM Providers'
+description: 'Specify which Large Language Model providers and models Plexe should use for its agent system.'
+---
+
+Plexe utilizes Large Language Models (LLMs) extensively through its agent system to perform tasks like planning, code generation, analysis, and schema inference. You can configure which LLM provider and model Plexe uses.
+
+## Setting API Keys
+
+Before configuring providers, ensure the necessary API keys are set as environment variables. Plexe uses [LiteLLM](https://docs.litellm.ai/docs/providers) to connect to various providers.
+
+```bash
+# Example for OpenAI
+export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+
+# Example for Anthropic
+export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
+
+# Example for Google Gemini
+export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+
+# Example for Cohere
+export COHERE_API_KEY="YOUR_COHERE_API_KEY"
+
+# ... and so on for other providers supported by LiteLLM
+```
+
+## Specifying the Provider in `model.build()`
+
+The `provider` argument in `model.build()` controls which LLM is used.
+
+### Simple Provider String
+
+You can provide a single string in the format `"vendor/model_name"`. This model will be used for all agent tasks by default.
+
+```python
+import plexe
+import pandas as pd
+
+# --- Prepare Data & Model ---
+# (Assume df and model are defined as in previous examples)
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+model = plexe.Model(intent="Predict house prices")
+# --------------------------
+
+# Use OpenAI's gpt-4o-mini (default if provider is omitted)
+model.build(datasets=datasets, provider="openai/gpt-4o-mini")
+
+# Use Anthropic's Claude 3 Sonnet
+# model.build(datasets=datasets, provider="anthropic/claude-3-sonnet-20240229")
+
+# Use Ollama's Llama 3 (requires Ollama server running)
+# model.build(datasets=datasets, provider="ollama/llama3")
+```
+
+Plexe defaults to `"openai/gpt-4o-mini"` if the `provider` argument is omitted.
+
+### Using `ProviderConfig` for Granular Control
+
+For more advanced control, you can specify different models for different agent roles using the `ProviderConfig` class. This allows you to use potentially stronger models for complex tasks like planning or coding, and faster/cheaper models for simpler tasks like tool usage or review.
+
+The roles you can configure are:
+
+  * `default_provider`: Fallback provider if a specific role isn't set.
+  * `orchestrator_provider`: For the main agent managing the workflow.
+  * `research_provider`: For the agent planning the ML solution.
+  * `engineer_provider`: For the agent writing the training code.
+  * `ops_provider`: For the agent writing the inference code.
+  * `tool_provider`: For agents performing internal tool calls (like schema inference, metric selection).
+
+```python
+import plexe
+import pandas as pd
+from plexe.internal.common.provider import ProviderConfig # Import the config class
+
+# --- Prepare Data & Model ---
+# (Assume df and model are defined as in previous examples)
+try:
+    df = pd.read_csv("housing_data.csv")
+except FileNotFoundError:
+    df = pd.DataFrame({ # Dummy data
+        'square_footage': [1500, 2100, 1800, 2500, 1200], 'bedrooms': [3, 4, 3, 5, 2],
+        'bathrooms': [2, 2.5, 2, 3, 1.5], 'price': [300000, 450000, 380000, 550000, 250000]
+    })
+datasets = [df]
+model = plexe.Model(intent="Predict house prices")
+# --------------------------
+
+# Define a provider configuration
+# Use GPT-4o for core engineering/research, Claude Sonnet for orchestration/ops, GPT-4o-mini for tools
+provider_config = ProviderConfig(
+    default_provider="openai/gpt-4o-mini", # Fallback
+    orchestrator_provider="anthropic/claude-3-sonnet-20240229",
+    research_provider="openai/gpt-4o",
+    engineer_provider="openai/gpt-4o",
+    ops_provider="anthropic/claude-3-sonnet-20240229",
+    tool_provider="openai/gpt-4o-mini"
+)
+
+# Build the model using the specific configuration
+model.build(
+    datasets=datasets,
+    provider=provider_config, # Pass the config object
+    max_iterations=1
+)
+
+print(f"Model build finished using ProviderConfig. State: {model.get_state()}")
+
+# You can check which providers were actually used in the model metadata
+if model.get_state() == plexe.internal.common.utils.model_state.ModelState.READY:
+    metadata = model.get_metadata()
+    print("\nProviders Used:")
+    print(f"  Orchestrator: {metadata.get('orchestrator_provider')}")
+    print(f"  Research: {metadata.get('research_provider')}")
+    print(f"  Engineer: {metadata.get('engineer_provider')}")
+    print(f"  Ops: {metadata.get('ops_provider')}")
+    print(f"  Tool: {metadata.get('tool_provider')}")
+```
+
+{/* Info component with proper JSX syntax */}
+<Info>
+  Using `ProviderConfig` allows optimizing for cost and capability by assigning different models to roles based on their complexity. Refer to your LLM provider's documentation for model identifiers and capabilities.
+</Info>

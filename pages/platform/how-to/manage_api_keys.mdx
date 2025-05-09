@@ -1,0 +1,72 @@
+---
+title: 'Manage API Keys'
+description: 'Create, view, and revoke API keys for accessing the Plexe Platform API.'
+---
+
+API keys allow you to authenticate requests to the Plexe Platform API programmatically. Manage your API keys
+securely through the Plexe Console.
+
+## Accessing API Key Management
+
+1.  Log in to the [Plexe Console](https://console.plexe.ai) (Replace with actual URL).
+2.  Navigate to the "Account Settings" or "API Keys" section.
+
+## Creating an API Key
+
+1.  Click the "Create New API Key" or similar button.
+2.  Give your key a descriptive name (e.g., "dev-script-key", "production-app-key") to help you identify its purpose later.
+3.  Click "Create".
+4.  **Important:** Your new API key will be displayed **only once**. Copy it immediately and store it securely (e.g., in a password manager or secret vault). **You will not be able to retrieve the key again.**
+
+## Viewing API Keys
+
+The API Key management section will list your existing keys, typically showing:
+
+* Key Name
+* A portion of the key (e.g., the first few characters) for identification
+* Creation Date
+* Last Used Date (if tracked)
+* Status (Active/Inactive)
+
+You **cannot** view the full secret key after creation for security reasons.
+
+## Revoking an API Key
+
+If a key is compromised or no longer needed:
+
+1.  Find the key you want to revoke in the list.
+2.  Click the "Revoke", "Delete", or similar button associated with that key.
+3.  Confirm the action when prompted.
+
+Revoked keys can no longer be used to authenticate API requests.
+
+## Using Your API Key
+
+Include your API key in the `x-api-key` header for all requests to the Plexe API.
+
+```python
+import requests
+import os
+
+api_key = "YOUR_PLEXE_API_KEY" # Replace with your actual key or load securely
+base_url = "https://api.plexe.ai" # Replace with actual API endpoint
+
+headers = {
+    "x-api-key": api_key
+}
+
+# Example: List models
+try:
+    response = requests.get(f"{base_url}/v1/models", headers=headers)
+    response.raise_for_status()
+    print("API request successful:", response.json())
+except requests.exceptions.RequestException as e:
+    print(f"API request failed: {e}")
+    if e.response is not None:
+        print(f"Status Code: {e.response.status_code}, Response: {e.response.text}")
+```
+
+{/* Warning component - proper JSX syntax */}
+<Warning>
+**Treat your API keys like passwords.** Do not share them, embed them directly in public code (like frontend JavaScript), or commit them to version control. Use environment variables or secure secret management solutions.
+</Warning>

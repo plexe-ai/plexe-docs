@@ -1,0 +1,583 @@
+---
+title: 'Use Deployed Models'
+description: 'Learn how to make predictions with deployed models on the Plexe Platform.'
+---
+
+After you've built and deployed a model on the Plexe Platform, you can use its API endpoint to make predictions (inferences). This guide explains how to interact with deployed models to get predictions for your data.
+
+## Prerequisites
+
+- A model that has been successfully deployed (status: `READY`)
+- The deployment ID or endpoint URL
+- A valid API key with appropriate permissions
+- The input schema for your model (what data format it expects)
+
+## Getting the Endpoint URL
+
+Before making predictions, you need to know your model's endpoint URL. You can obtain this in several ways:
+
+### From the Console
+
+1. Log in to [Plexe Console](https://console.plexe.ai)
+2. Navigate to **Models** → **Deployments**
+3. Select your deployment
+4. Copy the endpoint URL from the **Overview** tab
+
+### From the API
+
+```bash
+# Get deployment details including the endpoint URL
+curl -X GET https://api.plexe.ai/v1/deployments/{deployment_id} \
+  -H "x-api-key: YOUR_API_KEY"
+```
+
+Response (excerpt):
+
+```json
+{
+  "deployment_id": "dep_abc123def456",
+  "status": "READY",
+  "endpoint": "https://api.plexe.ai/v1/predict/dep_abc123def456",
+  "model_id": "model_789xyz",
+  "created_at": "2024-05-01T12:00:00Z"
+}
+```
+
+## Making Single Predictions
+
+For predictions with a single data point, use the simple prediction endpoint.
+
+### Using cURL
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id} \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42,
+    "feature3": true
+  }'
+```
+
+The response will contain the prediction result:
+
+```json
+{
+  "request_id": "req_789012",
+  "result": {
+    "predicted_class": "category_b",
+    "confidence": 0.87
+  },
+  "model_id": "model_789xyz",
+  "model_version": "1",
+  "processing_time_ms": 28
+}
+```
+
+### Using Python
+
+```python
+import requests
+import json
+
+API_KEY = "YOUR_API_KEY"
+DEPLOYMENT_ID = "dep_abc123def456"
+BASE_URL = "https://api.plexe.ai/v1"
+
+def get_prediction(input_data):
+    """
+    Get a prediction from a deployed model.
+    
+    Args:
+        input_data (dict): The input data matching the model's expected schema
+        
+    Returns:
+        dict: The prediction result
+    """
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}"
+    
+    try:
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            data=json.dumps(input_data)
+        )
+        response.raise_for_status()  # Raise exception for error status codes
+        
+        return response.json()
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error making prediction: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response: {e.response.text}")
+        return None
+
+# Example usage
+input_data = {
+    "square_footage": 1950,
+    "bedrooms": 3,
+    "bathrooms": 2.5,
+    "location": "suburban"
+}
+
+result = get_prediction(input_data)
+if result:
+    print(f"Prediction result: {result['result']}")
+    print(f"Request ID: {result['request_id']}")
+    print(f"Processing time: {result['processing_time_ms']} ms")
+```
+
+### Using JavaScript
+
+```javascript
+async function getPrediction(inputData) {
+  const apiKey = "YOUR_API_KEY";
+  const deploymentId = "dep_abc123def456";
+  const endpoint = `https://api.plexe.ai/v1/predict/${deploymentId}`;
+  
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(inputData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    return await response.json();
+    
+  } catch (error) {
+    console.error("Error making prediction:", error);
+    return null;
+  }
+}
+
+// Example usage
+const inputData = {
+  square_footage: 1950,
+  bedrooms: 3,
+  bathrooms: 2.5,
+  location: "suburban"
+};
+
+getPrediction(inputData)
+  .then(result => {
+    if (result) {
+      console.log("Prediction result:", result.result);
+      console.log("Request ID:", result.request_id);
+      console.log("Processing time:", result.processing_time_ms, "ms");
+    }
+  });
+```
+
+## Making Batch Predictions
+
+For efficiently processing multiple predictions at once, use the batch prediction endpoint.
+
+### Using cURL
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/batch \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": [
+      {"feature1": "value1", "feature2": 42},
+      {"feature1": "value2", "feature2": 17},
+      {"feature1": "value3", "feature2": 98}
+    ]
+  }'
+```
+
+The response will contain an array of predictions:
+
+```json
+{
+  "request_id": "batch_req_345678",
+  "results": [
+    {"predicted_class": "category_b", "confidence": 0.87},
+    {"predicted_class": "category_a", "confidence": 0.92},
+    {"predicted_class": "category_c", "confidence": 0.78}
+  ],
+  "model_id": "model_789xyz",
+  "model_version": "1",
+  "processing_time_ms": 85
+}
+```
+
+### Using Python
+
+```python
+import requests
+import json
+
+API_KEY = "YOUR_API_KEY"
+DEPLOYMENT_ID = "dep_abc123def456"
+BASE_URL = "https://api.plexe.ai/v1"
+
+def get_batch_predictions(input_data_list):
+    """
+    Get predictions for multiple inputs from a deployed model.
+    
+    Args:
+        input_data_list (list): List of input data dictionaries
+        
+    Returns:
+        dict: The batch prediction results
+    """
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}/batch"
+    
+    try:
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            data=json.dumps({"inputs": input_data_list})
+        )
+        response.raise_for_status()
+        
+        return response.json()
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error making batch prediction: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response: {e.response.text}")
+        return None
+
+# Example usage
+input_data_list = [
+    {
+        "square_footage": 1950,
+        "bedrooms": 3,
+        "bathrooms": 2.5,
+        "location": "suburban"
+    },
+    {
+        "square_footage": 850,
+        "bedrooms": 1,
+        "bathrooms": 1.0,
+        "location": "urban"
+    },
+    {
+        "square_footage": 3200,
+        "bedrooms": 4,
+        "bathrooms": 3.5,
+        "location": "rural"
+    }
+]
+
+results = get_batch_predictions(input_data_list)
+if results:
+    print(f"Batch request ID: {results['request_id']}")
+    print(f"Processing time: {results['processing_time_ms']} ms")
+    
+    for i, result in enumerate(results['results']):
+        print(f"Prediction {i+1}: {result}")
+```
+
+## Streaming Large Batch Predictions
+
+For very large prediction tasks, use the asynchronous batch prediction endpoint:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/async-batch \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_upload_id": "upload_def456",
+    "input_column_mapping": {
+      "csv_column1": "feature1",
+      "csv_column2": "feature2"
+    },
+    "output_format": "csv",
+    "notification_email": "user@example.com"
+  }'
+```
+
+Response:
+
+```json
+{
+  "job_id": "job_batch_hij789",
+  "status": "PENDING",
+  "created_at": "2024-05-01T14:30:00Z"
+}
+```
+
+You can then [monitor the job](/platform/how-to/monitor_jobs) to check when it's complete and download results.
+
+## Input Validation
+
+To validate your input data against the model's schema before sending:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}/validate \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42,
+    "feature3": true
+  }'
+```
+
+Response for valid input:
+
+```json
+{
+  "valid": true
+}
+```
+
+Response for invalid input:
+
+```json
+{
+  "valid": false,
+  "errors": [
+    {
+      "field": "feature2",
+      "error": "must be a string"
+    },
+    {
+      "field": "required_feature",
+      "error": "field is required"
+    }
+  ]
+}
+```
+
+## Handling Errors
+
+### Common Error Codes
+
+| HTTP Status | Error Code | Description |
+| --- | --- | --- |
+| 400 | `invalid_input` | Input doesn't match model schema |
+| 401 | `unauthorized` | Missing or invalid API key |
+| 403 | `forbidden` | API key doesn't have permission for this deployment |
+| 404 | `not_found` | Deployment ID doesn't exist |
+| 429 | `rate_limit_exceeded` | Too many requests in the allowed time period |
+| 500 | `prediction_error` | Error occurred during model prediction |
+| 503 | `deployment_unavailable` | Deployment is not in READY state |
+
+### Error Response Format
+
+```json
+{
+  "error": {
+    "code": "invalid_input",
+    "message": "Input validation failed",
+    "details": {
+      "feature2": "must be a number between 0 and 100"
+    }
+  },
+  "request_id": "req_789012"
+}
+```
+
+### Python Error Handling Example
+
+```python
+import requests
+import json
+import time
+
+API_KEY = "YOUR_API_KEY"
+DEPLOYMENT_ID = "dep_abc123def456"
+BASE_URL = "https://api.plexe.ai/v1"
+
+def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
+    """
+    Get a prediction with retry logic for transient errors.
+    
+    Args:
+        input_data (dict): The input data
+        max_retries (int): Maximum number of retry attempts
+        initial_backoff (float): Initial backoff time in seconds (doubles each retry)
+        
+    Returns:
+        dict: The prediction result or None if failed
+    """
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}"
+    backoff = initial_backoff
+    
+    for attempt in range(max_retries + 1):
+        try:
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                data=json.dumps(input_data),
+                timeout=10  # 10-second timeout
+            )
+            
+            # If successful, return the result
+            if response.status_code == 200:
+                return response.json()
+            
+            # Handle different error types
+            if response.status_code == 400:
+                # Bad request - no point retrying
+                error_data = response.json().get("error", {})
+                print(f"Input validation error: {error_data.get('message')}")
+                print(f"Details: {error_data.get('details')}")
+                return None
+                
+            elif response.status_code == 429:
+                # Rate limit - should retry with backoff
+                if attempt < max_retries:
+                    print(f"Rate limit exceeded. Retrying in {backoff} seconds...")
+                    time.sleep(backoff)
+                    backoff *= 2  # Exponential backoff
+                    continue
+                else:
+                    print("Maximum retries reached. Rate limit still exceeded.")
+                    return None
+                    
+            elif response.status_code in (503, 504):
+                # Service unavailable or gateway timeout - retry
+                if attempt < max_retries:
+                    print(f"Service temporarily unavailable. Retrying in {backoff} seconds...")
+                    time.sleep(backoff)
+                    backoff *= 2
+                    continue
+                else:
+                    print("Maximum retries reached. Service still unavailable.")
+                    return None
+            
+            # Other errors
+            try:
+                error_data = response.json().get("error", {})
+                print(f"Error: {error_data.get('code')} - {error_data.get('message')}")
+            except:
+                print(f"HTTP Error: {response.status_code} - {response.text}")
+            
+            return None
+                
+        except requests.exceptions.Timeout:
+            if attempt < max_retries:
+                print(f"Request timed out. Retrying in {backoff} seconds...")
+                time.sleep(backoff)
+                backoff *= 2
+                continue
+            else:
+                print("Maximum retries reached. Requests still timing out.")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            return None
+    
+    return None  # Should not reach here but just in case
+```
+
+## Advanced Features
+
+### Controlling Response Fields
+
+Specify which fields to include in the response:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?include=result,processing_time_ms \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42
+  }'
+```
+
+### Explanation Requests
+
+For models that support it, get explanations for predictions:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?explain=true \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42
+  }'
+```
+
+Response with explanation:
+
+```json
+{
+  "request_id": "req_789012",
+  "result": {
+    "predicted_class": "category_b",
+    "confidence": 0.87
+  },
+  "explanation": {
+    "type": "feature_importance",
+    "data": [
+      {"feature": "feature2", "importance": 0.65},
+      {"feature": "feature1", "importance": 0.35}
+    ]
+  },
+  "processing_time_ms": 45
+}
+```
+
+### Versioned Inference
+
+Request a specific model version:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/predict/{deployment_id}?model_version=2 \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature1": "value1",
+    "feature2": 42
+  }'
+```
+
+## Best Practices
+
+1. **Input Validation**: Validate inputs before sending to avoid unnecessary API calls
+2. **Error Handling**: Implement robust error handling with retries for transient errors
+3. **Logging**: Log request IDs and responses for troubleshooting
+4. **Batch Processing**: Use batch endpoints for high-volume prediction needs
+5. **Rate Limiting**: Manage your request rate to avoid hitting rate limits
+6. **Monitoring**: Track latency and error rates for your production deployments
+7. **Caching**: Consider caching prediction results for identical inputs
+8. **Timeouts**: Set appropriate timeouts for your application's needs
+
+## Performance Optimization
+
+1. **Batch When Possible**: Use batch predictions for multiple inputs
+2. **Minimize Payload Size**: Only include required fields in your requests
+3. **Connection Pooling**: Reuse HTTP connections for multiple requests
+4. **Use CDNs**: If serving model in user-facing applications, consider a CDN in front of your API calls
+5. **Regional Endpoints**: Use the endpoint closest to your application (if multiple regions are supported)
+
+## Security Considerations
+
+1. **API Key Management**: Rotate keys regularly and use the principle of least privilege
+2. **Input Sanitization**: Validate and sanitize all inputs before sending to the API
+3. **TLS/HTTPS**: Always use HTTPS (the API will reject HTTP requests)
+4. **Response Handling**: Don't expose full API responses to end users
+5. **Rate Limiting**: Implement your own rate limiting to avoid service disruption
