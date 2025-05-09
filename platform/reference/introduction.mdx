@@ -15,18 +15,41 @@ https://api.plexe.ai/v1
 
 ## Authentication
 
-All API requests require authentication using an API key. Include your key in the `x-api-key` header:
+All API requests require authentication using an API key. You have two options for authentication:
+
+Option 1: Include your key in the `Authorization` header as a Bearer token:
 
 ```bash
-curl -X GET https://api.plexe.ai/v1/models \
+curl -X GET https://api.plexe.ai/v1/models/list \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE"
+```
+
+Option 2: Include your key in the `x-api-key` header:
+
+```bash
+curl -X GET https://api.plexe.ai/v1/models/list \
   -H "x-api-key: YOUR_API_KEY_HERE"
 ```
 
 You can generate API keys in the [Plexe Console](https://console.plexe.ai) under Settings > API Keys. See the [Manage API Keys](/platform/how-to/manage_api_keys) guide for details.
 
+## Request Format
+
+For endpoints that accept data (POST, PUT, PATCH), provide a JSON-formatted request body with the appropriate Content-Type header:
+
+```bash
+curl -X POST https://api.plexe.ai/v1/models/build \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Model",
+    "intent": "Predict customer churn"
+  }'
+```
+
 ## Response Format
 
-All responses are returned in JSON format. Successful responses include the requested data, while error responses include an error message and relevant details.
+All responses are returned in JSON format. Successful responses include the requested data, while error responses include an error message and relevant details. The HTTP status code indicates the result of the operation.
 
 Example success response:
 

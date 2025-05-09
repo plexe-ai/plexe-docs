@@ -86,7 +86,6 @@
                 "pages": [
                   "platform/explanation/concepts",
                   "platform/explanation/authentication",
-                  "platform/explanation/billing",
                   "platform/explanation/deployment"
                 ]
               },

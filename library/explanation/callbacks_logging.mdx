@@ -3,7 +3,9 @@ title: 'Callbacks and Logging'
 description: 'Monitor and interact with the Plexe model building process through callbacks and logging.'
 ---
 
-Plexe provides robust capabilities for monitoring and interacting with the model building process through its callback system and logging features. These tools give you visibility into what's happening during model creation and allow you to integrate with external systems.
+Plexe provides robust capabilities for monitoring and interacting with the model building process through its
+callback system and logging features. These tools give you visibility into what's happening during model creation
+and allow you to integrate with external systems.
 
 ## The Callback System
 
@@ -36,7 +38,8 @@ The `info` parameter provides context about the current state, including:
 
 #### Chain of Thought Callback
 
-This callback is automatically added when you set `chain_of_thought=True` in `model.build()`. It captures the detailed reasoning steps and decision-making process of the AI agents.
+This callback is automatically added when you set `chain_of_thought=True` in `model.build()`. It captures the
+detailed reasoning steps and decision-making process of the AI agents.
 
 ```python
 import plexe
@@ -236,4 +239,5 @@ This approach gives you:
 4. **Adjust Log Levels**: Set appropriate verbosity based on your needs
 5. **Combine Approaches**: Use both logging and callbacks for comprehensive monitoring
 
-By leveraging Plexe's callback system and logging capabilities, you can gain insights into the model building process, track experiments systematically, and integrate Plexe into your broader ML workflows.
+By leveraging Plexe's callback system and logging capabilities, you can gain insights into the model building process,
+track experiments systematically, and integrate Plexe into your broader ML workflows.

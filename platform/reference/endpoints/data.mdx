@@ -12,7 +12,7 @@ This document outlines the RESTful API endpoints for managing data uploads and q
 Retrieves a list of all data uploads associated with your account.
 
 ```http
-GET /v1/uploads
+GET /data/uploads
 ```
 
 #### Query Parameters
@@ -163,7 +163,7 @@ GET /v1/uploads/{upload_id}
 Initiates a new upload by requesting a pre-signed S3 URL.
 
 ```http
-POST /v1/uploads
+POST /data/upload
 ```
 
 #### Request Body
@@ -311,8 +311,14 @@ DELETE /v1/uploads/{upload_id}
 Retrieves a preview of a file's contents.
 
 ```http
-GET /v1/uploads/{upload_id}/files/{filename}/preview
+GET /data/uploads/{upload_id}/files/{filename}/preview
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Path Parameters
 
@@ -536,8 +542,15 @@ GET /v1/data/analysis/{job_id}
 Creates a session for querying a dataset.
 
 ```http
-POST /v1/data/sessions
+POST /data/sessions
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 #### Request Body
 
@@ -574,14 +587,15 @@ POST /v1/data/sessions
 Queries a dataset using natural language or SQL.
 
 ```http
-POST /v1/data/sessions/{session_id}/query
+POST /data/query
 ```
 
-#### Path Parameters
+#### Headers
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `session_id` | string | Yes | ID of the data session |
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 #### Request Body
 

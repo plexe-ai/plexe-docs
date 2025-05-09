@@ -9,9 +9,15 @@ The Models API provides endpoints for creating, managing, and using machine lear
 
 ### List Models
 
+```http
+GET /models/list
 ```
-GET /models
-```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Retrieves a list of all models in your account.
 
@@ -60,9 +66,15 @@ Retrieves a list of all models in your account.
 
 ### Get Model
 
-```
+```http
 GET /models/{model_id}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Retrieves detailed information about a specific model.
 
@@ -108,9 +120,16 @@ Retrieves detailed information about a specific model.
 
 ### Create Model
 
-```
+```http
 POST /models/build
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Initiates the process of building a new model. This is an asynchronous operation that returns a job ID for tracking progress.
 
@@ -158,9 +177,16 @@ Initiates the process of building a new model. This is an asynchronous operation
 
 ### Deploy Model
 
-```
+```http
 POST /models/{model_id}/deploy
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Deploys a model, making it available for predictions. This is an asynchronous operation.
 
@@ -203,9 +229,16 @@ Deploys a model, making it available for predictions. This is an asynchronous op
 
 ### Make Prediction
 
+```http
+POST /models/predict/{deployment_id}
 ```
-POST /predict/{deployment_id}
-```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Makes a prediction using a deployed model.
 
@@ -245,9 +278,16 @@ Output data matching the model's output schema. Example:
 
 ### Update Model
 
-```
+```http
 PATCH /models/{model_id}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Updates metadata for an existing model.
 
@@ -287,9 +327,15 @@ Updates metadata for an existing model.
 
 ### Delete Model
 
-```
+```http
 DELETE /models/{model_id}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Deletes a model and its deployments.
 
@@ -313,9 +359,15 @@ Deletes a model and its deployments.
 
 ### List Model Versions
 
-```
+```http
 GET /models/{model_id}/versions
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Lists all versions of a specific model.
 
@@ -373,9 +425,16 @@ Lists all versions of a specific model.
 
 ### Create Model Version
 
-```
+```http
 POST /models/{model_id}/versions
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Creates a new version of an existing model. This is useful for iterative model improvement.
 
@@ -425,9 +484,15 @@ Creates a new version of an existing model. This is useful for iterative model i
 
 ### List Deployments
 
-```
+```http
 GET /models/{model_id}/deployments
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Lists all active deployments for a model.
 
@@ -471,9 +536,15 @@ Lists all active deployments for a model.
 
 ### Undeploy Model
 
-```
+```http
 DELETE /models/{model_id}/deployments/{deployment_id}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Removes a specific deployment of a model.
 
@@ -499,9 +570,16 @@ Removes a specific deployment of a model.
 
 ### Create Batch Prediction Job
 
-```
+```http
 POST /models/{model_id}/batch-predict
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `Content-Type` | `application/json` | Required |
 
 Creates a batch prediction job for processing multiple inputs at once.
 
@@ -543,9 +621,15 @@ Creates a batch prediction job for processing multiple inputs at once.
 
 ### Get Batch Prediction Results
 
-```
+```http
 GET /models/{model_id}/batch-predict/{batch_job_id}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 Retrieves the status and results of a batch prediction job.
 

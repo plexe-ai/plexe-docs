@@ -36,11 +36,11 @@ This method orchestrates the core model creation workflow.
 
 * **Inputs:** Requires `datasets` (list of Pandas DataFrames or `DatasetGenerator` objects) and a `provider` configuration (LLM to use). Optional arguments include `max_iterations`, `timeout`, `callbacks`, etc.
 * **Agent System (`PlexeAgent`):** Internally, `build` invokes a multi-agent system (`PlexeAgent`) comprising specialized roles:
-    * **Orchestrator:** Manages the overall workflow, delegating tasks.
-    * **ML Researcher:** Analyzes the problem, proposes solution plans.
-    * **ML Engineer:** Writes and refines the model training code based on the plan.
-    * **ML Ops Engineer:** Generates the inference code for the final model.
-    * **(Tool Agents):** Smaller, specialized agents perform tasks like metric selection, schema inference, code validation, and execution using defined "tools".
+  * **Orchestrator:** Manages the overall workflow, delegating tasks.
+  * **ML Researcher:** Analyzes the problem, proposes solution plans.
+  * **ML Engineer:** Writes and refines the model training code based on the plan.
+  * **ML Ops Engineer:** Generates the inference code for the final model.
+  * **(Tool Agents):** Smaller, specialized agents perform tasks like metric selection, schema inference, code validation, and execution using defined "tools".
 * **Iteration:** The system may try multiple approaches (`max_iterations`) to find the best model according to the selected performance metric. Each attempt involves planning, code generation, execution, and evaluation.
 * **Output:** Updates the `Model` object's state (`READY` or `ERROR`), populates its `predictor`, `metric`, `metadata`, `artifacts`, and source code attributes.
 

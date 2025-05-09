@@ -12,8 +12,14 @@ This document provides detailed information about the authentication endpoints o
 Creates a new API key for your account.
 
 ```http
-POST /v1/keys
+POST /auth/api-keys
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Request Body
 
@@ -55,8 +61,14 @@ POST /v1/keys
 Returns a list of all API keys for your account.
 
 ```http
-GET /v1/keys
+GET /auth/api-keys
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Query Parameters
 
@@ -110,14 +122,20 @@ GET /v1/keys
 Retrieves details for a specific API key.
 
 ```http
-GET /v1/keys/{key_id}
+GET /auth/api-keys/{keyId}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Path Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `key_id` | string | Yes | ID of the API key to retrieve |
+| `keyId` | string | Yes | ID of the API key to retrieve |
 
 #### Response
 
@@ -146,14 +164,20 @@ GET /v1/keys/{key_id}
 Updates the name or expiration of an API key.
 
 ```http
-PATCH /v1/keys/{key_id}
+PATCH /auth/api-keys/{keyId}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Path Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `key_id` | string | Yes | ID of the API key to update |
+| `keyId` | string | Yes | ID of the API key to update |
 
 #### Request Body
 
@@ -196,14 +220,20 @@ PATCH /v1/keys/{key_id}
 Revokes (invalidates) an API key, preventing its further use.
 
 ```http
-DELETE /v1/keys/{key_id}
+DELETE /auth/api-keys/{keyId}
 ```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
 
 #### Path Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `key_id` | string | Yes | ID of the API key to revoke |
+| `keyId` | string | Yes | ID of the API key to revoke |
 
 #### Response
 
