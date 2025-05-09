@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains documentation for Plexe.ai, a machine learning model generation platform, built with Mintlify (a documentation site generator). The documentation describes Plexe's capabilities, API reference, and use cases.
+This repository contains documentation for Plexe.ai, a machine learning model generation platform, built 
+with Mintlify (a documentation site generator). The documentation describes Plexe's capabilities, API reference, 
+and use cases.
+
+The Plexe platform consists of:
+1. An open-source Python library (`pip install plexe`)
+2. The proprietary Plexe Platform (`console.plexe.ai`/`api.plexe.ai`)
 
 ## Development Commands
 
@@ -28,11 +34,17 @@ Mintlify handles deployment automatically when changes are pushed to the main br
 
 ## Documentation Structure
 
-- `mint.json`: Configuration file for the Mintlify documentation site, including navigation structure, colors, and metadata.
-- `introduction/`: Contains introductory documents about Plexe
-- `api-reference/`: API documentation including endpoints and usage instructions
-- `essentials/`: Core documentation including explanations, guides, and references
-- `usecases/`: Example use cases organized by industry/application
+- `docs.json`: Configuration file for the Mintlify documentation site, including navigation structure, colors, and metadata.
+- `pages/`: Contains all documentation content
+  - `introduction/`: Introductory content about Plexe
+  - `library/`: Documentation for the open-source Python library
+    - `tutorials/`: Step-by-step guides
+    - `how-to/`: Task-oriented guides
+    - `explanation/`: Concept explanations
+    - `reference/`: API reference
+  - `platform/`: Documentation for the Plexe Platform
+    - Similar structure to the library section
+  - `usecases/`: Example use cases showing how Plexe can be applied
 
 ## Content Format
 
@@ -41,15 +53,21 @@ Documentation content is written in MDX (Markdown with JSX support). Each conten
 ```mdx
 ---
 title: "Page Title"
+description: "Brief description of the page"
 ---
 
-Content in Markdown format...
+Content in Markdown format with optional JSX components...
 ```
 
-## Documentation Updating Guidelines
+## Documentation Workflow
 
-1. Edit existing MDX files to update content, or add new files for new sections.
-2. Update `mint.json` to include any new files in the navigation structure.
-3. Follow existing formatting patterns for consistency.
-4. Use headings (###) appropriately for document structure.
-5. Include code examples where relevant for API usage.
+1. Create a new branch for your changes
+2. Edit existing MDX files or add new ones
+3. Update `docs.json` if adding new pages to the navigation
+4. Test locally with `mint dev`
+5. Submit a pull request to the main branch
+
+## Helper Scripts
+
+- `scripts/dumpdocs.py`: Collects all documentation files and outputs them to a single text file, useful for providing 
+  context to large language models.
