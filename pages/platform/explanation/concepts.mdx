@@ -5,8 +5,7 @@ description: 'Core concepts and architecture of the Plexe Platform.'
 
 ## What is the Plexe Platform?
 
-The Plexe Platform is a managed service that builds on the core capabilities of the Plexe Python library, providing a
-full-featured, scalable system for creating, managing, and deploying machine learning models. It offers both a
+The Plexe Platform is a managed service providing a full-featured, scalable system for creating, managing, and deploying machine learning models. It offers both a
 web-based Console UI and a comprehensive REST API.
 
 While the Plexe library is designed for users who want to integrate model creation directly into their Python
@@ -72,14 +71,6 @@ The standard workflow for using the Plexe Platform follows these steps:
 7. **Monitoring & Maintenance:** Monitor performance and update as needed
 
 ## Key Concepts
-
-### Jobs
-
-Any long-running operation (like model building) is represented as a **job**. Jobs have:
-- A unique ID
-- Status tracking
-- Progress information
-- Results upon completion
 
 ### Models
 
@@ -156,11 +147,7 @@ The Plexe Platform implements several security measures:
 The Platform can be deployed in different configurations depending on your needs:
 
 - **Hosted Service:** The standard managed offering at api.plexe.ai
-- **Enterprise Mode:** For self-hosted deployments without authentication requirements
-
-<Note>
-Multiple environment support (Development/Staging/Production) is planned for a future release.
-</Note>
+- **Enterprise Mode:** For self-hosted deployments without authentication requirements. Please contact us at vdubey@plexe.ai.
 
 ## Next Steps
 

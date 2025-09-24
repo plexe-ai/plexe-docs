@@ -52,21 +52,6 @@ API keys can be created in two ways:
    - You can programmatically create API keys using an existing key with appropriate permissions
    - See the [Manage API Keys](/platform/how-to/manage_api_keys) guide for details
 
-### API Key Permissions
-
-When creating an API key, you can assign specific permission levels:
-
-- **Read-only:** Can only make GET requests to fetch information
-- **Read & Write:** Can both read data and create or modify resources
-
-### API Key Best Practices
-
-1. **Limit Access:** Create keys with the minimum permissions needed
-2. **Use Descriptive Names:** Help identify the purpose of each key
-3. **Secure Storage:** Store keys securely; never in public repositories or client-side code
-4. **Regular Rotation:** Change keys periodically, especially for production systems
-5. **Immediate Revocation:** If a key is compromised, revoke it immediately
-
 ## Security Features
 
 ### TLS Encryption
@@ -88,15 +73,6 @@ To protect against brute force and denial of service attacks, the API implements
 ### Session Management
 
 For Console users, sessions automatically expire after periods of inactivity. Sensitive actions may require re-authentication for additional security.
-
-## Multi-factor Authentication (MFA)
-
-<Note>
-Multi-factor Authentication will be available in a future platform release. The following methods are planned for implementation:
-</Note>
-
-1. **Time-based One-Time Passwords (TOTP):** Using authentication apps like Google Authenticator or Authy
-2. **Email Verification:** Receiving codes via email
 
 ## Authentication Errors
 

@@ -175,7 +175,87 @@ getPrediction(inputData)
   });
 ```
 
-{/* Note: Batch prediction capabilities will be added in a future release. Currently, predictions should be made one at a time using the single prediction endpoint. */}
+## Making Batch Predictions
+
+For making predictions with multiple data points at once, use the batch predictions endpoint. This is more efficient than making multiple individual requests.
+
+### Using cURL
+
+```bash
+curl -X POST "https://api.plexe.ai/models/{model_name}/{model_version}/predictions" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "feature1": "value1",
+      "feature2": 42,
+      "feature3": true
+    },
+    {
+      "feature1": "value2",
+      "feature2": 35,
+      "feature3": false
+    }
+  ]'
+```
+
+### Using Python
+
+```python
+def get_batch_predictions(input_data_list):
+    """
+    Get batch predictions from a deployed model.
+
+    Args:
+        input_data_list (list): List of input data objects
+
+    Returns:
+        list: List of prediction results
+    """
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
+
+    endpoint = f"{BASE_URL}/models/{MODEL_NAME}/{MODEL_VERSION}/predictions"
+
+    try:
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            data=json.dumps(input_data_list)
+        )
+        response.raise_for_status()
+
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making batch predictions: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response: {e.response.text}")
+        return None
+
+# Example usage
+batch_input_data = [
+    {
+        "square_footage": 1950,
+        "bedrooms": 3,
+        "bathrooms": 2.5,
+        "location": "suburban"
+    },
+    {
+        "square_footage": 1200,
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "location": "urban"
+    }
+]
+
+batch_results = get_batch_predictions(batch_input_data)
+if batch_results:
+    for i, result in enumerate(batch_results):
+        print(f"Prediction {i+1}: {result['prediction']}")
+```
 
 {/* Input validation API endpoints will be available in a future release. For now, we recommend implementing validation in your client application before sending requests to the model. */}
 
@@ -216,7 +296,8 @@ import json
 import time
 
 API_KEY = "YOUR_API_KEY"
-DEPLOYMENT_ID = "dep_abc123def456"
+MODEL_NAME = "your_model_name"
+MODEL_VERSION = "1"
 BASE_URL = "https://api.plexe.ai"
 
 def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
@@ -236,7 +317,7 @@ def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
         "Content-Type": "application/json"
     }
     
-    endpoint = f"{BASE_URL}/predict/{DEPLOYMENT_ID}"
+    endpoint = f"{BASE_URL}/models/{MODEL_NAME}/{MODEL_VERSION}/infer"
     backoff = initial_backoff
     
     for attempt in range(max_retries + 1):
@@ -315,7 +396,7 @@ def get_prediction_with_retry(input_data, max_retries=3, initial_backoff=1):
 1. **Input Validation**: Validate inputs before sending to avoid unnecessary API calls
 2. **Error Handling**: Implement robust error handling with retries for transient errors
 3. **Logging**: Log request IDs and responses for troubleshooting
-4. **Batch Processing**: Use batch endpoints for high-volume prediction needs
+4. **Batch Processing**: Use the batch predictions endpoint (`/predictions`) for processing multiple inputs efficiently
 5. **Rate Limiting**: Manage your request rate to avoid hitting rate limits
 6. **Monitoring**: Track latency and error rates for your production deployments
 7. **Caching**: Consider caching prediction results for identical inputs

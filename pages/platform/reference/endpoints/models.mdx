@@ -10,7 +10,7 @@ The Models API provides endpoints for creating, managing, and using machine lear
 ### List Models
 
 ```http
-GET /models/list
+GET /models
 ```
 
 #### Headers
@@ -37,7 +37,8 @@ Retrieves a list of all models in your account.
 {
   "models": [
     {
-      "model_id": "mdl_abc123def456",
+      "model_name": "customer-churn-predictor",
+      "model_version": "v1.0",
       "name": "Customer Churn Predictor",
       "intent": "Predict customer churn based on usage patterns",
       "status": "READY",
@@ -46,7 +47,8 @@ Retrieves a list of all models in your account.
       "updated_at": "2023-06-15T10:30:12Z"
     },
     {
-      "model_id": "mdl_ghi789jkl012",
+      "model_name": "product-recommendation-engine",
+      "model_version": "v2.1",
       "name": "Product Recommendation Engine",
       "intent": "Recommend products based on purchase history",
       "status": "BUILDING",
@@ -67,7 +69,7 @@ Retrieves a list of all models in your account.
 ### Get Model
 
 ```http
-GET /models/{model_id}
+GET /models/{model_name}
 ```
 
 #### Headers
@@ -80,21 +82,22 @@ Retrieves detailed information about a specific model.
 
 #### Path Parameters
 
-| Parameter  | Type   | Required | Description             |
-|------------|--------|----------|-------------------------|
-| `model_id` | string | Yes      | ID of the model to get  |
+| Parameter    | Type   | Required | Description               |
+|--------------|--------|----------|---------------------------|
+| `model_name` | string | Yes      | Name of the model to get  |
 
 #### Response
 
 ```json
 {
-  "model_id": "mdl_abc123def456",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "name": "Customer Churn Predictor",
   "intent": "Predict customer churn based on usage patterns",
   "description": "Model predicts likelihood of customer churn in the next 30 days",
   "status": "READY",
   "deployment_status": "DEPLOYED",
-  "endpoint": "https://api.plexe.ai/predict/dep_mno345pqr678",
+  "endpoint": "https://api.plexe.ai/models/customer-churn-predictor/v1.0/infer",
   "metrics": {
     "accuracy": 0.92,
     "precision": 0.88,
@@ -121,7 +124,7 @@ Retrieves detailed information about a specific model.
 ### Create Model
 
 ```http
-POST /models/build
+POST /models/{model_name}
 ```
 
 #### Headers
@@ -132,6 +135,12 @@ POST /models/build
 | `Content-Type` | `application/json` | Required |
 
 Initiates the process of building a new model. This is an asynchronous operation that returns a job ID for tracking progress.
+
+#### Path Parameters
+
+| Parameter    | Type   | Required | Description                   |
+|--------------|--------|----------|-------------------------------|
+| `model_name` | string | Yes      | Name for the new model        |
 
 #### Request Body
 
@@ -170,7 +179,8 @@ Initiates the process of building a new model. This is an asynchronous operation
 {
   "job_id": "job_def456ghi789",
   "status": "PENDING",
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "created_at": "2023-06-16T15:00:00Z"
 }
 ```
@@ -178,7 +188,7 @@ Initiates the process of building a new model. This is an asynchronous operation
 ### Deploy Model
 
 ```http
-POST /models/{model_id}/deploy
+POST /models/{model_name}/deploy
 ```
 
 #### Headers
@@ -194,7 +204,7 @@ Deploys a model, making it available for predictions. This is an asynchronous op
 
 | Parameter  | Type   | Required | Description                 |
 |------------|--------|----------|-----------------------------|
-| `model_id` | string | Yes      | ID of the model to deploy   |
+| `model_name` | string | Yes      | Name of the model to deploy   |
 
 #### Request Body
 
@@ -217,7 +227,8 @@ Deploys a model, making it available for predictions. This is an asynchronous op
 ```json
 {
   "deployment_id": "dep_pqr678stu901",
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "status": "DEPLOYING",
   "endpoint": "https://api.plexe.ai/predict/dep_pqr678stu901",
   "environment": "production",
@@ -230,23 +241,24 @@ Deploys a model, making it available for predictions. This is an asynchronous op
 ### Make Prediction
 
 ```http
-POST /models/predict/{deployment_id}
+POST /models/{model_name}/{model_version}/infer
 ```
 
 #### Headers
 
 | Header | Value | Description |
 | --- | --- | --- |
-| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+| `x-api-key` | `YOUR_API_KEY` | Required. Your API access key |
 | `Content-Type` | `application/json` | Required |
 
 Makes a prediction using a deployed model.
 
 #### Path Parameters
 
-| Parameter      | Type   | Required | Description                         |
-|----------------|--------|----------|-------------------------------------|
-| `deployment_id`| string | Yes      | ID of the deployed model to use     |
+| Parameter       | Type   | Required | Description                          |
+|-----------------|--------|----------|--------------------------------------|
+| `model_name`    | string | Yes      | Name of the model to use             |
+| `model_version` | string | Yes      | Version of the model to use          |
 
 #### Request Body
 
@@ -271,15 +283,50 @@ Output data matching the model's output schema. Example:
   "result": {
     "churn_probability": 0.27
   },
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "created_at": "2023-06-16T15:15:00Z"
+}
+```
+
+### Get Model Status
+
+```http
+GET /models/{model_name}/{model_version}/status
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Gets the current status of a specific model version.
+
+#### Path Parameters
+
+| Parameter       | Type   | Required | Description                          |
+|-----------------|--------|----------|--------------------------------------|
+| `model_name`    | string | Yes      | Name of the model                    |
+| `model_version` | string | Yes      | Version of the model                 |
+
+#### Response
+
+```json
+{
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
+  "status": "READY",
+  "deployment_status": "DEPLOYED",
+  "last_updated": "2023-06-16T15:15:00Z",
+  "build_progress": 100
 }
 ```
 
 ### Update Model
 
 ```http
-PATCH /models/{model_id}
+PATCH /models/{model_name}
 ```
 
 #### Headers
@@ -293,9 +340,9 @@ Updates metadata for an existing model.
 
 #### Path Parameters
 
-| Parameter  | Type   | Required | Description                 |
-|------------|--------|----------|-----------------------------|
-| `model_id` | string | Yes      | ID of the model to update   |
+| Parameter    | Type   | Required | Description                   |
+|--------------|--------|----------|-------------------------------|
+| `model_name` | string | Yes      | Name of the model to update   |
 
 #### Request Body
 
@@ -317,7 +364,8 @@ Updates metadata for an existing model.
 
 ```json
 {
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "name": "Enhanced Customer Churn Predictor",
   "description": "Updated model with improved accuracy",
   "tags": ["production", "customer-retention", "v2"],
@@ -328,7 +376,7 @@ Updates metadata for an existing model.
 ### Delete Model
 
 ```http
-DELETE /models/{model_id}
+DELETE /models/{model_name}
 ```
 
 #### Headers
@@ -343,15 +391,118 @@ Deletes a model and its deployments.
 
 | Parameter  | Type   | Required | Description                 |
 |------------|--------|----------|-----------------------------|
-| `model_id` | string | Yes      | ID of the model to delete   |
+| `model_name` | string | Yes      | Name of the model to delete   |
 
 #### Response
 
 ```json
 {
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "status": "DELETED",
   "deleted_at": "2023-06-16T17:00:00Z"
+}
+```
+
+### Retrain Model
+
+```http
+POST /models/{model_name}/retrain
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `x-api-key` | `YOUR_API_KEY` | Required. Your API access key |
+| `Content-Type` | `application/json` | Required |
+
+Initiates retraining of an existing model with new data or updated configuration.
+
+#### Path Parameters
+
+| Parameter    | Type   | Required | Description                   |
+|--------------|--------|----------|-------------------------------|
+| `model_name` | string | Yes      | Name of the model to retrain  |
+
+#### Request Body
+
+```json
+{
+  "upload_id": "upload_def789ghi012",
+  "goal": "Updated goal with new requirements",
+  "metric": "accuracy",
+  "max_iterations": 3
+}
+```
+
+| Field            | Type    | Required | Description                                      |
+|------------------|---------|----------|--------------------------------------------------|
+| `upload_id`      | string  | No       | ID of new dataset for retraining                |
+| `goal`           | string  | No       | Updated natural language description             |
+| `metric`         | string  | No       | Primary metric to optimize                       |
+| `max_iterations` | integer | No       | Maximum training iterations                      |
+
+#### Response
+
+```json
+{
+  "job_id": "job_rst456uvw789",
+  "status": "PENDING",
+  "model_name": "customer-churn-predictor",
+  "new_version": "v2.0",
+  "created_at": "2023-06-20T10:00:00Z"
+}
+```
+
+### Get Build Logs
+
+```http
+GET /models/build-logs
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `x-api-key` | `YOUR_API_KEY` | Required. Your API access key |
+
+Retrieves build logs for model training processes.
+
+#### Query Parameters
+
+| Parameter | Type   | Required | Description                                    |
+|-----------|--------|----------|------------------------------------------------|
+| `limit`   | integer| No       | Maximum number of log entries to return (default: 100) |
+| `offset`  | integer| No       | Number of log entries to skip (default: 0)    |
+| `job_id`  | string | No       | Filter logs by specific build job ID          |
+
+#### Response
+
+```json
+{
+  "logs": [
+    {
+      "job_id": "job_def456ghi789",
+      "model_name": "customer-churn-predictor",
+      "timestamp": "2023-06-16T15:05:00Z",
+      "level": "INFO",
+      "message": "Starting model training with dataset ds_stu901vwx234"
+    },
+    {
+      "job_id": "job_def456ghi789",
+      "model_name": "customer-churn-predictor",
+      "timestamp": "2023-06-16T15:08:30Z",
+      "level": "INFO",
+      "message": "Training completed. Model accuracy: 92.5%"
+    }
+  ],
+  "pagination": {
+    "total": 45,
+    "limit": 100,
+    "offset": 0,
+    "has_more": false
+  }
 }
 ```
 
@@ -360,7 +511,7 @@ Deletes a model and its deployments.
 ### List Model Versions
 
 ```http
-GET /models/{model_id}/versions
+GET /models/{model_name}/versions
 ```
 
 #### Headers
@@ -375,13 +526,14 @@ Lists all versions of a specific model.
 
 | Parameter  | Type   | Required | Description                           |
 |------------|--------|----------|---------------------------------------|
-| `model_id` | string | Yes      | ID of the model to list versions for  |
+| `model_name` | string | Yes      | Name of the model to list versions for  |
 
 #### Response
 
 ```json
 {
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "versions": [
     {
       "version_id": "ver_bcd890efg123",
@@ -426,7 +578,7 @@ Lists all versions of a specific model.
 ### Create Model Version
 
 ```http
-POST /models/{model_id}/versions
+POST /models/{model_name}/versions
 ```
 
 #### Headers
@@ -442,7 +594,7 @@ Creates a new version of an existing model. This is useful for iterative model i
 
 | Parameter  | Type   | Required | Description                           |
 |------------|--------|----------|---------------------------------------|
-| `model_id` | string | Yes      | ID of the model to create version for |
+| `model_name` | string | Yes      | Name of the model to create version for |
 
 #### Request Body
 
@@ -473,7 +625,8 @@ Creates a new version of an existing model. This is useful for iterative model i
 {
   "job_id": "job_zab234cde567",
   "status": "PENDING",
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "version_id": "ver_fgh890ijk123",
   "version": 4,
   "created_at": "2023-06-21T10:00:00Z"
@@ -485,7 +638,7 @@ Creates a new version of an existing model. This is useful for iterative model i
 ### List Deployments
 
 ```http
-GET /models/{model_id}/deployments
+GET /models/{model_name}/deployments
 ```
 
 #### Headers
@@ -500,13 +653,14 @@ Lists all active deployments for a model.
 
 | Parameter  | Type   | Required | Description                               |
 |------------|--------|----------|-------------------------------------------|
-| `model_id` | string | Yes      | ID of the model to list deployments for   |
+| `model_name` | string | Yes      | Name of the model to list deployments for   |
 
 #### Response
 
 ```json
 {
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "deployments": [
     {
       "deployment_id": "dep_lmn456opq789",
@@ -537,7 +691,7 @@ Lists all active deployments for a model.
 ### Undeploy Model
 
 ```http
-DELETE /models/{model_id}/deployments/{deployment_id}
+DELETE /models/{model_name}/deployments/{deployment_id}
 ```
 
 #### Headers
@@ -559,101 +713,159 @@ Removes a specific deployment of a model.
 
 ```json
 {
-  "model_id": "mdl_jkl012mno345",
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
   "deployment_id": "dep_rst012uvw345",
   "status": "UNDEPLOYING",
   "undeployed_at": "2023-06-21T11:00:00Z"
 }
 ```
 
-## Batch Predictions
-
-### Create Batch Prediction Job
+### Describe Model
 
 ```http
-POST /models/{model_id}/batch-predict
+GET /models/{model_name}/{model_version}/describe
 ```
 
 #### Headers
 
 | Header | Value | Description |
 | --- | --- | --- |
-| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
-| `Content-Type` | `application/json` | Required |
+| `x-api-key` | `YOUR_API_KEY` | Required. Your API access key |
 
-Creates a batch prediction job for processing multiple inputs at once.
+Gets detailed information and metadata about a specific model version.
 
 #### Path Parameters
 
-| Parameter  | Type   | Required | Description                           |
-|------------|--------|----------|---------------------------------------|
-| `model_id` | string | Yes      | ID of the model to use for prediction |
+| Parameter       | Type   | Required | Description                          |
+|-----------------|--------|----------|--------------------------------------|
+| `model_name`    | string | Yes      | Name of the model                    |
+| `model_version` | string | Yes      | Version of the model                 |
+
+#### Response
+
+```json
+{
+  "model_name": "customer-churn-predictor",
+  "model_version": "v1.0",
+  "description": "Detailed model description and capabilities",
+  "input_schema": {
+    "usage_minutes": "float",
+    "subscription_months": "integer",
+    "support_tickets": "integer",
+    "plan_type": "string"
+  },
+  "output_schema": {
+    "churn_probability": "float"
+  },
+  "performance_metrics": {
+    "accuracy": 0.92,
+    "precision": 0.88,
+    "recall": 0.85,
+    "f1_score": 0.86
+  },
+  "training_info": {
+    "dataset_size": 10000,
+    "training_time_minutes": 15,
+    "algorithm": "ensemble",
+    "feature_importance": {
+      "usage_minutes": 0.45,
+      "support_tickets": 0.30,
+      "subscription_months": 0.15,
+      "plan_type": 0.10
+    }
+  }
+}
+```
+
+## Batch Predictions
+
+### Batch Predictions
+
+```http
+POST /models/{model_name}/{model_version}/predictions
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `x-api-key` | `YOUR_API_KEY` | Required. Your API access key |
+| `Content-Type` | `application/json` | Required |
+
+Makes batch predictions using a deployed model by sending an array of input data.
+
+#### Path Parameters
+
+| Parameter       | Type   | Required | Description                          |
+|-----------------|--------|----------|--------------------------------------|
+| `model_name`    | string | Yes      | Name of the model to use             |
+| `model_version` | string | Yes      | Version of the model to use          |
 
 #### Request Body
 
-```json
-{
-  "dataset_id": "ds_xyz678abc901",
-  "output_format": "json",
-  "include_explanations": true
-}
-```
+Array of input objects matching the model's input schema. Example:
 
-| Field                 | Type    | Required | Description                                           |
-|-----------------------|---------|----------|-------------------------------------------------------|
-| `dataset_id`          | string  | Yes      | ID of the dataset containing inputs                   |
-| `output_format`       | string  | No       | Format for results: `json` or `csv` (default: `json`) |
-| `include_explanations`| boolean | No       | Whether to include prediction explanations            |
+```json
+[
+  {
+    "credit_score": 42,
+    "employment_type": "sample string",
+    "infrastructure_score": 42,
+    "years_employed": 3.14,
+    "payment_to_income_ratio": 3.14,
+    "population_growth_trend": "sample string",
+    "loan_year": 42,
+    "permit_fees_aed": 42,
+    "market_conditions": "sample string",
+    "land_area_sqm": 42,
+    "interest_rate_percent": 3.14,
+    "land_value_aed": 42,
+    "debt_to_income_ratio": 3.14,
+    "monthly_income_aed": 42,
+    "construction_delay_months": 3.14,
+    "loan_to_value_ratio": 3.14,
+    "market_activity_level": "sample string",
+    "borrower_age": 42,
+    "loan_term_years": 42,
+    "building_area_sqm": 42,
+    "monthly_payment_aed": 42,
+    "cost_overrun_percentage": 3.14,
+    "distance_to_center_km": 3.14,
+    "district": "sample string",
+    "building_type": "sample string",
+    "estimated_monthly_rental_aed": 42
+  },
+  {
+    "credit_score": 45,
+    "employment_type": "full-time",
+    "infrastructure_score": 38,
+    "years_employed": 2.5,
+    "payment_to_income_ratio": 2.8
+    // ... additional fields for second prediction
+  }
+]
+```
 
 #### Response
 
-```json
-{
-  "batch_job_id": "bjob_bcd234efg567",
-  "model_id": "mdl_jkl012mno345",
-  "dataset_id": "ds_xyz678abc901",
-  "status": "PENDING",
-  "progress": 0,
-  "estimated_completion": "2023-06-21T12:30:00Z",
-  "created_at": "2023-06-21T12:00:00Z"
-}
-```
-
-### Get Batch Prediction Results
-
-```http
-GET /models/{model_id}/batch-predict/{batch_job_id}
-```
-
-#### Headers
-
-| Header | Value | Description |
-| --- | --- | --- |
-| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
-
-Retrieves the status and results of a batch prediction job.
-
-#### Path Parameters
-
-| Parameter     | Type   | Required | Description                              |
-|---------------|--------|----------|------------------------------------------|
-| `model_id`    | string | Yes      | ID of the model used for prediction      |
-| `batch_job_id`| string | Yes      | ID of the batch prediction job           |
-
-#### Response
+Array of prediction results corresponding to each input:
 
 ```json
-{
-  "batch_job_id": "bjob_bcd234efg567",
-  "model_id": "mdl_jkl012mno345",
-  "dataset_id": "ds_xyz678abc901",
-  "status": "COMPLETED",
-  "progress": 100,
-  "row_count": 5000,
-  "completed_at": "2023-06-21T12:25:00Z",
-  "results_url": "https://api.plexe.ai/download/bjob_bcd234efg567.json",
-  "expires_at": "2023-06-28T12:25:00Z"
-}
+[
+  {
+    "prediction": {
+      "loan_approval_probability": 0.85,
+      "risk_score": 0.15
+    }
+  },
+  {
+    "prediction": {
+      "loan_approval_probability": 0.72,
+      "risk_score": 0.28
+    }
+  }
+]
 ```
 
 ## Error Codes

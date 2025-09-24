@@ -12,7 +12,7 @@ This document outlines the RESTful API endpoints for managing data uploads and q
 Retrieves a list of all data uploads associated with your account.
 
 ```http
-GET /data/uploads
+GET /uploads
 ```
 
 #### Query Parameters
@@ -230,19 +230,14 @@ After receiving the pre-signed URLs, you must upload each file directly to the p
 Confirms completion of file uploads to S3 and updates the upload status.
 
 ```http
-POST /uploads/{upload_id}/status
+POST /uploads/status
 ```
-
-#### Path Parameters
-
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `upload_id` | string | Yes | ID of the upload to update |
 
 #### Request Body
 
 ```json
 {
+  "upload_id": "upload_abc123def456",
   "status": "complete",
   "files": [
     {
@@ -259,6 +254,7 @@ POST /uploads/{upload_id}/status
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
+| `upload_id` | string | Yes | ID of the upload to update |
 | `status` | string | Yes | New status: `complete` to confirm all files are uploaded |
 | `files` | array | Yes | List of files that were uploaded |
 | `files[].filename` | string | Yes | Name of the file |
@@ -376,6 +372,52 @@ For JSON files:
       "referral_source": "search"
     },
     // ... more records
+  ]
+}
+```
+
+### Get Dataset Versions
+
+```http
+GET /uploads/datasets/{dataset_name}/versions
+```
+
+#### Headers
+
+| Header | Value | Description |
+| --- | --- | --- |
+| `Authorization` | `Bearer TOKEN` | Required. Your API access token |
+
+Retrieves all versions of a specific dataset.
+
+#### Path Parameters
+
+| Parameter      | Type   | Required | Description                    |
+|----------------|--------|----------|--------------------------------|
+| `dataset_name` | string | Yes      | Name of the dataset            |
+
+#### Response
+
+```json
+{
+  "dataset_name": "customer-data",
+  "versions": [
+    {
+      "version": "v2.0",
+      "upload_id": "upload_def789ghi012",
+      "created_at": "2024-05-15T10:00:00Z",
+      "status": "complete",
+      "file_count": 3,
+      "total_size_bytes": 2048000
+    },
+    {
+      "version": "v1.0",
+      "upload_id": "upload_abc123def456",
+      "created_at": "2024-05-01T12:00:00Z",
+      "status": "complete",
+      "file_count": 2,
+      "total_size_bytes": 1536000
+    }
   ]
 }
 ```
